@@ -3,7 +3,7 @@ plugins:
   - rubocop-rspec
 
 AllCops:
-  NewCops: enable
+  NewCops: disable
   Exclude:
     - "vendor/**/*"
     - "spec/fixtures/**/*"
