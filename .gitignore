@@ -37,3 +37,6 @@
 
 # Environment files that may contain sensitive data
 .env
+
+# Claude Code
+.claude/
