@@ -11,7 +11,7 @@ AllCops:
     - ".git/**/*"
     - "bin/*"
     - "db/**/*"
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 4.0
   SuggestExtensions: false
 
 Layout/LineLength:
@@ -26,6 +26,9 @@ Naming/PredicateMethod:
 
 Naming/VariableNumber:
   EnforcedStyle: snake_case
+
+Lint/MissingSuper:
+  Enabled: true
 
 Rails/Delegate:
   Enabled: false
@@ -44,6 +47,13 @@ Rails/OutputSafety:
 
 Rails/SkipsModelValidations:
   Enabled: false
+
+Rails/EnvironmentVariableAccess:
+  Enabled: true
+  AllowReads: false
+
+Rails/RedundantPresenceValidationOnBelongsTo:
+  Enabled: true
 
 Rails/RequestReferer:
   Enabled: false
@@ -83,6 +93,9 @@ Style/EmptyMethod:
 
 Style/FrozenStringLiteralComment:
   Enabled: false
+
+Style/SafeNavigation:
+  Enabled: true
 
 Style/HashSyntax:
   Enabled: false

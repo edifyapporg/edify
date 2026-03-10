@@ -1,6 +1,6 @@
 class EdifyConfig
   def self.app_url
-    ::ENV["APP_URL"] || "localhost:3000"
+    ::ENV["APP_URL"] || "localhost:3000" # rubocop:disable Rails/EnvironmentVariableAccess
   end
 
   def self.cloudflare_turnstile_secret_key
