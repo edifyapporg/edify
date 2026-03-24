@@ -12,15 +12,15 @@ module Webhooks
 
         next if sendgrid_event.save
 
-        Sentry.capture_message("Failed to save SendgridEvent",
-                               extra: { sendgrid_event: sendgrid_event, errors: sendgrid_event.errors.full_messages })
+        error = StandardError.new("Failed to save SendgridEvent: #{sendgrid_event.errors.full_messages.join(', ')}")
+        ScoutApm::Error.capture(error, { sendgrid_event: sendgrid_event, errors: sendgrid_event.errors.full_messages })
         status = :unprocessable_content
         break
       end
 
       head status
     rescue ActionController::ParameterMissing => e
-      Sentry.capture_message("Sendgrid webhook parameter missing", extra: { error: e })
+      ScoutApm::Error.capture(e, { context: "Sendgrid webhook parameter missing" })
       head :unprocessable_content
     end
 
