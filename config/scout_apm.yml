@@ -9,9 +9,9 @@ common: &defaults
   # log_level: Verboseness of logs.
   # - Default: 'info'
   # - Valid Options: debug, info, warn, error
-  log_level: info
-  logs_monitor: true
-  logs_ingest_key: <%= ::EdifyConfig.scout_apm_logs_ingest_key %>
+#  log_level: info
+#  logs_monitor: true
+#  logs_ingest_key: <%#= ::EdifyConfig.scout_apm_logs_ingest_key %>
 
   # name: Application name in APM Web UI
   # - Default: the application names comes from the Rails or Sinatra class name
