@@ -15,7 +15,7 @@ common: &defaults
 
   # name: Application name in APM Web UI
   # - Default: the application names comes from the Rails or Sinatra class name
-  name: Edify
+  name: edify
 
   # monitor: Enable Scout APM or not
   # - Default: none
