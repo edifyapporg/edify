@@ -36,7 +36,7 @@ class EdifyConfig
   end
 
   def self.scout_apm_logs_ingest_key
-    Rails.application.credentials.dig(:scout, :logs_ingest_key)
+    Rails.application.credentials.dig(:scout, :logs_ingest_key) || "test_key"
   end
 
   def self.sentry_dsn
