@@ -1,3 +1,4 @@
+<% require File.expand_path("config/initializers/01_edify_config", Rails.root) %>
 # This configuration file is used for Scout APM.
 # Environment variables can also be used to configure Scout. See our help docs at https://scoutapm.com/docs/ruby/configuration#environment-variables for more information.
 common: &defaults
