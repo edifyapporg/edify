@@ -46,33 +46,40 @@ en:
   models:
     meeting:
       date_not_unique: "has been taken; a meeting already exists for this date"
-  notifications:
+  notifiers:
     incomplete_meeting_notification:
-      message:
-        zero: "The %{meeting_type} scheduled for %{date} has no speakers yet scheduled."
-        one: "The %{meeting_type} meeting scheduled for %{date} has only one speaker scheduled at this time."
-        other: "The %{meeting_type} scheduled for %{date} has only %{count} speakers scheduled at this time."
-      subject: "Meeting for %{date} is not fully scheduled in Edify"
+      notification:
+        message:
+          zero: "The %{meeting_type} scheduled for %{date} has no speakers yet scheduled."
+          one: "The %{meeting_type} meeting scheduled for %{date} has only one speaker scheduled at this time."
+          other: "The %{meeting_type} scheduled for %{date} has only %{count} speakers scheduled at this time."
+        subject: "Meeting for %{date} is not fully scheduled in Edify"
     missing_meetings_notification:
-      message:
-        one: "Edify did not find a meeting scheduled for %{date_string}. Please schedule a meeting when you have a moment."
-        other: "Edify did not find meetings scheduled for %{date_string}. Please schedule those meetings when you have a moment."
-      subject: "Missing meetings in Edify"
+      notification:
+        message:
+          one: "Edify did not find a meeting scheduled for %{date_string}. Please schedule a meeting when you have a moment."
+          other: "Edify did not find meetings scheduled for %{date_string}. Please schedule those meetings when you have a moment."
+        subject: "Missing meetings in Edify"
     new_user_notification:
-      message: "Hello, and thanks for joining Edify. Before continuing, you will need to create a Ward unit or request access to an existing one. Edify will walk you through the process."
-      subject: "Welcome to Edify!"
+      notification:
+        message: "Hello, and thanks for joining Edify. Before continuing, you will need to create a Ward unit or request access to an existing one. Edify will walk you through the process."
+        subject: "Welcome to Edify!"
     new_user_admin_notification:
-      message: "A new user has signed up for Edify."
-      subject: "New user for Edify"
+      notification:
+        message: "A new user has signed up for Edify."
+        subject: "New user for Edify"
     unit_access_approval_notification:
-      message: "%{user_name} was approved for access to your ward in Edify."
-      subject: "Access approval for your ward in Edify"
+      notification:
+        message: "%{user_name} was approved for access to your ward in Edify."
+        subject: "Access approval for your ward in Edify"
     unit_access_rejection_notification:
-      message: "%{user_name} was rejected for access to your ward in Edify. Click the link for more information."
-      subject: "Access rejection for your ward in Edify"
+      notification:
+        message: "%{user_name} was rejected for access to your ward in Edify. Click the link for more information."
+        subject: "Access rejection for your ward in Edify"
     unit_access_request_notification:
-      message: "%{user_name} has requested access to your ward in Edify. Click the link to approve or reject this request."
-      subject: "Request for access to your ward in Edify"
+      notification:
+        message: "%{user_name} has requested access to your ward in Edify. Click the link to approve or reject this request."
+        subject: "Request for access to your ward in Edify"
   views:
     home:
       index:
