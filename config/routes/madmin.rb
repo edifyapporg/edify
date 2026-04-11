@@ -1,7 +1,9 @@
 # Below are the routes for madmin
 namespace :madmin do
   resources :notes
-  resources :email_events
+  namespace :analytics do
+    resources :email_events
+  end
   resources :access_requests
   resources :import_jobs
   resources :notifications

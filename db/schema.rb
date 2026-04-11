@@ -67,16 +67,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_10_235826) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "announcements", force: :cascade do |t|
-    t.datetime "published_at"
-    t.string "announcement_type"
-    t.string "name"
-    t.text "description"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "email_events", force: :cascade do |t|
+  create_table "analytics_email_events", force: :cascade do |t|
     t.string "email"
     t.datetime "timestamp"
     t.string "smtp_id"
@@ -93,6 +84,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_10_235826) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "type"
+  end
+
+  create_table "announcements", force: :cascade do |t|
+    t.datetime "published_at"
+    t.string "announcement_type"
+    t.string "name"
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
