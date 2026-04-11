@@ -11,18 +11,18 @@ RSpec.describe UnitAccessRequestJob, type: :job do
   end
 
   describe "#perform" do
-    let(:perform_job) { subject.perform(unit: unit, user: user) }
+    it "creates notifications for each approver" do
+      expect do
+        subject.perform(unit: unit, user: user)
+      end.to change(Noticed::Notification, :count).by(unit.users.approvers.count)
+    end
 
-    before { allow(::UnitAccessRequestNotification).to receive(:deliver_later) }
+    it "delivers to the correct recipients" do
+      subject.perform(unit: unit, user: user)
 
-    it "delivers a message to each approver" do
-      mock_notification = instance_double(UnitAccessRequestNotification)
-      allow(UnitAccessRequestNotification).to receive(:with).with(user: user).and_return(mock_notification)
-      unit.users.approvers.each do |approver|
-        expect(mock_notification).to receive(:deliver_later).with(approver)
-      end
-
-      perform_job
+      approver_ids = unit.users.approvers.pluck(:id)
+      recipient_ids = Noticed::Notification.last(approver_ids.size).map(&:recipient_id)
+      expect(recipient_ids).to match_array(approver_ids)
     end
   end
 end

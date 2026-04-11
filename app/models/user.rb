@@ -9,7 +9,7 @@ class User < ApplicationRecord
 
   has_one_attached :avatar
   has_person_name
-  has_noticed_notifications
+  has_noticed_notifications param_name: :user
 
   enum :role, {
     bishopric: 1,
@@ -20,7 +20,7 @@ class User < ApplicationRecord
 
   has_many :import_jobs, foreign_key: :owner_id, dependent: :nullify
   has_many :scheduled_meetings, class_name: "Meeting", foreign_key: :scheduler_id, dependent: :nullify
-  has_many :notifications, as: :recipient, dependent: :destroy
+  has_many :notifications, as: :recipient, dependent: :destroy, class_name: "Noticed::Notification"
   has_one :access_request, dependent: :destroy
   belongs_to :unit, optional: true
 
@@ -83,10 +83,8 @@ class User < ApplicationRecord
   def send_welcome_notifications
     return true unless newly_confirmed?
 
-    ::User.admin.find_each do |admin|
-      ::NewUserAdminNotification.with(user: self).deliver_later(admin)
-    end
-    ::NewUserNotification.with(user: self).deliver_later(self)
+    ::NewUserAdminNotification.with(user: self).deliver(::User.admin)
+    ::NewUserNotification.with(user: self).deliver(self)
   end
 
   def set_notification_preferences

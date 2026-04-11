@@ -13,7 +13,7 @@ class Meeting < ApplicationRecord
   belongs_to :unit
   belongs_to :scheduler, class_name: "User", optional: true
 
-  has_noticed_notifications
+  has_noticed_notifications param_name: :meeting
 
   enum :meeting_type, {
     sacrament_meeting: 0,
