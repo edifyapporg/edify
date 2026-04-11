@@ -7,13 +7,13 @@ module Webhooks
       rows = params.require(:_json)
 
       rows.each do |row|
-        sendgrid_event = SendgridEvent.new(row.permit(*sendgrid_event_params))
+        sendgrid_event = Analytics::SendgridEvent.new(row.permit(*sendgrid_event_params))
         sendgrid_event.event_type = row[:type]
 
         next if sendgrid_event.save
 
-        error = StandardError.new("Failed to save SendgridEvent: #{sendgrid_event.errors.full_messages.join(', ')}")
-        ScoutApm::Error.capture(error, { sendgrid_event: sendgrid_event, errors: sendgrid_event.errors.full_messages })
+        message = "Failed to save SendgridEvent: #{sendgrid_event.errors.full_messages.join(', ')}"
+        ScoutApm::Error.capture(StandardError.new(message), { errors: sendgrid_event.errors.full_messages })
         status = :unprocessable_content
         break
       end
