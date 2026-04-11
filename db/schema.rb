@@ -10,9 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_18_033918) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_10_235826) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
+  enable_extension "pg_catalog.plpgsql"
 
   create_table "access_requests", force: :cascade do |t|
     t.bigint "user_id", null: false
@@ -74,6 +74,25 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_18_033918) do
     t.text "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "email_events", force: :cascade do |t|
+    t.string "email"
+    t.datetime "timestamp"
+    t.string "smtp_id"
+    t.string "event"
+    t.string "category"
+    t.string "provider_event_id"
+    t.string "provider_message_id"
+    t.string "reason"
+    t.string "status"
+    t.string "ip"
+    t.string "response"
+    t.string "event_type"
+    t.string "useragent"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "type"
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
@@ -160,24 +179,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_18_033918) do
     t.datetime "updated_at", null: false
     t.index ["read_at"], name: "index_notifications_on_read_at"
     t.index ["recipient_type", "recipient_id"], name: "index_notifications_on_recipient"
-  end
-
-  create_table "sendgrid_events", force: :cascade do |t|
-    t.string "email"
-    t.datetime "timestamp"
-    t.string "smtp_id"
-    t.string "event"
-    t.string "category"
-    t.string "sg_event_id"
-    t.string "sg_message_id"
-    t.string "reason"
-    t.string "status"
-    t.string "ip"
-    t.string "response"
-    t.string "event_type"
-    t.string "useragent"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|

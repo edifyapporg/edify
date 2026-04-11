@@ -1,13 +1,4 @@
-class SendgridEvent < ApplicationRecord
-  validates :email, :event, :timestamp, presence: true
-
-  def timestamp=(timestamp)
-    if timestamp.is_a?(Numeric)
-      super(Time.zone.at(timestamp))
-    elsif timestamp.respond_to?(:numeric?) && timestamp.numeric?
-      super(Time.zone.at(timestamp.to_i))
-    else
-      super
-    end
-  end
+class SendgridEvent < EmailEvent
+  alias_attribute :sg_event_id, :provider_event_id
+  alias_attribute :sg_message_id, :provider_message_id
 end
