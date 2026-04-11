@@ -19,9 +19,11 @@ describe CheckMeetingsAndNotify do
     let(:test_date) { "2022-04-30" }
     let(:expected_missing_dates) { ["2022-05-08", "2022-05-22"].map(&:to_date) }
 
-    it "sends notifications of missing dates to unit users" do
+    it "sends notifications of missing dates to each meeting scheduler" do
       expect(::MissingMeetingsNotification).to receive(:with).with(dates: expected_missing_dates)
-      expect(missing_meetings_notification).to receive(:deliver_later).with(unit.users.bishopric)
+      unit.users.meeting_schedulers.each do |user|
+        expect(missing_meetings_notification).to receive(:deliver_later).with(user)
+      end
       subject.perform!
     end
   end
@@ -41,9 +43,11 @@ describe CheckMeetingsAndNotify do
     let(:incomplete_meeting) { unit.meetings.find_by(date: "2022-05-15") }
 
     context "when the meeting has no scheduler" do
-      it "sends an incomplete meeting notification to unit users" do
+      it "sends an incomplete meeting notification to each meeting scheduler" do
         expect(::IncompleteMeetingNotification).to receive(:with).with(meeting: incomplete_meeting)
-        expect(incomplete_meeting_notification).to receive(:deliver_later).with(unit.users.bishopric)
+        unit.users.meeting_schedulers.each do |user|
+          expect(incomplete_meeting_notification).to receive(:deliver_later).with(user)
+        end
         subject.perform!
       end
     end

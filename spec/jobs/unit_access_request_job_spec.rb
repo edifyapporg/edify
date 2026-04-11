@@ -15,10 +15,12 @@ RSpec.describe UnitAccessRequestJob, type: :job do
 
     before { allow(::UnitAccessRequestNotification).to receive(:deliver_later) }
 
-    it "delivers a message" do
+    it "delivers a message to each approver" do
       mock_notification = instance_double(UnitAccessRequestNotification)
       allow(UnitAccessRequestNotification).to receive(:with).with(user: user).and_return(mock_notification)
-      expect(mock_notification).to receive(:deliver_later).with(unit.users.approvers)
+      unit.users.approvers.each do |approver|
+        expect(mock_notification).to receive(:deliver_later).with(approver)
+      end
 
       perform_job
     end
