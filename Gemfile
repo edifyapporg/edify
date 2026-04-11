@@ -38,7 +38,6 @@ gem "responders"
 gem "rest-client"
 gem "scout_apm"
 gem "scout_apm_logging"
-gem "sendgrid-ruby" # TODO: Remove after Mailgun migration is verified (see #231)
 gem "solid_cable"
 gem "solid_queue"
 gem "strip_attributes"
