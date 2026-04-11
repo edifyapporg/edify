@@ -83,7 +83,9 @@ class User < ApplicationRecord
   def send_welcome_notifications
     return true unless newly_confirmed?
 
-    ::NewUserAdminNotification.with(user: self).deliver_later(::User.admin.all)
+    ::User.admin.find_each do |admin|
+      ::NewUserAdminNotification.with(user: self).deliver_later(admin)
+    end
     ::NewUserNotification.with(user: self).deliver_later(self)
   end
 
