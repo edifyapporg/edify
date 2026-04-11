@@ -110,6 +110,21 @@ repository. Contact a member of the development team if you need access to the R
 
 Contact Mark Oveson or Evan Child for further information.
 
+Infrastructure
+--------------
+
+Edify runs on **Digital Ocean** via [Hatchbox](https://www.hatchbox.io/):
+
+- **Web + Worker**: DO droplets managed by Hatchbox
+- **Database**: DO Managed Postgres
+- **Background Jobs**: Solid Queue (runs inside Puma via `plugin :solid_queue`)
+- **Email Delivery**: [Mailgun](https://www.mailgun.com/) API (via `mailgun-ruby` gem)
+- **Email Event Tracking**: Mailgun webhooks at `POST /webhooks/mailgun_events`, stored as `Analytics::MailgunEvent` records
+- **DNS/CDN**: Cloudflare
+- **Monitoring**: Scout APM
+- **File Storage**: Amazon S3 (via Active Storage)
+- **Real-time**: Solid Cable (Action Cable adapter)
+
 **Continuous Integration**
 
 Edify uses Github Actions for CI/CD. When you push a branch, pipeline will run and should pass before merging to master.
@@ -159,4 +174,4 @@ License
 Copyright
 ---------
 
-Copyright (c) 2022-2025 by Mark Oveson. See license for details.
+Copyright (c) 2022-2026 by Mark Oveson. See license for details.
