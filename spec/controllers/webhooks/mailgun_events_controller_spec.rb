@@ -9,29 +9,29 @@ RSpec.describe Webhooks::MailgunEventsController do
     context "when the event is delivered" do
       let(:params) do
         {
-          signature: {
-            timestamp: "1683409840",
-            token: "random-token-string",
-            signature: "fake-signature",
+          "signature" => {
+            "timestamp" => "1683409840",
+            "token" => "random-token-string",
+            "signature" => "fake-signature",
           },
-          event_data: {
-            event: "delivered",
-            id: "unique-event-id",
-            timestamp: 1_683_409_840.123,
-            recipient: "user@example.com",
-            message: {
-              headers: {
-                message_id: "abc123@edifyapp.org",
+          "event-data" => {
+            "event" => "delivered",
+            "id" => "unique-event-id",
+            "timestamp" => 1_683_409_840.123,
+            "recipient" => "user@example.com",
+            "message" => {
+              "headers" => {
+                "message-id" => "abc123@edifyapp.org",
               },
             },
-            delivery_status: {
-              code: 250,
-              message: "OK",
+            "delivery-status" => {
+              "code" => 250,
+              "message" => "OK",
             },
-            ip: "1.2.3.4",
-            reason: nil,
-            client_info: {
-              user_agent: "Mozilla/5.0",
+            "ip" => "1.2.3.4",
+            "reason" => nil,
+            "client-info" => {
+              "user-agent" => "Mozilla/5.0",
             },
           },
         }
@@ -66,28 +66,28 @@ RSpec.describe Webhooks::MailgunEventsController do
     context "when the event is failed" do
       let(:params) do
         {
-          signature: {
-            timestamp: "1683409840",
-            token: "random-token-string",
-            signature: "fake-signature",
+          "signature" => {
+            "timestamp" => "1683409840",
+            "token" => "random-token-string",
+            "signature" => "fake-signature",
           },
-          event_data: {
-            event: "failed",
-            id: "failed-event-id",
-            timestamp: 1_683_409_840,
-            recipient: "bounced@example.com",
-            message: {
-              headers: {
-                message_id: "def456@edifyapp.org",
+          "event-data" => {
+            "event" => "failed",
+            "id" => "failed-event-id",
+            "timestamp" => 1_683_409_840,
+            "recipient" => "bounced@example.com",
+            "message" => {
+              "headers" => {
+                "message-id" => "def456@edifyapp.org",
               },
             },
-            delivery_status: {
-              code: 550,
-              message: "Mailbox not found",
+            "delivery-status" => {
+              "code" => 550,
+              "message" => "Mailbox not found",
             },
-            ip: nil,
-            reason: "bounce",
-            client_info: {},
+            "ip" => nil,
+            "reason" => "bounce",
+            "client-info" => {},
           },
         }
       end
@@ -116,18 +116,18 @@ RSpec.describe Webhooks::MailgunEventsController do
 
       let(:params) do
         {
-          signature: {
-            timestamp: "1683409840",
-            token: "random-token-string",
-            signature: "bad-signature",
+          "signature" => {
+            "timestamp" => "1683409840",
+            "token" => "random-token-string",
+            "signature" => "bad-signature",
           },
-          event_data: {
-            event: "delivered",
-            id: "unique-event-id",
-            timestamp: 1_683_409_840,
-            recipient: "user@example.com",
-            message: { headers: { message_id: "abc123@edifyapp.org" } },
-            delivery_status: { code: 250, message: "OK" },
+          "event-data" => {
+            "event" => "delivered",
+            "id" => "unique-event-id",
+            "timestamp" => 1_683_409_840,
+            "recipient" => "user@example.com",
+            "message" => { "headers" => { "message-id" => "abc123@edifyapp.org" } },
+            "delivery-status" => { "code" => 250, "message" => "OK" },
           },
         }
       end
@@ -142,13 +142,13 @@ RSpec.describe Webhooks::MailgunEventsController do
       end
     end
 
-    context "when event_data is missing" do
+    context "when event-data is missing" do
       let(:params) do
         {
-          signature: {
-            timestamp: "1683409840",
-            token: "random-token-string",
-            signature: "fake-signature",
+          "signature" => {
+            "timestamp" => "1683409840",
+            "token" => "random-token-string",
+            "signature" => "fake-signature",
           },
         }
       end
@@ -162,18 +162,18 @@ RSpec.describe Webhooks::MailgunEventsController do
     context "when a required attribute is missing" do
       let(:params) do
         {
-          signature: {
-            timestamp: "1683409840",
-            token: "random-token-string",
-            signature: "fake-signature",
+          "signature" => {
+            "timestamp" => "1683409840",
+            "token" => "random-token-string",
+            "signature" => "fake-signature",
           },
-          event_data: {
-            event: "delivered",
-            id: "unique-event-id",
-            timestamp: nil,
-            recipient: "user@example.com",
-            message: { headers: { message_id: "abc123@edifyapp.org" } },
-            delivery_status: { code: 250, message: "OK" },
+          "event-data" => {
+            "event" => "delivered",
+            "id" => "unique-event-id",
+            "timestamp" => nil,
+            "recipient" => "user@example.com",
+            "message" => { "headers" => { "message-id" => "abc123@edifyapp.org" } },
+            "delivery-status" => { "code" => 250, "message" => "OK" },
           },
         }
       end
