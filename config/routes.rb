@@ -60,7 +60,6 @@ Rails.application.routes.draw do
 
   namespace :webhooks do
     resources :mailgun_events, only: [:create]
-    resources :sendgrid_events, only: [:create]
   end
 
   root to: "home#index"
