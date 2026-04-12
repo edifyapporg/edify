@@ -1,6 +1,6 @@
 class UnitAccessRejectionNotification < ApplicationNotification
   deliver_by :email, mailer: "UserMailer", method: :unit_access_rejection_notification,
-                     if: -> { recipient.notification_preference_email? }
+                     if: -> { notify_by_email? }
   deliver_by :twilio_messaging,
              json: lambda {
                {
@@ -9,7 +9,7 @@ class UnitAccessRejectionNotification < ApplicationNotification
                  To: recipient.phone_number,
                }
              },
-             if: -> { recipient.notification_preference_sms? }
+             if: -> { notify_by_sms? }
 
   required_param :user
 

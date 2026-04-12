@@ -11,5 +11,13 @@ class ApplicationNotification < Noticed::Event
     def url
       raise NotImplementedError, "Notification must implement #url"
     end
+
+    def notify_by_email?
+      recipient.notification_preference_email?
+    end
+
+    def notify_by_sms?
+      recipient.notification_preference_sms?
+    end
   end
 end
