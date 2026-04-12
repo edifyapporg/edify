@@ -6,7 +6,10 @@ namespace :madmin do
   end
   resources :access_requests
   resources :import_jobs
-  resources :notifications
+  namespace :noticed do
+    resources :events
+    resources :notifications
+  end
   resources :units
   resources :meetings
   resources :talks

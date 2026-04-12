@@ -18,17 +18,13 @@ class CheckMeetingsAndNotify
   attr_reader :unit, :today
 
   def notify_missing_dates
-    unit.users.meeting_schedulers.find_each do |user|
-      ::MissingMeetingsNotification.with(dates: notifiable_missing_dates).deliver_later(user)
-    end
+    ::MissingMeetingsNotification.with(dates: notifiable_missing_dates).deliver(unit.users.meeting_schedulers)
   end
 
   def notify_incomplete_meetings
     notifiable_incomplete_meetings.each do |meeting|
       recipients = meeting.scheduler ? [meeting.scheduler] : unit.users.meeting_schedulers.to_a
-      recipients.each do |user|
-        ::IncompleteMeetingNotification.with(meeting: meeting).deliver_later(user)
-      end
+      ::IncompleteMeetingNotification.with(meeting: meeting).deliver(recipients)
     end
   end
 

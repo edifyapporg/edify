@@ -1,31 +1,25 @@
 class NewUserAdminNotification < ApplicationNotification
-  deliver_by :database
-  deliver_by :email, mailer: "UserMailer", format: :format_for_email
+  # Admins should always be informed of new signups, regardless of their personal
+  # notification preferences, so this bypasses the usual recipient-preference guard.
+  deliver_by :email, mailer: "UserMailer", method: :new_user_admin_notification
 
-  param :user
+  required_param :user
 
-  def format_for_email
-    {
-      message: message,
-      subject: subject,
-      url: url,
-      user: user,
-    }
-  end
+  notification_methods do
+    def message
+      t(".message")
+    end
 
-  def message
-    t(".message")
-  end
+    def subject
+      t(".subject")
+    end
 
-  def subject
-    t(".subject")
-  end
+    def url
+      root_path
+    end
 
-  def url
-    root_path
-  end
-
-  def user
-    params[:user]
+    def user
+      params[:user]
+    end
   end
 end
