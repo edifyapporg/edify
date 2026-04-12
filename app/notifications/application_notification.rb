@@ -1,6 +1,7 @@
 class ApplicationNotification < Noticed::Event
   def self.deliver_by_email(method:)
-    deliver_by :email, mailer: "UserMailer", method: method, if: -> { notify_by_email? }
+    deliver_by :email, mailer: "UserMailer", method: method,
+                       if: -> { recipient.notification_preference_email? }
   end
 
   def self.deliver_by_sms
@@ -12,7 +13,7 @@ class ApplicationNotification < Noticed::Event
                    To: recipient.phone_number,
                  }
                },
-               if: -> { notify_by_sms? }
+               if: -> { recipient.notification_preference_sms? }
   end
 
   notification_methods do
@@ -26,14 +27,6 @@ class ApplicationNotification < Noticed::Event
 
     def url
       raise NotImplementedError, "Notification must implement #url"
-    end
-
-    def notify_by_email?
-      recipient.notification_preference_email?
-    end
-
-    def notify_by_sms?
-      recipient.notification_preference_sms?
     end
   end
 end

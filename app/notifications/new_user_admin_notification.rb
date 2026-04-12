@@ -1,6 +1,6 @@
 class NewUserAdminNotification < ApplicationNotification
   # Admins should always be informed of new signups, regardless of their personal
-  # notification preferences, so this bypasses the usual `notify_by_email?` guard.
+  # notification preferences, so this bypasses the usual recipient-preference guard.
   deliver_by :email, mailer: "UserMailer", method: :new_user_admin_notification
 
   required_param :user

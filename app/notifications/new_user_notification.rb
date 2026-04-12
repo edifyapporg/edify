@@ -1,6 +1,6 @@
 class NewUserNotification < ApplicationNotification
   # Sent on account confirmation, before the user has a chance to set notification
-  # preferences, so it bypasses the usual `notify_by_email?` guard.
+  # preferences, so it bypasses the usual recipient-preference guard.
   deliver_by :email, mailer: "UserMailer", method: :new_user_notification
 
   required_param :user
