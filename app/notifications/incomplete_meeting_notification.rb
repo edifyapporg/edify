@@ -1,15 +1,6 @@
 class IncompleteMeetingNotification < ApplicationNotification
-  deliver_by :email, mailer: "UserMailer", method: :incomplete_meeting_notification,
-                     if: -> { notify_by_email? }
-  deliver_by :twilio_messaging,
-             json: lambda {
-               {
-                 Body: "#{message} #{url}",
-                 From: Rails.application.credentials.twilio[:phone_number],
-                 To: recipient.phone_number,
-               }
-             },
-             if: -> { notify_by_sms? }
+  deliver_by_email method: :incomplete_meeting_notification
+  deliver_by_sms
 
   required_param :meeting
 

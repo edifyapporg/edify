@@ -1,15 +1,6 @@
 class UnitAccessRejectionNotification < ApplicationNotification
-  deliver_by :email, mailer: "UserMailer", method: :unit_access_rejection_notification,
-                     if: -> { notify_by_email? }
-  deliver_by :twilio_messaging,
-             json: lambda {
-               {
-                 Body: "#{message} #{url}",
-                 From: Rails.application.credentials.twilio[:phone_number],
-                 To: recipient.phone_number,
-               }
-             },
-             if: -> { notify_by_sms? }
+  deliver_by_email method: :unit_access_rejection_notification
+  deliver_by_sms
 
   required_param :user
 
