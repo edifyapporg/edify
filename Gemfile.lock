@@ -205,9 +205,6 @@ GEM
       rake (~> 13.3)
     googleapis-common-protos-types (1.22.0)
       google-protobuf (~> 4.26)
-    http (6.0.2)
-      http-cookie (~> 1.0)
-      llhttp (~> 0.6.1)
     http-accept (1.7.0)
     http-cookie (1.1.4)
       domain_name (~> 0.5)
@@ -234,7 +231,6 @@ GEM
       base64
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
-    llhttp (0.6.1)
     logger (1.7.0)
     loofah (2.25.1)
       crass (~> 1.0.2)
@@ -312,9 +308,8 @@ GEM
       racc (~> 1.4)
     nokogiri (1.19.2-x86_64-linux-musl)
       racc (~> 1.4)
-    noticed (1.6.3)
-      http (>= 4.0.0)
-      rails (>= 5.2.0)
+    noticed (2.9.3)
+      rails (>= 6.1.0)
     opentelemetry-api (1.9.0)
       logger
     opentelemetry-common (0.24.0)
@@ -601,7 +596,7 @@ DEPENDENCIES
   mission_control-jobs
   name_of_person
   nokogiri (>= 1.13.4)
-  noticed (~> 1.0)
+  noticed (~> 2.0)
   pagy
   pg
   phonelib

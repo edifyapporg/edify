@@ -3,13 +3,13 @@
        data-controller="highlight"
        data-highlight-created-value="<%= notification.read_at.to_i %>">
     <div class="card-body">
-      <% if notification.to_notification.present? %>
-        <h6><strong><%= notification.to_notification.message %></strong></h6>
-        <% if notification.to_notification.params[:user].present? %>
-          <h6>User: <%= "#{notification.to_notification.params[:user].name} (#{notification.to_notification.params[:user].email})" %></h6>
+      <% if notification.event.present? && !notification.event.deserialize_error? %>
+        <h6><strong><%= notification.message %></strong></h6>
+        <% if notification.params[:user].present? %>
+          <h6>User: <%= "#{notification.params[:user].name} (#{notification.params[:user].email})" %></h6>
         <% end %>
-        <% if notification.to_notification.respond_to?(:url) %>
-          <h6>Link: <%= link_to "#{notification.to_notification.url}", notification.to_notification.url %></h6>
+        <% if notification.respond_to?(:url) %>
+          <h6>Link: <%= link_to "#{notification.url}", notification.url %></h6>
         <% end %>
       <% else %>
       <h6>[This notification can no longer be rendered]</h6>

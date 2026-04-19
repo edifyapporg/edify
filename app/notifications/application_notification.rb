@@ -1,39 +1,32 @@
-class ApplicationNotification < Noticed::Base
-  def format_for_email
-    {
-      message: message,
-      subject: subject,
-      url: url,
-    }
+class ApplicationNotification < Noticed::Event
+  def self.deliver_by_email(method:)
+    deliver_by :email, mailer: "UserMailer", method: method,
+                       if: -> { recipient.notification_preference_email? }
   end
 
-  def format_for_twilio
-    {
-      Body: "#{message} #{url}",
-      From: Rails.application.credentials.twilio[:phone_number],
-      To: recipient.phone_number
-    }
+  def self.deliver_by_sms
+    deliver_by :twilio_messaging,
+               json: lambda {
+                 {
+                   Body: "#{message} #{url}",
+                   From: Rails.application.credentials.twilio[:phone_number],
+                   To: recipient.phone_number,
+                 }
+               },
+               if: -> { recipient.notification_preference_sms? }
   end
 
-  private
+  notification_methods do
+    def message
+      raise NotImplementedError, "Notification must implement #message"
+    end
 
-  def notify_by_email?
-    recipient.notification_preference_email?
-  end
+    def subject
+      raise NotImplementedError, "Notification must implement #subject"
+    end
 
-  def notify_by_twilio?
-    recipient.notification_preference_sms?
-  end
-
-  def message
-    raise NotImplementedError, "Notification must implement #message"
-  end
-
-  def subject
-    raise NotImplementedError, "Notification must implement #subject"
-  end
-
-  def url
-    raise NotImplementedError, "Notification must implement #url"
+    def url
+      raise NotImplementedError, "Notification must implement #url"
+    end
   end
 end
