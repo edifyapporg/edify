@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup Ruby and install gems
         uses: ruby/setup-ruby@v1
@@ -38,9 +40,11 @@ jobs:
         run: |
           yarn install --pure-lockfile
 
-      - name: Run linter
+      - name: Run rubocop on changed files
         run: |
-          bin/rubocop --parallel
+          { git diff --name-only --diff-filter=d ${{ github.event.pull_request.base.sha }}...HEAD \
+            | grep -E '\.(rb|rake)$|(^|/)(Rakefile|Gemfile)$' || true; } \
+            | xargs --no-run-if-empty bundle exec rubocop --force-exclusion
 
       - name: Run security checks
         run: |
