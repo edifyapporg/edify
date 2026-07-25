@@ -125,6 +125,9 @@ Edify runs on **Digital Ocean** via [Hatchbox](https://www.hatchbox.io/):
 - **File Storage**: Amazon S3 (via Active Storage)
 - **Real-time**: Solid Cable (Action Cable adapter)
 
+Operational procedures — the Hatchbox web-process setup (web role + localhost bind), diagnosing a full
+outage, and the shared-droplet caution — are documented in [OPERATIONS.md](OPERATIONS.md).
+
 **Continuous Integration**
 
 Edify uses Github Actions for CI/CD. When you push a branch, pipeline will run and should pass before merging to master.
