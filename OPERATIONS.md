@@ -85,15 +85,19 @@ cause (a missing web-role process, or a bind command without `-b 127.0.0.1`).
 
 ---
 
-## Background jobs run inside Puma
+## Background jobs run in a dedicated worker process
 
-Production runs Solid Queue **in-process** inside Puma (`plugin :solid_queue` in `config/puma.rb`, gated
-on `SOLID_QUEUE_IN_PUMA`) rather than as a standalone worker, so:
+Solid Queue runs as its **own process** — a separate Hatchbox `worker` process with its own
+`edify-worker` systemd unit — **not** inside Puma. Running it in-process (`plugin :solid_queue` in
+`config/puma.rb`, gated on `SOLID_QUEUE_IN_PUMA`) was tried on Heroku to save a dyno but ran the app out of
+memory, so it uses a dedicated worker instead. **Leave `SOLID_QUEUE_IN_PUMA` unset** — don't re-enable the
+in-Puma path.
 
-- If the web process is down, **job processing is down too**.
-- Restarting or redeploying the web process pauses and resumes jobs with it.
+Because the worker is independent of the web process:
 
-(The `worker:` line in `Procfile.dev` is for local development only.)
+- A web restart/redeploy does **not** stop job processing, and a worker restart doesn't affect serving.
+- Check it like any other unit: `systemctl --user status edify-worker` and
+  `journalctl --user -u edify-worker -f`.
 
 ---
 

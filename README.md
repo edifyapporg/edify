@@ -117,7 +117,7 @@ Edify runs on **Digital Ocean** via [Hatchbox](https://www.hatchbox.io/):
 
 - **Web + Worker**: DO droplets managed by Hatchbox
 - **Database**: DO Managed Postgres
-- **Background Jobs**: Solid Queue (runs inside Puma via `plugin :solid_queue`)
+- **Background Jobs**: Solid Queue in a dedicated worker process
 - **Email Delivery**: [Mailgun](https://www.mailgun.com/) API (via `mailgun-ruby` gem)
 - **Email Event Tracking**: Mailgun webhooks at `POST /webhooks/mailgun_events`, stored as `Analytics::MailgunEvent` records
 - **DNS/CDN**: Cloudflare
