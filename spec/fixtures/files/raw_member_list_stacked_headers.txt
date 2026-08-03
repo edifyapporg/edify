@@ -1,0 +1,16 @@
+	Name
+Gender
+Age
+Birth Date
+Phone Number	E-mail
+
+Bins, Froederick	M	83	22 Feb 1943	(801) 545-4545	froederick@frank.com
+
+Cummerata, Lisette	F	46	19 Sep 1979	07710587623	lisette@cummerata.com
+
+Bentley, David
+Not Baptized
+M	8	2 Aug 2018		
+
+Heidenrick, Kenneth	M	63	1 Jul 1963	385-348-3585	heidenrick@kenneth.com
+Count: 4
