@@ -81,6 +81,14 @@ $ ./bin/update
 
 This installs any new Ruby and JavaScript dependencies, rebuilds assets, runs pending migrations, clears old logs and tempfiles, and restarts the application server.
 
+Optionally, you can also refresh your development database so it reflects any fixture changes that came in with the pull:
+
+```bash
+$ bundle exec rails db:from_fixtures
+```
+
+Note that this replaces existing data in your development database, so skip it if you have local data you want to keep.
+
 **Loading Test Fixtures**
 
 To populate your development database with test data from fixtures (users, units, meetings, etc.):
