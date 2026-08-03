@@ -50,6 +50,27 @@ describe ::Edify::Etl::ExtractMemberData do
         end
       end
 
+      context "when the export uses stacked (one-per-line) headers" do
+        let(:raw_data_file_name) { "raw_member_list_stacked_headers.txt" }
+
+        it "returns a row per member" do
+          expect(result.count).to eq(4)
+          expect(result).to all be_a(::Edify::Etl::RawMemberRow)
+          expect(result.map(&:name)).to eq(
+            ["Bins, Froederick", "Cummerata, Lisette", "Bentley, David", "Heidenrick, Kenneth"]
+          )
+        end
+
+        it "coalesces wrapped unbaptized members and keeps their columns aligned" do
+          bentley = result.find { |row| row.name == "Bentley, David" }
+
+          expect(bentley.gender).to eq("M")
+          expect(bentley.birthdate).to eq("2 Aug 2018")
+          expect(bentley.phone_number).to be_blank
+          expect(bentley.email).to be_blank
+        end
+      end
+
       context "when the raw member data is incomplete" do
         let(:raw_data_file_name) { "raw_member_list_incomplete.txt" }
 

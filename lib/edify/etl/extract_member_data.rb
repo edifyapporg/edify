@@ -1,5 +1,3 @@
-require "csv"
-
 module Edify
   module Etl
     class ExtractMemberData
@@ -10,6 +8,11 @@ module Edify
         "Phone Number" => "phone_number",
         "E-mail" => "email",
       }.freeze
+
+      # Header labels that appear in the export but aren't imported. They must
+      # still be recognised so their column position is accounted for when
+      # aligning data cells to headers.
+      IGNORED_HEADER_LABELS = ["Age"].freeze
 
       FILTERED_DATA_REGEX = /\(filtered from \d+ total\)/
       MEMBER_DATA_REGEX = /\A.*(^\t*Name.*)^Count:/m
@@ -28,7 +31,7 @@ module Edify
         download_member_data
         check_for_filter_text if errors.empty?
         strip_raw_data if errors.empty?
-        morph_header_row if errors.empty?
+        extract_headers if errors.empty?
         extract_members if errors.empty?
 
         raw_member_rows
@@ -60,35 +63,51 @@ module Edify
         errors.add(:raw_data, "could not be parsed. Please ensure you have copy/pasted the entire member list.")
       end
 
-      def morph_header_row
-        lines = raw_data.lines
-        header = lines.shift
+      # Content lines of the member list with blank lines removed. Exports
+      # separate records with blank lines, and newer exports also put each
+      # header cell on its own line, so we normalise by dropping blanks first.
+      def content_lines
+        @content_lines ||= raw_data.lines.map(&:chomp).compact_blank
+      end
 
-        # Rename headers by matching whole tab-delimited fields rather than
-        # substrings, so an expected header like "Name" can't be picked up
-        # inside a different column (e.g. "Preferred Name") and leave the real
-        # column unmapped.
-        fields = header.chomp.split("\t")
-        fields.map! { |field| ATTRIBUTE_NAME_MAP.fetch(field.strip, field) }
+      # Reads the leading header cells, which may be laid out either as a single
+      # tab-separated row (older exports) or one cell per line (newer exports).
+      # Both collapse to the same ordered list of column headers, keyed by the
+      # data attribute each column maps to. Unrecognised-but-expected headers
+      # (e.g. Age) are retained so data cells stay aligned to their columns.
+      def extract_headers
+        header_labels = []
+
+        content_lines.each do |line|
+          cells = line.split("\t").map(&:strip).compact_blank
+          break unless header_cells?(cells)
+
+          header_labels.concat(cells)
+          @data_line_offset = (@data_line_offset || 0) + 1
+        end
+
+        @headers = header_labels.map { |label| ATTRIBUTE_NAME_MAP.fetch(label, label) }
 
         ATTRIBUTE_NAME_MAP.each do |header_name, attribute_name|
-          next if fields.include?(attribute_name)
+          next if @headers.include?(attribute_name)
 
           errors.add(:raw_data, "did not contain expected header #{header_name}")
         end
+      end
 
-        lines.unshift("#{fields.join("\t")}\n")
-        self.raw_data = lines.join
+      def header_cells?(cells)
+        cells.any? &&
+          cells.all? { |cell| ATTRIBUTE_NAME_MAP.key?(cell) || IGNORED_HEADER_LABELS.include?(cell) }
       end
 
       def extract_members
         import_job.update(status_text: "Parsing member list")
 
-        member_list_rows = CSV.parse(raw_data, headers: true, col_sep: "\t", encoding: "UTF-8")
+        records = member_records
+        import_job.update(row_count: records.size)
 
-        import_job.update(row_count: member_list_rows.size)
-        member_list_rows.each.with_index(1) do |row, row_index|
-          attributes = row.to_h.slice(*included_attributes)
+        records.each.with_index(1) do |cells, row_index|
+          attributes = @headers.zip(cells).to_h.slice(*included_attributes)
           next if attributes.compact.empty?
 
           raw_member_row = RawMemberRow.new(**attributes)
@@ -105,6 +124,31 @@ module Edify
         end
       end
 
+      # Groups the data lines into one cell array per member. A member's cells
+      # usually sit on a single tab-separated line, but newer exports wrap
+      # unbaptized members across several lines: the name, a status annotation
+      # (e.g. "Not Baptized"), then the remaining columns. A line beginning with
+      # a "Last, First" name starts a new record; single-cell annotation lines
+      # are dropped; any other line continues the current record.
+      def member_records
+        content_lines.drop(@data_line_offset.to_i).each_with_object([]) do |line, records|
+          cells = line.split("\t")
+          cells.shift while cells.first == "" # drop the leading empty column older exports include
+          next if cells.empty?
+
+          if member_name?(cells.first)
+            records << cells
+          elsif cells.length > 1 && records.any?
+            records.last.concat(cells) # continuation columns for a wrapped record
+          end
+          # otherwise a single-cell annotation line (e.g. "Not Baptized") — skip
+        end
+      end
+
+      def member_name?(value)
+        value.include?(",")
+      end
+
       def included_attributes
         # Struct#members returns an array of symbols representing the attributes of the Struct,
         # e.g., [:name, :gender, :birthdate], similar to calling `.to_h.keys` on the Struct.
@@ -113,8 +157,9 @@ module Edify
       end
 
       def strip_unbaptized_member_of_record(raw_member_row)
-        stripped_name = raw_member_row.name.match(UNBAPTIZED_MEMBER_OF_RECORD_REGEX)[1]
-        raw_member_row.name = stripped_name
+        return if raw_member_row.name.blank?
+
+        raw_member_row.name = raw_member_row.name.match(UNBAPTIZED_MEMBER_OF_RECORD_REGEX)[1]
       end
     end
   end
