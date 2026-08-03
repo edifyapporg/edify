@@ -27,19 +27,23 @@ Instructions follow for setting up a local development environment in MacOS.
 **Ruby**
 
 Ruby is installed by default on all MacOS systems, but it lives in the root directory and probably won't be the correct
-version to run Edify. Nearly all Ruby developers use a Ruby environment manager like rbenv, rvm, or asdf. Instructions
-for installing rbenv follow, but feel free to use one of the other tools if you wish.
+version to run Edify. Nearly all Ruby developers use a Ruby environment manager like asdf, rbenv, or rvm. Instructions
+for installing asdf follow, but feel free to use one of the other tools if you wish.
 
-#### Install rbenv
+#### Install [asdf](https://asdf-vm.com/)
 
 1. `$ brew update`
-2. `$ brew install rbenv`
+2. `$ brew install asdf`
+3. Add the asdf shims directory to your path by adding this line to your shell config (`~/.zshrc` or `~/.bashrc`), then
+restart your terminal:
 
-3. `$ cd` into your local `edify` directory
-4. `$ rbenv init` For any questions around setting up rbenv see https://github.com/rbenv/rbenv
-5. `$ rbenv local` to see the Ruby version Edify is currently using
-6. `$ rbenv install <current ruby version>`
-7. `$ rbenv rehash` then restart the terminal session
+> `export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"`
+
+4. `$ cd` into your local `edify` directory
+5. `$ asdf plugin add ruby`
+6. `$ asdf install ruby` This installs the Ruby version specified in the project's `.tool-versions` file
+
+For any questions around setting up asdf see the [asdf getting started guide](https://asdf-vm.com/guide/getting-started.html).
 
 **Postgres**
 
@@ -57,8 +61,11 @@ uploads locally, you will need to install it.
 
 **Javascript Runtime + Yarn**
 
-1. Node can be installed using homebrew, but it takes a long time and may cause dependency conflicts in your local
-environment. Instead, install Node.js by downloading the package installer from nodejs.org
+1. Install Node.js. We recommend using asdf, which reads the version from the project's `.tool-versions` file:
+   - `$ asdf plugin add nodejs`
+   - `$ asdf install nodejs` (run from your local `edify` directory)
+
+   Otherwise, you can download the package installer from nodejs.org.
 2. Install Yarn with homebrew
 
 > `$ brew install yarn`
