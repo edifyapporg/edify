@@ -2,4 +2,5 @@
   <%= sort_members_dropdown(request.params, q, label: "Sort") %>
   <%= filter_members_age_dropdown(request.params, label: "Ages") %>
   <%= filter_members_gender_dropdown(request.params, label: "Genders") %>
+  <%= moved_filter_checkbox(request.params, current_unit) %>
 </div>

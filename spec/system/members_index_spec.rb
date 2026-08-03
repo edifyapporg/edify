@@ -67,6 +67,31 @@ describe "Visit the members index" do
     end
   end
 
+  context "when hiding moved members", :js do
+    before do
+      unit.update!(last_synced_on: Date.new(2022, 4, 15))
+      login_as bishopric_user, scope: :user
+    end
+
+    let!(:current_member) do
+      unit.members.create!(name: "Current Person", gender: :male, birthdate: "1990-01-01", synced_on: Date.new(2022, 4, 15))
+    end
+    let!(:moved_member) do
+      unit.members.create!(name: "Moved Person", gender: :male, birthdate: "1991-01-01", synced_on: Date.new(2022, 3, 1))
+    end
+
+    it "removes members not in the most recent import when the checkbox is checked" do
+      visit members_path
+      expect(page).to have_selector("#member_#{current_member.id}")
+      expect(page).to have_selector("#member_#{moved_member.id}")
+
+      check "Hide moved members"
+
+      expect(page).to have_selector("#member_#{current_member.id}")
+      expect(page).to have_no_selector("#member_#{moved_member.id}")
+    end
+  end
+
   def verify_members_present
     expect(page).to have_text "Members"
 
