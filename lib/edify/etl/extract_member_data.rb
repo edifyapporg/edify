@@ -64,12 +64,20 @@ module Edify
         lines = raw_data.lines
         header = lines.shift
 
+        # Rename headers by matching whole tab-delimited fields rather than
+        # substrings, so an expected header like "Name" can't be picked up
+        # inside a different column (e.g. "Preferred Name") and leave the real
+        # column unmapped.
+        fields = header.chomp.split("\t")
+        fields.map! { |field| ATTRIBUTE_NAME_MAP.fetch(field.strip, field) }
+
         ATTRIBUTE_NAME_MAP.each do |header_name, attribute_name|
-          result = header.sub!(header_name, attribute_name)
-          errors.add(:raw_data, "did not contain expected header #{header_name}") if result.nil?
+          next if fields.include?(attribute_name)
+
+          errors.add(:raw_data, "did not contain expected header #{header_name}")
         end
 
-        lines.unshift(header)
+        lines.unshift("#{fields.join("\t")}\n")
         self.raw_data = lines.join
       end
 
