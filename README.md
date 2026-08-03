@@ -71,6 +71,16 @@ Setup the app by running the setup script:
 2. `$ ./bin/dev` to start the servers in your dev environment
 3. Type `localhost:3000` in a browser
 
+**Staying Up to Date**
+
+After pulling the latest master, run the update script to bring your development environment current:
+
+```bash
+$ ./bin/update
+```
+
+This installs any new Ruby and JavaScript dependencies, rebuilds assets, runs pending migrations, clears old logs and tempfiles, and restarts the application server.
+
 **Loading Test Fixtures**
 
 To populate your development database with test data from fixtures (users, units, meetings, etc.):
