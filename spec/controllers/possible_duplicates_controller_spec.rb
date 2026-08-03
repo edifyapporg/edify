@@ -2,6 +2,7 @@ require "rails_helper"
 
 RSpec.describe PossibleDuplicatesController, type: :controller do
   include Devise::Test::ControllerHelpers
+
   render_views
 
   let(:unit) { units(:sunny_hills) }
