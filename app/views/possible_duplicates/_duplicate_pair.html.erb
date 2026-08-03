@@ -1,0 +1,41 @@
+<%= turbo_frame_tag "duplicate_pair_#{pair.id}" do %>
+  <div class="d-flex justify-content-center">
+    <div class="card bg-light mt-3 w-100" style="max-width: 700px;">
+      <div class="card-body">
+        <div class="row">
+          <% [[pair.keep, "Keep", "success"], [pair.remove, "Remove", "danger"]].each do |member, label, color| %>
+            <div class="col-12 col-md-6 mb-3 mb-md-0">
+              <div class="d-flex align-items-center mb-1">
+                <span class="badge bg-<%= color %> me-2"><%= label %></span>
+                <%= link_to fa_icon("person"), member_path(member), target: "_top", title: "Visit member page", data: { "bs-toggle" => "tooltip" } %>
+                <strong class="ms-1"><%= member.name %></strong>
+              </div>
+              <h6>
+                <%= member.bio %>
+                <% if member.not_in_most_recent_sync? %>
+                  <span class="badge bg-danger" data-bs-toggle="tooltip" title="Did not appear in the most recent import and may have moved out">Moved</span>
+                <% end %>
+              </h6>
+              <div class="text-muted small">
+                <div><%= "Born: #{l(member.birthdate, format: :rfc822)}" %></div>
+                <div><%= "Phone: #{member.phone_number.presence || "—"}" %></div>
+                <div><%= "Email: #{member.email.presence || "—"}" %></div>
+                <div><%= "Last talk: #{member.last_talk_date ? l(member.last_talk_date, format: :rfc822) : "Not found"}" %></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card-footer d-flex justify-content-end gap-2">
+        <%= button_to "Not a duplicate",
+              dismiss_possible_duplicates_path(member_a_id: pair.keep.id, member_b_id: pair.remove.id),
+              method: :post, class: "btn btn-outline-secondary btn-sm" %>
+        <%= button_to fa_icon("code-merge", text: " Merge"),
+              merge_possible_duplicates_path(keep_id: pair.keep.id, remove_id: pair.remove.id),
+              method: :put, class: "btn btn-primary btn-sm",
+              form: { data: { turbo_confirm: "Merge #{pair.remove.name} into #{pair.keep.name}? This deletes the removed record and moves its talks and notes onto the kept record." } } %>
+      </div>
+    </div>
+  </div>
+<% end %>

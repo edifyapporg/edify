@@ -1,0 +1,23 @@
+<div class="row">
+  <div class="col-md">
+    <h2 class="mt-md-4 mt-2"><strong><%= "Possible Duplicates for #{current_unit.name}" %></strong></h2>
+  </div>
+</div>
+<hr/>
+
+<p class="text-muted">
+  These member pairs share a birth date and closely matching names, so they may be the same
+  person recorded twice (for example after an official name change). Review each pair and either
+  merge them or mark them as not a duplicate.
+</p>
+
+<% if @pairs.empty? %>
+  <div class="alert alert-success mt-3" role="alert">
+    No possible duplicates found.
+  </div>
+<% else %>
+  <p class="fw-bold"><%= pluralize(@pairs.size, "possible duplicate") %></p>
+  <article>
+    <%= render partial: "duplicate_pair", collection: @pairs, as: :pair %>
+  </article>
+<% end %>
