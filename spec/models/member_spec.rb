@@ -118,6 +118,34 @@ describe ::Member do
     end
   end
 
+  describe "filtering out moved members via a synced_on_gteq ransack query" do
+    subject(:filtered) do
+      unit.members.with_last_talk_date.ransack(synced_on_gteq: unit.last_synced_on).result.to_a
+    end
+
+    let(:unit) { units(:sunny_hills) }
+    let!(:current_member) do
+      unit.members.create!(name: "Current, One", gender: :male, birthdate: "1990-01-01", synced_on: "2022-04-15")
+    end
+    let!(:moved_member) do
+      unit.members.create!(name: "Moved, Two", gender: :male, birthdate: "1991-01-01", synced_on: "2022-04-10")
+    end
+    let!(:never_synced_member) do
+      unit.members.create!(name: "Never, Three", gender: :male, birthdate: "1992-01-01", synced_on: nil)
+    end
+
+    before { unit.update!(last_synced_on: "2022-04-15") }
+
+    it "exposes synced_on to ransack" do
+      expect(described_class.ransackable_attributes).to include("synced_on")
+    end
+
+    it "keeps only members synced in the most recent import" do
+      expect(filtered).to include(current_member)
+      expect(filtered).not_to include(moved_member, never_synced_member)
+    end
+  end
+
   describe "#paused?" do
     let(:result) { member.paused? }
     before { travel_to("2022-04-15") }
