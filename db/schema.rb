@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_11_032116) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_02_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -93,6 +93,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_032116) do
     t.string "name"
     t.datetime "published_at"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "duplicate_dismissals", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "dismissed_by"
+    t.bigint "member_a_id", null: false
+    t.bigint "member_b_id", null: false
+    t.bigint "unit_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["member_a_id", "member_b_id"], name: "index_duplicate_dismissals_on_member_a_id_and_member_b_id", unique: true
+    t.index ["member_a_id"], name: "index_duplicate_dismissals_on_member_a_id"
+    t.index ["member_b_id"], name: "index_duplicate_dismissals_on_member_b_id"
+    t.index ["unit_id"], name: "index_duplicate_dismissals_on_unit_id"
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
@@ -384,6 +397,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_11_032116) do
   add_foreign_key "access_requests", "users"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "duplicate_dismissals", "members", column: "member_a_id", on_delete: :cascade
+  add_foreign_key "duplicate_dismissals", "members", column: "member_b_id", on_delete: :cascade
+  add_foreign_key "duplicate_dismissals", "units"
   add_foreign_key "import_jobs", "units"
   add_foreign_key "import_jobs", "users", column: "owner_id"
   add_foreign_key "meetings", "units"
