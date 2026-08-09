@@ -121,6 +121,29 @@ module DropdownHelper
     build_dropdown_menu(title, dropdown_items, options)
   end
 
+  # Checkbox that hides "moved" members (those not in the unit's most recent
+  # import). "Not moved" is exactly synced_on >= unit.last_synced_on, so the
+  # checkbox rides the same Ransack `q` params as the filter dropdowns: checking
+  # it adds synced_on_gteq, unchecking clears it, while deep_merge preserves any
+  # other active filters/sort/search. Hidden until the unit has been imported.
+  def moved_filter_checkbox(request_params, unit)
+    return if unit.last_synced_on.blank?
+
+    currently_hidden = request_params.dig(:q, :synced_on_gteq).present?
+    toggle_url = url_for(request_params.deep_merge(q: { synced_on_gteq: currently_hidden ? nil : unit.last_synced_on }))
+
+    content_tag(:div, class: "form-check form-check-inline align-middle ms-md-2 mt-2 mt-md-0") do
+      concat check_box_tag("hide_moved", "1", currently_hidden,
+                           class: "form-check-input",
+                           data: {
+                             controller: "toggle-filter",
+                             toggle_filter_url_value: toggle_url,
+                             action: "change->toggle-filter#toggle",
+                           })
+      concat label_tag("hide_moved", "Hide moved members", class: "form-check-label")
+    end
+  end
+
   def filter_talks_matched_dropdown(request_params, options = {})
     existing_matched_filter = request_params.dig(:q, :member_id_null).presence
 
