@@ -10,7 +10,7 @@ bartell_randal:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 predovic_mohamed:
   id: 3
   name: Predovic, Mohamed
@@ -22,7 +22,7 @@ predovic_mohamed:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 hill_waylon:
   id: 4
   name: Hill, Waylon
@@ -34,7 +34,7 @@ hill_waylon:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-04-23'
 nikolaus_jetta:
   id: 6
   name: Nikolaus, Jetta
@@ -46,7 +46,7 @@ nikolaus_jetta:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 zboncak_ivy:
   id: 8
   name: Zboncak, Ivy
@@ -58,7 +58,7 @@ zboncak_ivy:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 waelchi_lindsey:
   id: 9
   name: Waelchi, Lindsey
@@ -70,7 +70,7 @@ waelchi_lindsey:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 wilderman_kati:
   id: 10
   name: Wilderman, Kati
@@ -82,7 +82,7 @@ wilderman_kati:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 barrows_kenneth:
   id: 12
   name: Barrows, Kenneth
@@ -94,7 +94,7 @@ barrows_kenneth:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 luettgen_stefan:
   id: 16
   name: Luettgen, Stefan
@@ -106,7 +106,7 @@ luettgen_stefan:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 legros_joaquin:
   id: 17
   name: Legros, Joaquin
@@ -118,7 +118,7 @@ legros_joaquin:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 anderson_torri:
   id: 19
   name: Anderson, Torri
@@ -130,7 +130,7 @@ anderson_torri:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 torp_cherri:
   id: 20
   name: Torp, Cherri
@@ -142,7 +142,7 @@ torp_cherri:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 hills_julie:
   id: 21
   name: Hills, Julie
@@ -154,7 +154,7 @@ hills_julie:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 oberbrunner_meghann:
   id: 22
   name: Oberbrunner, Meghann
@@ -166,7 +166,7 @@ oberbrunner_meghann:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 collier_elinor:
   id: 23
   name: Collier, Elinor
@@ -178,7 +178,7 @@ collier_elinor:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 harris_staci:
   id: 24
   name: Harris, Staci
@@ -190,7 +190,7 @@ harris_staci:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 miller_wilton:
   id: 25
   name: Miller, Wilton
@@ -202,7 +202,7 @@ miller_wilton:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 friesen_sammy:
   id: 26
   name: Friesen, Sammy
@@ -214,7 +214,7 @@ friesen_sammy:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 kilback_darron:
   id: 27
   name: Kilback, Darron
@@ -226,7 +226,7 @@ kilback_darron:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 hagenes_daryl:
   id: 28
   name: Hagenes, Daryl
@@ -238,7 +238,7 @@ hagenes_daryl:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 aufderhar_matthew:
   id: 29
   name: Aufderhar, Matthew
@@ -250,7 +250,7 @@ aufderhar_matthew:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-05-21'
 heller_yong:
   id: 30
   name: Heller, Yong
@@ -262,7 +262,7 @@ heller_yong:
   paused_until:
   paused_on:
   paused_by:
-  synced_on:
+  synced_on: '2022-04-23'
 user_unassigned:
   id: 31
   name: User, Unassigned
