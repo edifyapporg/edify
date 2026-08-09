@@ -68,17 +68,10 @@ describe "Visit the members index" do
   end
 
   context "when hiding moved members", :js do
-    before do
-      unit.update!(last_synced_on: Date.new(2022, 4, 15))
-      login_as bishopric_user, scope: :user
-    end
+    before { login_as bishopric_user, scope: :user }
 
-    let!(:current_member) do
-      unit.members.create!(name: "Current Person", gender: :male, birthdate: "1990-01-01", synced_on: Date.new(2022, 4, 15))
-    end
-    let!(:moved_member) do
-      unit.members.create!(name: "Moved Person", gender: :male, birthdate: "1991-01-01", synced_on: Date.new(2022, 3, 1))
-    end
+    let(:current_member) { members(:bartell_randal) } # synced in the most recent import
+    let(:moved_member) { members(:hill_waylon) } # synced before the most recent import
 
     it "removes members not in the most recent import when the checkbox is checked" do
       visit members_path

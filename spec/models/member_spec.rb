@@ -124,17 +124,8 @@ describe ::Member do
     end
 
     let(:unit) { units(:sunny_hills) }
-    let!(:current_member) do
-      unit.members.create!(name: "Current, One", gender: :male, birthdate: "1990-01-01", synced_on: "2022-04-15")
-    end
-    let!(:moved_member) do
-      unit.members.create!(name: "Moved, Two", gender: :male, birthdate: "1991-01-01", synced_on: "2022-04-10")
-    end
-    let!(:never_synced_member) do
-      unit.members.create!(name: "Never, Three", gender: :male, birthdate: "1992-01-01", synced_on: nil)
-    end
-
-    before { unit.update!(last_synced_on: "2022-04-15") }
+    let(:current_member) { members(:bartell_randal) } # synced_on == unit.last_synced_on
+    let(:moved_member) { members(:hill_waylon) } # synced_on before unit.last_synced_on
 
     it "exposes synced_on to ransack" do
       expect(described_class.ransackable_attributes).to include("synced_on")
@@ -142,7 +133,8 @@ describe ::Member do
 
     it "keeps only members synced in the most recent import" do
       expect(filtered).to include(current_member)
-      expect(filtered).not_to include(moved_member, never_synced_member)
+      expect(filtered).not_to include(moved_member)
+      expect(filtered.none?(&:not_in_most_recent_sync?)).to be(true)
     end
   end
 
