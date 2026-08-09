@@ -19,6 +19,13 @@ Rails.application.routes.draw do
   resources :announcements, only: [:index]
   resources :import_jobs, only: [:index, :show, :new, :create, :destroy]
 
+  resources :possible_duplicates, only: [:index] do
+    collection do
+      put :merge
+      post :dismiss
+    end
+  end
+
   resources :meetings do
     member do
       get :edit_contributors
