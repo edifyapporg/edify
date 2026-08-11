@@ -4,18 +4,6 @@ class ApplicationNotification < Noticed::Event
                        if: -> { recipient.notification_preference_email? }
   end
 
-  def self.deliver_by_sms
-    deliver_by :twilio_messaging,
-               json: lambda {
-                 {
-                   Body: "#{message} #{url}",
-                   From: Rails.application.credentials.twilio[:phone_number],
-                   To: recipient.phone_number,
-                 }
-               },
-               if: -> { recipient.notification_preference_sms? }
-  end
-
   notification_methods do
     def message
       raise NotImplementedError, "Notification must implement #message"
