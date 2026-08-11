@@ -1,6 +1,5 @@
 class IncompleteMeetingNotification < ApplicationNotification
   deliver_by_email method: :incomplete_meeting_notification
-  deliver_by_sms
 
   required_param :meeting
 

@@ -1,6 +1,5 @@
 class MissingMeetingsNotification < ApplicationNotification
   deliver_by_email method: :missing_meetings_notification
-  deliver_by_sms
 
   required_param :dates
 

@@ -42,7 +42,6 @@ class SettingsController < ApplicationController
                :email,
                :name,
                :notification_preference_email,
-               :notification_preference_sms,
                :phone_number]
       )
   end
