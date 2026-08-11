@@ -1,8 +1,4 @@
 class User < ApplicationRecord
-  # SMS notifications have been removed (issue #175); the column is dropped in
-  # a follow-up migration.
-  self.ignored_columns += ["notification_preference_sms"]
-
   devise :database_authenticatable,
          :confirmable,
          :registerable,
