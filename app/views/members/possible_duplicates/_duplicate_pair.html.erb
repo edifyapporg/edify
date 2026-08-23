@@ -30,10 +30,10 @@
 
       <div class="card-footer d-flex justify-content-end gap-2">
         <%= button_to "Not a duplicate",
-              dismiss_possible_duplicates_path(member_a_id: pair.keep.id, member_b_id: pair.remove.id),
+              dismiss_members_possible_duplicates_path(member_a_id: pair.keep.id, member_b_id: pair.remove.id),
               method: :post, class: "btn btn-outline-secondary btn-sm" %>
         <%= button_to fa_icon("code-merge", text: " Merge"),
-              merge_possible_duplicates_path(keep_id: pair.keep.id, remove_id: pair.remove.id),
+              merge_members_possible_duplicates_path(keep_id: pair.keep.id, remove_id: pair.remove.id),
               method: :put, class: "btn btn-primary btn-sm",
               form: { data: { turbo_confirm: "Merge #{pair.remove.name} into #{pair.keep.name}? This deletes the removed record and moves its talks and notes onto the kept record." } } %>
       </div>

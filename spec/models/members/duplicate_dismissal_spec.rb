@@ -1,6 +1,6 @@
 require "rails_helper"
 
-describe ::DuplicateDismissal do
+describe ::Members::DuplicateDismissal do
   let(:unit) { units(:sunny_hills) }
 
   def create_member(name, birthdate: "1990-01-01")

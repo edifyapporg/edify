@@ -1,6 +1,6 @@
 require "rails_helper"
 
-describe ::DuplicateMemberFinder do
+describe ::Members::DuplicateFinder do
   subject(:pairs) { described_class.call(unit) }
 
   let(:unit) { ::Unit.create!(name: "Testing Ward", last_synced_on: Date.current) }
@@ -21,6 +21,14 @@ describe ::DuplicateMemberFinder do
   it "flags a surname hyphenation change" do
     a = create_member("Bentley-Dyches, Ben", birthdate: "1985-05-05")
     b = create_member("Dyches, Ben", birthdate: "1985-05-05")
+
+    expect(pairs.size).to eq(1)
+    expect([pairs.first.keep, pairs.first.remove].to_set).to eq(Set[a, b])
+  end
+
+  it "matches accented and unaccented spellings of the same name" do
+    a = create_member("Muñoz, Maria", birthdate: "1978-11-30")
+    b = create_member("Munoz, Maria Elena", birthdate: "1978-11-30")
 
     expect(pairs.size).to eq(1)
     expect([pairs.first.keep, pairs.first.remove].to_set).to eq(Set[a, b])
@@ -51,7 +59,7 @@ describe ::DuplicateMemberFinder do
   it "excludes pairs that have been dismissed" do
     a = create_member("Park, Nicole", birthdate: "1988-08-08")
     b = create_member("Park, Nicole Reese", birthdate: "1988-08-08")
-    ::DuplicateDismissal.for(a, b).tap do |d|
+    ::Members::DuplicateDismissal.for(a, b).tap do |d|
       d.unit = unit
       d.dismissed_by = 1
     end.save!

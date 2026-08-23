@@ -1,6 +1,6 @@
 require "rails_helper"
 
-describe ::MergeMembers do
+describe ::Members::Merger do
   let(:unit) { units(:sunny_hills) }
 
   let(:keep) do
