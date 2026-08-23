@@ -12,6 +12,9 @@
           <%= fa_icon("person", class: "text-muted") %>&nbsp
         <% end %>
         <%= talk.speaker_name %>
+        <% if current_user.access_to_lcr? && talk.meeting.not_yet_occurred? %>
+          <%= speaker_message_dropdown_for_talk(talk, text: nil, class: "btn-group-sm ms-1") %>
+        <% end %>
       </h6>
     </div>
     <div class="col-12 col-md-4 pt-md-2">

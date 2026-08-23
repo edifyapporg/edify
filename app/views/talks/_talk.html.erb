@@ -21,6 +21,11 @@
             <h6><%= "Purpose: #{talk.purpose}" %></h6>
             <h6><%= "Topic: #{talk.topic_truncated}" %></h6>
           </div>
+          <% if current_user.access_to_lcr? && talk.meeting.not_yet_occurred? %>
+            <div class="col-auto text-end">
+              <%= speaker_message_dropdown_for_talk(talk, class: "btn-group-sm") %>
+            </div>
+          <% end %>
         </div>
       </div>
     </div>

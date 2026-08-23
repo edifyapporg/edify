@@ -1,0 +1,193 @@
+# Builds the pre-set messages a bishopric sends to a speaker -- the invitation to speak, guidance on preparing, and a
+# reminder before the meeting -- along with the `sms:` and `mailto:` links that hand the finished message off to the
+# device's messaging app. Edify never sends these itself; the links only pre-fill a draft for the user to review.
+#
+# The wording lives in config/locales/en.yml under `speaker_messages`. Each template is an ordered list of sentence
+# segments per medium, and a segment whose interpolations are blank is dropped from the message. That is how one
+# template covers a talk with a topic and a date as well as an invitation to a member who has neither yet.
+class SpeakerMessage
+  TEMPLATES = %i[invitation guidance reminder].freeze
+  SEGMENT_SEPARATORS = { email: "\n\n", sms: "\n" }.freeze
+  INTERPOLATION_PATTERN = /%\{(\w+)\}/
+
+  class << self
+    # @param [Talk] talk
+    # @param [Symbol] template
+    # @param [User, nil] sender
+    # @param [Unit, nil] unit
+    # @return [SpeakerMessage]
+    def for_talk(talk, template:, sender: nil, unit: nil)
+      new(
+        template: template,
+        member: talk.member,
+        meeting_date: talk.date,
+        purpose: talk.purpose,
+        sender: sender,
+        speaker_name: talk.speaker_name,
+        topic: talk.topic,
+        unit: unit || talk.meeting.unit,
+      )
+    end
+
+    # @param [Member] member
+    # @param [Symbol] template
+    # @param [Date, nil] meeting_date
+    # @param [User, nil] sender
+    # @param [Unit, nil] unit
+    # @return [SpeakerMessage]
+    def for_member(member, template:, meeting_date: nil, sender: nil, unit: nil)
+      new(
+        template: template,
+        member: member,
+        meeting_date: meeting_date,
+        sender: sender,
+        speaker_name: member.name,
+        unit: unit || member.unit,
+      )
+    end
+
+    # @param [Symbol] template
+    # @return [String]
+    def label(template)
+      I18n.t("speaker_messages.#{template}.label")
+    end
+  end
+
+  # @param [Symbol] template
+  # @param [Member, nil] member the recipient; without one there is no phone number or email to send to
+  def initialize(template:, member: nil, meeting_date: nil, purpose: nil, sender: nil, speaker_name: nil, topic: nil,
+                 unit: nil)
+    @template = template.to_sym
+
+    raise ArgumentError, "Unknown template: #{template}" unless @template.in?(TEMPLATES)
+
+    @member = member
+    @meeting_date = meeting_date
+    @purpose = purpose
+    @sender = sender
+    @speaker_name = speaker_name
+    @topic = topic
+    @unit = unit
+  end
+
+  attr_reader :member, :template
+
+  # @return [Boolean]
+  def available?
+    email_available? || sms_available?
+  end
+
+  # @return [Boolean]
+  def email_available?
+    member.present? && member.email.present?
+  end
+
+  # @return [String]
+  def email_body
+    body(:email)
+  end
+
+  # @return [String]
+  def label
+    self.class.label(template)
+  end
+
+  # @return [String, nil]
+  def mailto_url
+    return unless email_available?
+
+    "mailto:#{member.email}?subject=#{encode(subject)}&body=#{encode(email_body)}"
+  end
+
+  # @return [Boolean]
+  def sms_available?
+    member.present? && member.phone_number.present?
+  end
+
+  # @return [String]
+  def sms_body
+    body(:sms)
+  end
+
+  # @return [String, nil]
+  def sms_url
+    return unless sms_available?
+
+    # `?&body=` is the one separator both iOS and Android accept for a pre-filled message.
+    "sms:#{sms_number}?&body=#{encode(sms_body)}"
+  end
+
+  # @return [String]
+  def subject
+    I18n.t("speaker_messages.#{template}.subject")
+  end
+
+  private
+
+  attr_reader :meeting_date, :purpose, :sender, :speaker_name, :topic, :unit
+
+  # @param [Symbol] medium
+  # @return [String]
+  def body(medium)
+    segments(medium).join(SEGMENT_SEPARATORS.fetch(medium))
+  end
+
+  # @param [String] text
+  # @return [String]
+  def encode(text)
+    ERB::Util.url_encode(text)
+  end
+
+  # Members are named "Last, First Middle", so the given name is what comes after the comma.
+  # @return [String, nil]
+  def first_name
+    return if speaker_name.blank?
+
+    surname, given_names = speaker_name.split(",", 2)
+
+    (given_names.presence || surname).strip.split.first
+  end
+
+  # @return [String, nil]
+  def formatted_meeting_date
+    return if meeting_date.blank?
+
+    I18n.l(meeting_date, format: :day_and_date)
+  end
+
+  # @param [String] segment
+  # @return [String, nil] nil when the segment depends on a detail we do not have
+  def render(segment)
+    keys = segment.scan(INTERPOLATION_PATTERN).flatten.map(&:to_sym)
+    return if keys.any? { |key| substitutions[key].blank? }
+
+    format(segment, substitutions)
+  end
+
+  # @param [Symbol] medium
+  # @return [Array<String>]
+  def segments(medium)
+    I18n.t("speaker_messages.#{template}.#{medium}").values.filter_map { |segment| render(segment) }
+  end
+
+  # @return [String]
+  def sms_number
+    number = member.phone_number.to_s.strip
+    digits = number.gsub(/\D/, "")
+
+    number.start_with?("+") ? "+#{digits}" : digits
+  end
+
+  # @return [Hash]
+  def substitutions
+    @substitutions ||= {
+      first_name: first_name,
+      full_name: speaker_name,
+      meeting_date: formatted_meeting_date,
+      purpose: purpose,
+      sender_name: sender&.name,
+      topic: topic,
+      unit_name: unit&.name,
+    }
+  end
+end
