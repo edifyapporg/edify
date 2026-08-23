@@ -101,6 +101,7 @@ en:
         opening_fallback: "The Bishopric would like to invite you to speak in sacrament meeting. We look forward to hearing from you. If you are not available, please let us know, and we can look to reschedule you for another Sunday."
         assignment: "Your talk will be approximately %{duration} minutes in length, and your assigned topic is %{topic}."
         assignment_fallback: "Your talk will be approximately %{duration} minutes in length."
+        purpose: "Assignment: %{purpose}."
         preparation: "As you prepare, please prayerfully consider how this gospel principle has influenced your life. We encourage you to share specific, faith-promoting experiences that, along with the scriptures, recent general conference messages and teachings of living prophets and apostles, illustrate and support the assigned topic. Personal experiences can help make your message meaningful and strengthen the faith of those you teach."
         focus: |-
           Please focus on:

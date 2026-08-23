@@ -23,6 +23,18 @@ describe SpeakerMessage do
         .to include("Your talk will be approximately 8-10 minutes in length, and your assigned topic is It Is Finished.")
     end
 
+    it "leaves out the assignment when the talk has no purpose" do
+      expect(message.email_body).not_to include("Assignment:")
+    end
+
+    context "when the talk has a purpose" do
+      let(:talk) { talks(:talk_1) }
+
+      it "names the assignment" do
+        expect(message.email_body).to include("Assignment: Departing Missionary.")
+      end
+    end
+
     it "tells the speaker what to focus on and what to avoid" do
       expect(message.email_body).to include("Please focus on:", "* Keeping your message centered on Jesus Christ.")
       expect(message.email_body).to include("Please also keep in mind:", "* Avoid political or divisive topics.")
