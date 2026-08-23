@@ -12,7 +12,6 @@ class UserResource < Madmin::Resource
   attribute :remember_created_at
   attribute :announcements_last_read_at
   attribute :notification_preference_email
-  attribute :notification_preference_sms
   attribute :created_at, form: false
   attribute :updated_at, form: false
   attribute :avatar, index: false

@@ -10,7 +10,6 @@ admin:
   unit_id:
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role: 1
   admin: true
 sunny_bishopric:
@@ -24,7 +23,6 @@ sunny_bishopric:
   unit_id: 1
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role: 1
   admin: false
 sunny_clerk:
@@ -38,7 +36,6 @@ sunny_clerk:
   unit_id: 1
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role: 2
   admin: false
 sunny_music:
@@ -52,7 +49,6 @@ sunny_music:
   unit_id: 1
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role: 3
   admin: false
 sunny_program:
@@ -66,7 +62,6 @@ sunny_program:
   unit_id: 1
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role: 4
   admin: false
 pleasant_one:
@@ -80,7 +75,6 @@ pleasant_one:
   unit_id: 2
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role: 1
   admin: false
 pleasant_two:
@@ -94,7 +88,6 @@ pleasant_two:
   unit_id: 2
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role: 1
   admin: false
 unassigned:
@@ -108,7 +101,6 @@ unassigned:
   unit_id:
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role:
   admin: false
 new_unit:
@@ -122,6 +114,5 @@ new_unit:
   unit_id:
   phone_number:
   notification_preference_email: true
-  notification_preference_sms: false
   role:
   admin: false

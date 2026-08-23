@@ -1,6 +1,5 @@
 class UnitAccessRejectionNotification < ApplicationNotification
   deliver_by_email method: :unit_access_rejection_notification
-  deliver_by_sms
 
   required_param :user
 

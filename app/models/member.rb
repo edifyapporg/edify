@@ -21,7 +21,7 @@ class Member < ApplicationRecord
   after_save_commit :match_talks
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[birthdate gender last_talk_date name]
+    %w[birthdate gender last_talk_date name synced_on]
   end
 
   def self.ransackable_associations(_auth_object = nil)

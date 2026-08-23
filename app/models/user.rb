@@ -89,8 +89,6 @@ class User < ApplicationRecord
 
   def set_notification_preferences
     self.notification_preference_email = true if notification_preference_email.nil?
-    self.notification_preference_sms = phone_number.present? if notification_preference_sms.nil?
-    self.notification_preference_sms = false if phone_number.blank?
   end
 
   def newly_confirmed?
