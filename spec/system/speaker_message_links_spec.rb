@@ -18,7 +18,7 @@ describe "Send a pre-set message to a speaker" do
       visit meetings_path
       talk_row = page.find("#meeting_#{meeting.id}_talk_#{talk.id}")
 
-      expect(talk_row).to have_link("Text: Invitation", href: /\Asms:6019156744\?&body=Hi%20Waylon/)
+      expect(talk_row).to have_link("Text: Invitation", href: /\Asms:6019156744\?&body=Hi%20Brother%20Hill/)
       expect(talk_row).to have_link("Text: Preparation guidance")
       expect(talk_row).to have_link("Email: Reminder", href: /\Amailto:jorge\.yost@oreilly\.info\?subject=/)
     end
@@ -41,9 +41,9 @@ describe "Send a pre-set message to a speaker" do
     it "offers a date-free invitation from the member page" do
       visit member_path(member)
 
-      expect(page).to have_link("Text: Invitation", href: /\Asms:6019156744\?&body=Hi%20Waylon/)
+      expect(page).to have_link("Text: Invitation", href: /\Asms:6019156744\?&body=Hi%20Brother%20Hill/)
       expect(page).to have_link("Email: Invitation", href: /\Amailto:jorge\.yost@oreilly\.info/)
-      expect(page).to have_no_link("Text: Invitation", href: /The%20meeting%20is%20on/)
+      expect(page).to have_no_link("Text: Invitation", href: /Sacrament%20Meeting%20on/)
     end
   end
 

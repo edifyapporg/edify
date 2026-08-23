@@ -81,25 +81,52 @@ en:
         message: "%{user_name} has requested access to your ward in Edify. Click the link to approve or reject this request."
         subject: "Request for access to your ward in Edify"
   speaker_messages:
+    # Details Edify has no field for, kept here so a unit can adjust the wording in one place.
+    defaults:
+      duration:
+        adult: "8-10"
+        youth: "3-5"
+      honorific:
+        female: "Sister"
+        male: "Brother"
+      meeting_end_time: "9:55 am"
+      # A bishopric is made up of men, and users have no gender on record, so the sender is always "Brother".
+      sender_honorific: "Brother"
     invitation:
       label: "Invitation"
-      subject: "Invitation to speak in Sacrament Meeting"
+      subject: "You've been invited to speak in Sacrament Meeting!"
       email:
         greeting: "Dear %{first_name},"
-        opening: "The bishopric of %{unit_name} would like to invite you to speak in Sacrament Meeting."
-        meeting_date: "The meeting is on %{meeting_date}."
-        topic: "We would like you to speak on the topic of \"%{topic}\"."
-        purpose: "Assignment: %{purpose}."
-        length: "Talks are usually 10 to 15 minutes long, and we will confirm the length once the program is set."
-        request: "Please let us know whether you are able to accept this invitation."
-        closing: "Thank you,\n%{sender_name}"
+        opening: "The Bishopric would like to invite you to speak in sacrament meeting on %{meeting_date}. We look forward to hearing from you. If you are not available, please let us know, and we can look to reschedule you for another Sunday."
+        opening_fallback: "The Bishopric would like to invite you to speak in sacrament meeting. We look forward to hearing from you. If you are not available, please let us know, and we can look to reschedule you for another Sunday."
+        assignment: "Your talk will be approximately %{duration} minutes in length, and your assigned topic is %{topic}."
+        assignment_fallback: "Your talk will be approximately %{duration} minutes in length."
+        preparation: "As you prepare, please prayerfully consider how this gospel principle has influenced your life. We encourage you to share specific, faith-promoting experiences that, along with the scriptures, recent general conference messages and teachings of living prophets and apostles, illustrate and support the assigned topic. Personal experiences can help make your message meaningful and strengthen the faith of those you teach."
+        focus: |-
+          Please focus on:
+
+          * Keeping your message centered on Jesus Christ.
+          * Teaching clear gospel principles supported by the scriptures and teachings of living prophets and apostles.
+          * Sharing personal experiences that directly relate to and illustrate the topic.
+          * Teaching with love, being guided by the Spirit, and concluding with your testimony.
+        cautions: |-
+          Please also keep in mind:
+
+          * Avoid mentioning how or why you were asked to speak.
+          * Avoid political or divisive topics.
+          * Avoid the use of visual aids.
+          * Avoid casual or inappropriate language.
+          * Avoid sharing details regarding past sins.
+        timing: "Please prepare and practice your talk beforehand so you can stay within your assigned time. If you are the concluding speaker, please be prepared to adjust the length of your remarks so the meeting concludes by %{meeting_end_time}, or before."
+        worship: "Sacrament meeting is a sacred opportunity to worship the Savior, strengthen faith, build testimony, and renew covenants. We are confident that as you prepare prayerfully and seek the guidance of the Spirit, you will be blessed and will bless those you teach."
+        confirmation: "Please reply to confirm that you received this invitation, and feel free to reach out with any questions."
+        thanks: "Thank you for your willingness to serve and share your testimony."
+        closing: "Sincerely,\nThe Bishopric"
       sms:
-        greeting: "Hi %{first_name},"
-        opening: "The bishopric of %{unit_name} would like to invite you to speak in Sacrament Meeting."
-        meeting_date: "The meeting is on %{meeting_date}."
-        topic: "The topic we have in mind is \"%{topic}\"."
-        request: "Are you able to accept this invitation?"
-        closing: "Thank you, %{sender_name}"
+        greeting: "Hi %{honorific} %{last_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
+        greeting_fallback: "Hi %{honorific} %{last_name}, this is a member of the bishopric."
+        invitation: "We would like to invite you to speak in Sacrament Meeting on %{meeting_date}. You would speak for %{duration} minutes. Are you in town and available to speak that day? We would love to hear from you."
+        invitation_fallback: "We would like to invite you to speak in Sacrament Meeting. You would speak for %{duration} minutes. Are you available to speak? We would love to hear from you."
     guidance:
       label: "Preparation guidance"
       subject: "Preparing for your talk in Sacrament Meeting"

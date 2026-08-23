@@ -13,31 +13,50 @@ describe SpeakerMessage do
       expect(message.email_body).to start_with("Dear Waylon,")
     end
 
-    it "names the unit that is inviting" do
-      expect(message.email_body).to include("The bishopric of Sunny Hills 3rd Ward")
+    it "invites the speaker to the meeting on its date" do
+      expect(message.email_body)
+        .to include("The Bishopric would like to invite you to speak in sacrament meeting on Sunday, April 10.")
     end
 
-    it "includes the date of the meeting" do
-      expect(message.email_body).to include("The meeting is on Sunday, April 10.")
+    it "gives the length of the talk and the assigned topic" do
+      expect(message.email_body)
+        .to include("Your talk will be approximately 8-10 minutes in length, and your assigned topic is It Is Finished.")
     end
 
-    it "includes the topic of the talk" do
-      expect(message.email_body).to include('We would like you to speak on the topic of "It Is Finished".')
+    it "tells the speaker what to focus on and what to avoid" do
+      expect(message.email_body).to include("Please focus on:", "* Keeping your message centered on Jesus Christ.")
+      expect(message.email_body).to include("Please also keep in mind:", "* Avoid political or divisive topics.")
     end
 
-    it "signs the message with the sender's name" do
-      expect(message.email_body).to end_with("Thank you,\nSunny Bishopric User")
+    it "names the time the meeting must conclude by" do
+      expect(message.email_body).to include("so the meeting concludes by 9:55 am, or before")
     end
 
-    it "omits segments for details the talk does not have" do
-      expect(message.email_body).not_to include("Assignment:")
+    it "signs the message from the bishopric" do
+      expect(message.email_body).to end_with("Sincerely,\nThe Bishopric")
     end
 
-    context "when the talk has a purpose" do
-      let(:talk) { talks(:talk_1) }
+    it "greets the speaker by surname in the text message and introduces the sender" do
+      expect(message.sms_body).to start_with("Hi Brother Hill, this is Brother User from the bishopric.")
+    end
 
-      it "includes the purpose" do
-        expect(message.email_body).to include("Assignment: Departing Missionary.")
+    it "asks about the date and the length in the text message" do
+      expect(message.sms_body)
+        .to include("invite you to speak in Sacrament Meeting on Sunday, April 10. You would speak for 8-10 minutes.",
+                    "Are you in town and available to speak that day?")
+    end
+
+    context "when the speaker is a youth" do
+      let(:member) { Member.new(name: "Wilderman, Kati", gender: :female, birthdate: 15.years.ago.to_date) }
+      let(:message) do
+        described_class.new(template: :invitation, member: member, speaker_name: member.name, sender: sender,
+                            meeting_date: talk.date, topic: talk.topic)
+      end
+
+      it "uses the shorter talk length and the matching honorific" do
+        expect(message.sms_body).to start_with("Hi Sister Wilderman,")
+        expect(message.sms_body).to include("You would speak for 3-5 minutes.")
+        expect(message.email_body).to include("approximately 3-5 minutes in length")
       end
     end
 
@@ -54,8 +73,8 @@ describe SpeakerMessage do
     context "when there is no sender" do
       subject(:message) { described_class.for_talk(talk, template: :invitation) }
 
-      it "leaves off the signature" do
-        expect(message.email_body).not_to include("Thank you,")
+      it "falls back to introducing an unnamed member of the bishopric" do
+        expect(message.sms_body).to start_with("Hi Brother Hill, this is a member of the bishopric.")
       end
     end
   end
@@ -63,10 +82,21 @@ describe SpeakerMessage do
   describe ".for_member" do
     subject(:message) { described_class.for_member(member, template: :invitation, sender: sender) }
 
-    it "invites the member without naming a meeting date" do
+    it "falls back to an invitation that names no meeting date" do
       expect(message.email_body).to start_with("Dear Waylon,")
-      expect(message.email_body).to include("would like to invite you to speak in Sacrament Meeting.")
-      expect(message.email_body).not_to include("The meeting is on")
+      expect(message.email_body)
+        .to include("The Bishopric would like to invite you to speak in sacrament meeting. We look forward")
+      expect(message.email_body).not_to include("sacrament meeting on")
+    end
+
+    it "falls back to giving the length without a topic" do
+      expect(message.email_body).to include("Your talk will be approximately 8-10 minutes in length.")
+      expect(message.email_body).not_to include("your assigned topic is")
+    end
+
+    it "falls back to a text message that asks about no particular day" do
+      expect(message.sms_body).to include("Are you available to speak?")
+      expect(message.sms_body).not_to include("Sacrament Meeting on")
     end
 
     context "when a meeting date is given" do
@@ -74,8 +104,14 @@ describe SpeakerMessage do
         described_class.for_member(member, template: :invitation, meeting_date: Date.new(2022, 5, 15), sender: sender)
       end
 
-      it "includes the date" do
-        expect(message.email_body).to include("The meeting is on Sunday, May 15.")
+      it "uses the dated invitation instead of the fallback" do
+        expect(message.email_body).to include("speak in sacrament meeting on Sunday, May 15.")
+        expect(message.email_body.scan("would like to invite you to speak").length).to eq(1)
+      end
+
+      it "uses the dated text message instead of the fallback" do
+        expect(message.sms_body).to include("Sacrament Meeting on Sunday, May 15.")
+        expect(message.sms_body).not_to include("Are you available to speak?")
       end
     end
   end

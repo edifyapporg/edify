@@ -5,10 +5,15 @@
 # The wording lives in config/locales/en.yml under `speaker_messages`. Each template is an ordered list of sentence
 # segments per medium, and a segment whose interpolations are blank is dropped from the message. That is how one
 # template covers a talk with a topic and a date as well as an invitation to a member who has neither yet.
+#
+# A segment key suffixed `_fallback` is the stand-in for the segment it is named after: it is used only when that
+# segment was dropped, so a sentence that reads naturally with a date can still say something without one.
 class SpeakerMessage
   TEMPLATES = %i[invitation guidance reminder].freeze
   SEGMENT_SEPARATORS = { email: "\n\n", sms: "\n" }.freeze
   INTERPOLATION_PATTERN = /%\{(\w+)\}/
+  FALLBACK_SUFFIX = "_fallback".freeze
+  YOUTH_MAX_AGE = 17
 
   class << self
     # @param [Talk] talk
@@ -132,10 +137,27 @@ class SpeakerMessage
     segments(medium).join(SEGMENT_SEPARATORS.fetch(medium))
   end
 
+  # Youth are asked to speak for less time than adults. Without a member on record we cannot tell, so we assume an
+  # adult -- the longer talk is the safer thing to over-prepare for.
+  # @return [String]
+  def duration
+    youth = member.present? && member.age <= YOUTH_MAX_AGE
+
+    I18n.t("speaker_messages.defaults.duration.#{youth ? :youth : :adult}")
+  end
+
   # @param [String] text
   # @return [String]
   def encode(text)
     ERB::Util.url_encode(text)
+  end
+
+  # @param [Symbol] key
+  # @return [Symbol, nil] the segment this one stands in for, when it is a fallback
+  def fallback_for(key)
+    base = key.to_s.delete_suffix(FALLBACK_SUFFIX)
+
+    base.to_sym unless base == key.to_s
   end
 
   # Members are named "Last, First Middle", so the given name is what comes after the comma.
@@ -155,6 +177,24 @@ class SpeakerMessage
     I18n.l(meeting_date, format: :day_and_date)
   end
 
+  # @return [String, nil]
+  def honorific
+    return if member&.gender.blank?
+
+    I18n.t("speaker_messages.defaults.honorific.#{member.gender}")
+  end
+
+  # Members are named "Last, First Middle", so the surname is what comes before the comma. A name entered without
+  # one falls back to its last word.
+  # @return [String, nil]
+  def last_name
+    return if speaker_name.blank?
+
+    surname, given_names = speaker_name.split(",", 2)
+
+    given_names.present? ? surname.strip : surname.strip.split.last
+  end
+
   # @param [String] segment
   # @return [String, nil] nil when the segment depends on a detail we do not have
   def render(segment)
@@ -167,7 +207,16 @@ class SpeakerMessage
   # @param [Symbol] medium
   # @return [Array<String>]
   def segments(medium)
-    I18n.t("speaker_messages.#{template}.#{medium}").values.filter_map { |segment| render(segment) }
+    rendered = I18n.t("speaker_messages.#{template}.#{medium}").transform_values { |segment| render(segment) }
+
+    rendered.filter_map do |key, text|
+      next if text.blank?
+
+      stands_in_for = fallback_for(key)
+      next if stands_in_for.present? && rendered[stands_in_for].present?
+
+      text
+    end
   end
 
   # @return [String]
@@ -181,10 +230,16 @@ class SpeakerMessage
   # @return [Hash]
   def substitutions
     @substitutions ||= {
+      duration: duration,
       first_name: first_name,
       full_name: speaker_name,
+      honorific: honorific,
+      last_name: last_name,
       meeting_date: formatted_meeting_date,
+      meeting_end_time: I18n.t("speaker_messages.defaults.meeting_end_time"),
       purpose: purpose,
+      sender_honorific: sender.present? ? I18n.t("speaker_messages.defaults.sender_honorific") : nil,
+      sender_last_name: sender&.last_name,
       sender_name: sender&.name,
       topic: topic,
       unit_name: unit&.name,
