@@ -7,59 +7,88 @@ RSpec.describe SpeakerMessagesHelper, type: :helper do
   let(:user) { users(:sunny_bishopric) }
 
   before do
+    travel_to("2022-04-05") # a Tuesday, so the next Sunday is the 10th
+
     without_partial_double_verification do
       allow(helper).to receive_messages(current_user: user, current_unit: unit)
     end
   end
 
-  describe "#speaker_message_dropdown_for_member" do
-    subject(:dropdown) { helper.speaker_message_dropdown_for_member(member) }
-
-    it "offers a text and an email link for each template" do
-      expect(dropdown).to include("Text: Invitation", "Text: Preparation guidance", "Text: Reminder")
-      expect(dropdown).to include("Email: Invitation", "Email: Preparation guidance", "Email: Reminder")
+  describe "#invitation_sundays" do
+    it "lists the next six Sundays" do
+      expect(helper.invitation_sundays.map(&:to_s))
+        .to eq(%w[2022-04-10 2022-04-17 2022-04-24 2022-05-01 2022-05-08 2022-05-15])
     end
 
-    it "links to the member's phone number and email" do
-      expect(dropdown).to include("sms:6019156744?")
-      expect(dropdown).to include("mailto:jorge.yost@oreilly.info?")
+    context "when today is a Sunday" do
+      before { travel_to("2022-04-10") }
+
+      it "starts with the Sunday after it, since today's meeting is too late to invite for" do
+        expect(helper.invitation_sundays.first.to_s).to eq("2022-04-17")
+      end
+    end
+  end
+
+  describe "#speaker_invitation_box" do
+    subject(:box) { helper.speaker_invitation_box(member) }
+
+    it "offers each of the next six Sundays to pick from" do
+      expect(box).to include("April 10", "April 17", "April 24", "May 1", "May 8", "May 15")
+    end
+
+    it "carries the message for every Sunday, not just the one showing" do
+      expect(box).to include(ERB::Util.url_encode("Sacrament Meeting on Sunday, April 10."))
+      expect(box).to include(ERB::Util.url_encode("Sacrament Meeting on Sunday, May 15."))
+    end
+
+    it "starts the link on the first Sunday" do
+      expect(box).to include("href=\"sms:6019156744?&amp;body=#{ERB::Util.url_encode('Hi Brother Hill')}")
+    end
+
+    it "wires the picker to the link" do
+      expect(box).to include("data-controller=\"speaker-invitation\"")
+      expect(box).to include("data-action=\"change-&gt;speaker-invitation#pick\"")
     end
 
     context "when the member has no phone number" do
       before { member.update_column(:phone_number, nil) }
 
-      it "offers only email links" do
-        expect(dropdown).to include("Email: Invitation")
-        expect(dropdown).not_to include("Text: Invitation")
-      end
+      it { expect(box).to be_nil }
+    end
+  end
+
+  describe "#speaker_reminder_link" do
+    subject(:link) { helper.speaker_reminder_link(talk) }
+
+    it "emails the matched speaker a reminder" do
+      expect(link).to include("mailto:jorge.yost@oreilly.info?subject=")
+      expect(link).to include(ERB::Util.url_encode("Reminder: your talk in Sacrament Meeting"))
     end
 
-    context "when the member has no phone number or email" do
-      before { member.update_columns(email: nil, phone_number: nil) }
-
-      it { expect(dropdown).to be_nil }
+    it "says who it reaches" do
+      expect(link).to include('title="Email Hill, Waylon a reminder"')
     end
 
-    context "when only one medium is asked for" do
-      subject(:dropdown) { helper.speaker_message_dropdown_for_member(member, media: :sms) }
+    context "when the speaker is not matched to a member" do
+      let(:talk) { talks(:talk_3) }
 
-      it "offers a text link for each template and no email links" do
-        expect(dropdown).to include("Text: Invitation", "Text: Preparation guidance", "Text: Reminder")
-        expect(dropdown).not_to include("Email:", "mailto:")
-      end
+      it { expect(link).to be_nil }
+    end
 
-      context "when the member has no phone number" do
-        before { member.update_column(:phone_number, nil) }
+    context "when the member has no email" do
+      before { member.update_column(:email, nil) }
 
-        it "falls away rather than offering the email links it was not asked for" do
-          expect(dropdown).to be_nil
-        end
-      end
+      it { expect(link).to be_nil }
     end
   end
 
   describe "#speaker_message_dropdown_for_talk" do
     subject(:dropdown) { helper.speaker_message_dropdown_for_talk(talk) }
+
+    it "offers a text and an email link for each template" do
+      expect(dropdown).to include("Text: Invitation", "Text: Preparation guidance", "Text: Reminder")
+      expect(dropdown).to include("Email: Invitation", "Email: Preparation guidance", "Email: Reminder")
+    end
 
     it "links to the matched member" do
       expect(dropdown).to include("sms:6019156744?", "mailto:jorge.yost@oreilly.info?")
@@ -69,15 +98,6 @@ RSpec.describe SpeakerMessagesHelper, type: :helper do
       let(:talk) { talks(:talk_3) }
 
       it { expect(dropdown).to be_nil }
-    end
-
-    context "when only email is asked for" do
-      subject(:dropdown) { helper.speaker_message_dropdown_for_talk(talk, media: :email) }
-
-      it "offers an email link for each template and no text links" do
-        expect(dropdown).to include("Email: Invitation", "Email: Preparation guidance", "Email: Reminder")
-        expect(dropdown).not_to include("Text:", "sms:")
-      end
     end
   end
 end
