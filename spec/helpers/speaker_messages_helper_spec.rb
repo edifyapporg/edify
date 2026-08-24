@@ -39,6 +39,23 @@ RSpec.describe SpeakerMessagesHelper, type: :helper do
 
       it { expect(dropdown).to be_nil }
     end
+
+    context "when only one medium is asked for" do
+      subject(:dropdown) { helper.speaker_message_dropdown_for_member(member, media: :sms) }
+
+      it "offers a text link for each template and no email links" do
+        expect(dropdown).to include("Text: Invitation", "Text: Preparation guidance", "Text: Reminder")
+        expect(dropdown).not_to include("Email:", "mailto:")
+      end
+
+      context "when the member has no phone number" do
+        before { member.update_column(:phone_number, nil) }
+
+        it "falls away rather than offering the email links it was not asked for" do
+          expect(dropdown).to be_nil
+        end
+      end
+    end
   end
 
   describe "#speaker_message_dropdown_for_talk" do
@@ -52,6 +69,15 @@ RSpec.describe SpeakerMessagesHelper, type: :helper do
       let(:talk) { talks(:talk_3) }
 
       it { expect(dropdown).to be_nil }
+    end
+
+    context "when only email is asked for" do
+      subject(:dropdown) { helper.speaker_message_dropdown_for_talk(talk, media: :email) }
+
+      it "offers an email link for each template and no text links" do
+        expect(dropdown).to include("Email: Invitation", "Email: Preparation guidance", "Email: Reminder")
+        expect(dropdown).not_to include("Text:", "sms:")
+      end
     end
   end
 end

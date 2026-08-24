@@ -14,13 +14,19 @@ describe "Send a pre-set message to a speaker" do
   context "when the user is in a bishopric" do
     before { login_as bishopric_user, scope: :user }
 
-    it "offers text and email links on an upcoming talk" do
+    it "emails the assignment from an upcoming talk on the meetings page" do
       visit meetings_path
       talk_row = page.find("#meeting_#{meeting.id}_talk_#{talk.id}")
 
-      expect(talk_row).to have_link("Text: Invitation", href: /\Asms:6019156744\?&body=Hi%20Brother%20Hill/)
-      expect(talk_row).to have_link("Text: Preparation guidance")
-      expect(talk_row).to have_link("Email: Reminder", href: /\Amailto:jorge\.yost@oreilly\.info\?subject=/)
+      expect(talk_row).to have_link("Email: Invitation", href: /\Amailto:jorge\.yost@oreilly\.info\?subject=/)
+      expect(talk_row).to have_link("Email: Preparation guidance")
+      expect(talk_row).to have_link("Email: Reminder")
+    end
+
+    it "does not offer to text from the meetings page" do
+      visit meetings_path
+
+      expect(page).to have_no_css("a[href^='sms:']")
     end
 
     it "does not offer messaging on a meeting that has already happened" do
@@ -30,7 +36,7 @@ describe "Send a pre-set message to a speaker" do
       expect(talk_row).not_to have_css(".dropdown-item")
     end
 
-    it "offers a link on an upcoming talk in the talks index" do
+    it "offers both a text and an email on an upcoming talk in the talks index" do
       visit talks_path
       talk_card = page.find("#meeting_#{meeting.id}_talk_#{talk.id}")
 
@@ -38,12 +44,17 @@ describe "Send a pre-set message to a speaker" do
       expect(talk_card).to have_link("Email: Invitation", href: /\Amailto:jorge\.yost@oreilly\.info/)
     end
 
-    it "offers a date-free invitation from the member page" do
+    it "texts a date-free invitation from the member page" do
       visit member_path(member)
 
       expect(page).to have_link("Text: Invitation", href: /\Asms:6019156744\?&body=Hi%20Brother%20Hill/)
-      expect(page).to have_link("Email: Invitation", href: /\Amailto:jorge\.yost@oreilly\.info/)
       expect(page).to have_no_link("Text: Invitation", href: /Sacrament%20Meeting%20on/)
+    end
+
+    it "does not offer to email from the member page" do
+      visit member_path(member)
+
+      expect(page).to have_no_css("a[href^='mailto:']")
     end
   end
 
