@@ -1,0 +1,11 @@
+<%= turbo_frame_tag :possible_duplicates_summary do %>
+  <% if @pairs.any? %>
+    <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert">
+      <span>
+        <%= fa_icon("triangle-exclamation") %>
+        <%= pluralize(@pairs.size, "possible duplicate") %> found in this member list.
+      </span>
+      <%= link_to "Review", members_possible_duplicates_path, target: "_top", class: "btn btn-sm btn-warning" %>
+    </div>
+  <% end %>
+<% end %>

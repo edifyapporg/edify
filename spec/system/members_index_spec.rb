@@ -85,6 +85,23 @@ describe "Visit the members index" do
     end
   end
 
+  context "with a possible-duplicates summary", :js do
+    before do
+      unit.update!(last_synced_on: Date.current)
+      login_as bishopric_user, scope: :user
+    end
+
+    it "lazily shows a banner linking to the review page when duplicates exist" do
+      unit.members.create!(name: "Twinny, Sam", gender: :male, birthdate: "1980-06-06", synced_on: Date.current)
+      unit.members.create!(name: "Twinny, Sam Robert", gender: :male, birthdate: "1980-06-06", synced_on: Date.current)
+
+      visit members_path
+
+      expect(page).to have_content("possible duplicate")
+      expect(page).to have_link("Review", href: members_possible_duplicates_path)
+    end
+  end
+
   def verify_members_present
     expect(page).to have_text "Members"
 
