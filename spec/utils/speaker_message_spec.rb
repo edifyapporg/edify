@@ -72,6 +72,34 @@ describe SpeakerMessage do
       end
     end
 
+    context "when the speaker has no birthdate on record" do
+      let(:member) { Member.new(name: "Wilderman, Kati", gender: :female, birthdate: nil) }
+      let(:message) do
+        described_class.new(template: :invitation, member: member, speaker_name: member.name, sender: sender,
+                            meeting_date: talk.date, topic: talk.topic)
+      end
+
+      it "assumes an adult rather than raising on the missing age" do
+        expect { message.sms_body }.not_to raise_error
+        expect(message.sms_body).to include("You would speak for 8-10 minutes.")
+      end
+    end
+
+    context "when the wording contains a literal percent sign" do
+      before do
+        # The locale files interpolate with %{...}, so that is what a segment under test has to use.
+        greeting = "Give 100% effort, %{first_name}." # rubocop:disable Style/FormatStringToken
+
+        I18n.backend.store_translations(:en, speaker_messages: { invitation: { email: { greeting: greeting } } })
+      end
+
+      after { I18n.backend.reload! }
+
+      it "renders it instead of raising" do
+        expect(message.email_body).to start_with("Give 100% effort, Waylon.")
+      end
+    end
+
     context "when the speaker is not matched to a member" do
       let(:talk) { talks(:talk_3) }
 
@@ -132,6 +160,22 @@ describe SpeakerMessage do
     it "returns the name of the template" do
       expect(described_class.for_member(member, template: :guidance).label).to eq("Preparation guidance")
       expect(described_class.label(:reminder)).to eq("Reminder")
+    end
+  end
+
+  describe "#spoken_name" do
+    it "reverses the roster's sort order" do
+      expect(described_class.for_talk(talk, template: :invitation).spoken_name).to eq("Waylon Hill")
+    end
+
+    it "handles a name entered without a comma" do
+      message = described_class.new(template: :invitation, speaker_name: "Gordon Ghibli")
+
+      expect(message.spoken_name).to eq("Gordon Ghibli")
+    end
+
+    it "is nil without a speaker" do
+      expect(described_class.new(template: :invitation).spoken_name).to be_nil
     end
   end
 

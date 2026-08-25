@@ -122,6 +122,11 @@ class SpeakerMessage
     "sms:#{sms_number}?&body=#{encode(sms_body)}"
   end
 
+  # @return [String, nil] the speaker's name as it is said aloud, rather than the way the roster sorts it
+  def spoken_name
+    [first_name, last_name].compact_blank.join(" ").presence
+  end
+
   # @return [String]
   def subject
     I18n.t("speaker_messages.#{template}.subject")
@@ -137,11 +142,11 @@ class SpeakerMessage
     segments(medium).join(SEGMENT_SEPARATORS.fetch(medium))
   end
 
-  # Youth are asked to speak for less time than adults. Without a member on record we cannot tell, so we assume an
-  # adult -- the longer talk is the safer thing to over-prepare for.
+  # Youth are asked to speak for less time than adults. Without a member on record, or without their birthdate, we
+  # cannot tell, so we assume an adult -- the longer talk is the safer thing to over-prepare for.
   # @return [String]
   def duration
-    youth = member.present? && member.age <= YOUTH_MAX_AGE
+    youth = member&.birthdate.present? && member.age <= YOUTH_MAX_AGE
 
     I18n.t("speaker_messages.defaults.duration.#{youth ? :youth : :adult}")
   end
@@ -195,13 +200,15 @@ class SpeakerMessage
     given_names.present? ? surname.strip : surname.strip.split.last
   end
 
+  # Substituted by hand rather than with `format`, which raises on a literal % -- the wording is meant to be edited
+  # freely, and "Give 100% effort" should not be able to break a page.
   # @param [String] segment
   # @return [String, nil] nil when the segment depends on a detail we do not have
   def render(segment)
     keys = segment.scan(INTERPOLATION_PATTERN).flatten.map(&:to_sym)
     return if keys.any? { |key| substitutions[key].blank? }
 
-    format(segment, substitutions)
+    segment.gsub(INTERPOLATION_PATTERN) { substitutions[Regexp.last_match(1).to_sym] }
   end
 
   # @param [Symbol] medium

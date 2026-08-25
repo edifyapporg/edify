@@ -66,7 +66,7 @@ RSpec.describe SpeakerMessagesHelper, type: :helper do
     end
 
     it "says who it reaches" do
-      expect(link).to include('title="Email Hill, Waylon a reminder"')
+      expect(link).to include('title="Email Waylon Hill a reminder"')
     end
 
     context "when the speaker is not matched to a member" do

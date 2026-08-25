@@ -28,7 +28,7 @@ module SpeakerMessagesHelper
 
     link_to fa_icon("paper-plane"), message.mailto_url,
             class: ["btn btn-sm btn-outline-secondary", options[:class]].compact,
-            title: "Email #{talk.speaker_name} a reminder",
+            title: "Email #{message.spoken_name} a reminder",
             data: { turbo: false, "bs-toggle" => "tooltip" }
   end
 
