@@ -89,3 +89,4 @@ en:
       rfc822: "%d %b %Y"
       american: "%-m/%-d/%Y"
       month_and_day: "%B %-d"
+      day_and_date: "%A, %B %-d"

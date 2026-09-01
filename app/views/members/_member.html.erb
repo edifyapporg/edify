@@ -39,6 +39,12 @@
 
             <h6><%= "Phone: #{member.phone_number}" %></h6>
             <h6><%= "Email: #{member.email}" %></h6>
+
+            <% if current_user.access_to_lcr? %>
+              <div class="mt-3">
+                <%= speaker_invitation_box(member) %>
+              </div>
+            <% end %>
           </div>
         </div>
       </div>
