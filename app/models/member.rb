@@ -1,6 +1,11 @@
 class Member < ApplicationRecord
+  # Children are baptized at eight.
+  BAPTISM_AGE = 8
+
   has_many :talks, dependent: :nullify
   has_many :notes, dependent: :destroy
+  has_many :household_members, dependent: :nullify, inverse_of: :member
+  has_many :households, through: :household_members
   belongs_to :unit
 
   enum :gender, { male: 0, female: 1 }
@@ -21,7 +26,7 @@ class Member < ApplicationRecord
   after_save_commit :match_talks
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[birthdate gender last_talk_date name synced_on]
+    %w[baptized birthdate gender last_talk_date name synced_on]
   end
 
   def self.ransackable_associations(_auth_object = nil)
@@ -74,8 +79,15 @@ class Member < ApplicationRecord
     @time_in_unit = (Date.current - created_at.to_date).to_i.days
   end
 
+  # Younger than the age at which a child is baptized, and so never a speaker. Children between this and the
+  # youth programs are kept: baptized ones can be invited to speak.
   # @return [Boolean]
   def under_age?
+    birthdate.present? && birthdate > BAPTISM_AGE.years.ago.to_date
+  end
+
+  # @return [Boolean] not yet old enough for the youth programs, which a child joins in the year they turn 12
+  def child?
     birthdate.present? && birthdate >= 11.years.ago.beginning_of_year.to_date
   end
 

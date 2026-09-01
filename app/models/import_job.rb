@@ -11,6 +11,9 @@ class ImportJob < ApplicationRecord
   attribute :failed_count, default: 0
   attribute :ignored_count, default: 0
 
+  # Which of the two Member Directory tabs the pasted data came from.
+  enum :kind, { individuals: 0, households: 1 }, default: :individuals
+
   enum :status, {
     waiting: 0,
     extracting: 1,
@@ -33,7 +36,9 @@ class ImportJob < ApplicationRecord
   def data_string
     return @data_string if defined?(@data_string)
 
-    @data_string = raw_data.download
+    # Active Storage hands back binary. The directory is UTF-8 and not every name in it is ASCII, and a
+    # binary string never compares equal to the UTF-8 one the database gives back for the same bytes.
+    @data_string = raw_data.download&.force_encoding(Encoding::UTF_8)
   end
 
   # A regular update with callbacks will wipe out errors on the ImportJob object.

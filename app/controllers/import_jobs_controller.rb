@@ -45,7 +45,7 @@ class ImportJobsController < ApplicationController
   private
 
   def import_job_params
-    params.expect(import_job: [:data_string])
+    params.expect(import_job: %i[data_string kind])
   end
 
   def set_import_job
