@@ -20,7 +20,7 @@ describe SpeakerMessage do
 
     it "gives the length of the talk and the assigned topic" do
       expect(message.email_body)
-        .to include("Your talk will be approximately 8-10 minutes in length, and your assigned topic is It Is Finished.")
+        .to include("approximately 8 to 10 minutes in length, or about 8 minutes if there are three speakers")
     end
 
     it "leaves out the assignment when the talk has no purpose" do
@@ -54,7 +54,7 @@ describe SpeakerMessage do
 
     it "asks about the date and the length in the text message" do
       expect(message.sms_body)
-        .to include("invite you to speak in Sacrament Meeting on Sunday, April 10. You would speak for 8-10 minutes.",
+        .to include("You would speak for 8 to 10 minutes.",
                     "Are you in town and available to speak that day?")
     end
 
@@ -67,8 +67,8 @@ describe SpeakerMessage do
 
       it "uses the shorter talk length and the matching honorific" do
         expect(message.sms_body).to start_with("Hi Sister Wilderman,")
-        expect(message.sms_body).to include("You would speak for 3-5 minutes.")
-        expect(message.email_body).to include("approximately 3-5 minutes in length")
+        expect(message.sms_body).to include("The talk would be about 3 to 5 minutes.")
+        expect(message.email_body).to include("approximately 3 to 5 minutes in length")
       end
     end
 
@@ -81,7 +81,7 @@ describe SpeakerMessage do
 
       it "assumes an adult rather than raising on the missing age" do
         expect { message.sms_body }.not_to raise_error
-        expect(message.sms_body).to include("You would speak for 8-10 minutes.")
+        expect(message.sms_body).to include("You would speak for 8 to 10 minutes.")
       end
     end
 
@@ -90,7 +90,7 @@ describe SpeakerMessage do
         # The locale files interpolate with %{...}, so that is what a segment under test has to use.
         greeting = "Give 100% effort, %{first_name}." # rubocop:disable Style/FormatStringToken
 
-        I18n.backend.store_translations(:en, speaker_messages: { invitation: { email: { greeting: greeting } } })
+        I18n.backend.store_translations(:en, speaker_messages: { invitation: { adult: { email: { greeting: greeting } } } })
       end
 
       after { I18n.backend.reload! }
@@ -130,7 +130,7 @@ describe SpeakerMessage do
     end
 
     it "falls back to giving the length without a topic" do
-      expect(message.email_body).to include("Your talk will be approximately 8-10 minutes in length.")
+      expect(message.email_body).to include("approximately 8 to 10 minutes in length, or about 8 minutes if there are three speakers.")
       expect(message.email_body).not_to include("your assigned topic is")
     end
 
@@ -200,7 +200,7 @@ describe SpeakerMessage do
 
     it "strips the phone number to digits and pre-fills the body" do
       expect(url).to start_with("sms:6019156744?&body=")
-      expect(url).to include(ERB::Util.url_encode("Hi Waylon,"))
+      expect(url).to include(ERB::Util.url_encode("Hi Brother Hill"))
     end
 
     it "keeps an international prefix" do
@@ -249,6 +249,78 @@ describe SpeakerMessage do
 
     it "uses the first word as the first name" do
       expect(message.email_body).to start_with("Dear Gordon,")
+    end
+  end
+
+  describe "the group a speaker is written to as" do
+    let(:household) { unit.households.create!(name: "Hill, Waylon & Wanda") }
+
+    def message_for(member, template: :invitation)
+      described_class.for_member(member, template: template, meeting_date: Date.new(2022, 4, 10), sender: sender)
+    end
+
+    def member_aged(years, name: "Hill, Junior")
+      unit.members.create!(name: name, gender: :male, birthdate: years.years.ago.to_date)
+    end
+
+    it "asks a child for the shortest talk and writes to the family" do
+      message = message_for(member_aged(9))
+
+      expect(message.email_body).to start_with("Dear Junior and family,")
+      expect(message.email_body).to include("about 30 seconds to 2 minutes long")
+      expect(message.sms_body).to include("It would be a short talk, about 30 seconds to 2 minutes.")
+    end
+
+    it "asks a youth for a shorter talk than an adult" do
+      message = message_for(member_aged(15))
+
+      expect(message.email_body).to include("approximately 3 to 5 minutes in length")
+      expect(message.email_body).not_to include("if there are three speakers")
+    end
+
+    it "tells an adult the length depends on how many speakers there are" do
+      message = message_for(member_aged(40))
+
+      expect(message.email_body).to include("approximately 8 to 10 minutes in length, or about 8 minutes if there " \
+                                            "are three speakers")
+    end
+
+    it "treats a speaker with no birthdate as an adult" do
+      message = described_class.new(template: :invitation, speaker_name: "Hill, Waylon", sender: sender)
+
+      expect(message.email_body).to include("approximately 8 to 10 minutes in length")
+    end
+
+    describe "inviting a child alongside their parents" do
+      let(:child) { member_aged(9) }
+      let(:parent) { unit.members.create!(name: "Hill, Waylon", gender: :male, birthdate: 40.years.ago.to_date) }
+
+      before do
+        child.update!(phone_number: "801-555-0101")
+        parent.update!(phone_number: "(801) 555-0202")
+        household.household_members.create!(name: parent.name, member: parent, position: 0, parent: true)
+        household.household_members.create!(name: child.name, member: child, position: 1, listed_age: 9)
+      end
+
+      it "texts the child and the parent together" do
+        expect(message_for(child).sms_numbers).to eq(%w[8015550101 8015550202])
+        expect(message_for(child).sms_url).to start_with("sms:8015550101,8015550202?&body=")
+      end
+
+      it "does not add parents to an adult's text" do
+        adult = member_aged(40, name: "Hill, Grandpa")
+        adult.update!(phone_number: "801-555-0303")
+        household.household_members.create!(name: adult.name, member: adult, position: 2)
+
+        expect(message_for(adult).sms_numbers).to eq(["8015550303"])
+      end
+
+      it "still reaches the parents when the child has no phone of their own" do
+        child.update!(phone_number: nil)
+
+        expect(message_for(child).sms_numbers).to eq(["8015550202"])
+        expect(message_for(child)).to be_sms_available
+      end
     end
   end
 end

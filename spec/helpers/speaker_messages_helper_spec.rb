@@ -100,4 +100,25 @@ RSpec.describe SpeakerMessagesHelper, type: :helper do
       it { expect(dropdown).to be_nil }
     end
   end
+
+  describe "an unbaptized member of record" do
+    before { member.update_column(:baptized, false) }
+
+    it "is not offered an invitation" do
+      expect(helper.speaker_invitation_box(member)).to be_nil
+    end
+
+    it "is not offered a reminder from a talk" do
+      expect(helper.speaker_reminder_link(talk)).to be_nil
+      expect(helper.speaker_message_dropdown_for_talk(talk)).to be_nil
+    end
+  end
+
+  describe "a member whose baptism status is unknown" do
+    before { member.update_column(:baptized, nil) }
+
+    it "is still offered an invitation" do
+      expect(helper.speaker_invitation_box(member)).to be_present
+    end
+  end
 end

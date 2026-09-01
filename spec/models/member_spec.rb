@@ -220,4 +220,60 @@ describe ::Member do
       it { expect(result).to eq(false) }
     end
   end
+
+  describe "#speaker_category" do
+    it "calls anyone not yet in the youth programs a child" do
+      expect(Member.new(birthdate: 9.years.ago).speaker_category).to eq(:child)
+      expect(Member.new(birthdate: (Member::YOUTH_AGE - 1).years.ago.beginning_of_year).speaker_category).to eq(:child)
+    end
+
+    it "calls anyone in the youth programs but not yet an adult a youth" do
+      expect(Member.new(birthdate: 15.years.ago).speaker_category).to eq(:youth)
+    end
+
+    it "calls everyone else an adult" do
+      expect(Member.new(birthdate: 40.years.ago).speaker_category).to eq(:adult)
+      expect(Member.new(birthdate: nil).speaker_category).to eq(:adult)
+    end
+  end
+
+  describe "#invitable_to_speak?" do
+    it "excludes an unbaptized member of record, whatever their age" do
+      expect(Member.new(birthdate: 9.years.ago, baptized: false)).not_to be_invitable_to_speak
+      expect(Member.new(birthdate: 16.years.ago, baptized: false)).not_to be_invitable_to_speak
+      expect(Member.new(birthdate: 40.years.ago, baptized: false)).not_to be_invitable_to_speak
+    end
+
+    it "includes a baptized member" do
+      expect(Member.new(baptized: true)).to be_invitable_to_speak
+    end
+
+    it "does not treat unknown as a refusal" do
+      expect(Member.new(baptized: nil)).to be_invitable_to_speak
+    end
+  end
+
+  describe "#parents" do
+    let(:unit) { units(:sunny_hills) }
+    let(:household) { unit.households.create!(name: "Hill, Waylon & Wanda") }
+    let(:child) { unit.members.create!(name: "Hill, Junior", gender: :male, birthdate: 9.years.ago.to_date) }
+    let(:parent) { unit.members.create!(name: "Hill, Wanda", gender: :female, birthdate: 40.years.ago.to_date) }
+
+    it "returns the adults their household is named for" do
+      household.household_members.create!(name: parent.name, member: parent, position: 0, parent: true)
+      household.household_members.create!(name: child.name, member: child, position: 1, listed_age: 9)
+
+      expect(child.parents).to eq([parent])
+    end
+
+    it "never includes the member themselves" do
+      household.household_members.create!(name: parent.name, member: parent, position: 0, parent: true)
+
+      expect(parent.parents).to be_empty
+    end
+
+    it "is empty without a household" do
+      expect(child.parents).to be_empty
+    end
+  end
 end
