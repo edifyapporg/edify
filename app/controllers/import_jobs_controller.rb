@@ -49,6 +49,6 @@ class ImportJobsController < ApplicationController
   end
 
   def set_import_job
-    @import_job = current_unit.import_jobs.find(params[:id])
+    @import_job = current_unit.import_jobs.find(params.expect(:id))
   end
 end
