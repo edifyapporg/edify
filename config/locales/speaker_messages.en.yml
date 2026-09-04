@@ -78,11 +78,11 @@ en:
           parents_copied: "We have copied %{parents_first_names} on this message so they know about the invitation."
           closing: "Sincerely,\nThe Bishopric"
         sms:
-          greeting: "Hi %{honorific} %{last_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
-          greeting_fallback: "Hi %{honorific} %{last_name}, this is a member of the bishopric."
-          invitation: "We would like to invite %{first_name} to speak in Sacrament Meeting on %{meeting_date}. The talk would be about %{speaking_time}. Are you in town and available to speak that day? We would love to hear from you."
+          greeting: "Hi %{first_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
+          greeting_fallback: "Hi %{first_name}, this is a member of the bishopric."
+          invitation: "We would like to invite you to speak in Sacrament Meeting on %{meeting_date}. The talk would be about %{speaking_time}. Are you in town and available to speak that day? We would love to hear from you."
           parents_copied: "We have included %{parents_first_names} on this text so they know."
-          invitation_fallback: "We would like to invite %{first_name} to speak in Sacrament Meeting. The talk would be about %{speaking_time}. Are you available to speak? We would love to hear from you."
+          invitation_fallback: "We would like to invite you to speak in Sacrament Meeting. The talk would be about %{speaking_time}. Are you available to speak? We would love to hear from you."
       adult:
         email:
           greeting: "Dear %{first_name},"
@@ -154,8 +154,8 @@ en:
           parents_copied: "We have copied %{parents_first_names} on this message so they know what to expect."
           closing: "Sincerely,\nThe Bishopric"
         sms:
-          greeting: "Hi %{honorific} %{last_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
-          greeting_fallback: "Hi %{honorific} %{last_name}, this is a member of the bishopric."
+          greeting: "Hi %{first_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
+          greeting_fallback: "Hi %{first_name}, this is a member of the bishopric."
           opening: "Thanks again for agreeing to speak in Sacrament Meeting."
           meeting_date: "Your talk is on %{meeting_date}."
           topic: "Your topic is %{topic}."
@@ -214,8 +214,8 @@ en:
           parents_copied: "We have copied %{parents_first_names} on this reminder as well."
           closing: "Sincerely,\nThe Bishopric"
         sms:
-          greeting: "Hi %{honorific} %{last_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
-          greeting_fallback: "Hi %{honorific} %{last_name}, this is a member of the bishopric."
+          greeting: "Hi %{first_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
+          greeting_fallback: "Hi %{first_name}, this is a member of the bishopric."
           opening: "A friendly reminder that you are speaking in Sacrament Meeting."
           meeting_date: "The meeting is on %{meeting_date}."
           topic: "Your topic is %{topic}."
