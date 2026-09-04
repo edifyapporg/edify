@@ -1,5 +1,6 @@
 class Unit < ApplicationRecord
   has_many :access_requests, dependent: nil
+  has_many :households, dependent: :destroy
   has_many :import_jobs, dependent: :destroy
   has_many :meetings, dependent: nil
   has_many :members, dependent: nil

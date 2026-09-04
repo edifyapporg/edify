@@ -50,6 +50,18 @@
 
 <%= form_with(model: @import_job) do |form| %>
   <div class="mb-3">
+    <%= form.label :kind, "Which tab did you copy?", class: "form-label" %>
+    <%= form.select :kind,
+                    [["Individuals — names, genders, birthdates and contact details", "individuals"],
+                     ["Households — who lives together, and the family contact details", "households"]],
+                    {}, class: "form-select" %>
+    <div class="form-text">
+      Import the Individuals tab first. The Households tab records who lives with whom, but it carries no
+      genders or birthdates, so it cannot add anyone Edify has not already seen.
+    </div>
+  </div>
+
+  <div class="mb-3">
     <%= form.label :raw_membership_list, class: "form-label" %>
     <%= form.text_area :data_string, class: "form-control", rows: 20, autofocus: true, placeholder: "Paste your membership list here" %>
   </div>
