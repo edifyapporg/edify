@@ -65,8 +65,8 @@ describe SpeakerMessage do
                             meeting_date: talk.date, topic: talk.topic)
       end
 
-      it "uses the shorter talk length and the matching honorific" do
-        expect(message.sms_body).to start_with("Hi Sister Wilderman,")
+      it "asks for a shorter talk and speaks to them by first name" do
+        expect(message.sms_body).to start_with("Hi Kati,")
         expect(message.sms_body).to include("The talk would be about 3 to 5 minutes.")
         expect(message.email_body).to include("approximately 3 to 5 minutes in length")
       end
@@ -419,7 +419,7 @@ describe SpeakerMessage do
         message = invitation_for(youth)
 
         expect(message.email_body).to start_with("Dear Junior,")
-        expect(message.sms_body).to start_with("Hi Brother Ngarupe, this is")
+        expect(message.sms_body).to start_with("Hi Junior, this is")
       end
 
       it "copies the parents rather than addressing them" do
