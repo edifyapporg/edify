@@ -25,6 +25,12 @@ en:
       honorific:
         female: "Sister"
         male: "Brother"
+      # The child a message is about, in a sentence addressed to their parents. Falls back to "them" when the
+      # directory has no gender on record, so the sentence survives rather than being dropped.
+      pronoun:
+        female: "her"
+        male: "him"
+        unknown: "them"
       meeting_end_time: "9:55 am"
       # A bishopric is made up of men, and users have no gender on record, so the sender is always "Brother".
       sender_honorific: "Brother"
@@ -47,8 +53,8 @@ en:
         sms:
           greeting: "Hi %{addressed_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
           greeting_fallback: "Hi %{addressed_name}, this is a member of the bishopric."
-          invitation: "We would like to invite %{first_name} to speak in Sacrament Meeting on %{meeting_date}. It would be a short talk, about %{speaking_time}. Does that Sunday work for your family? We would love to hear from you."
-          invitation_fallback: "We would like to invite %{first_name} to speak in Sacrament Meeting. It would be a short talk, about %{speaking_time}. Which Sundays work for your family? We would love to hear from you."
+          invitation: "We would like to invite %{first_name} to speak in Sacrament Meeting on %{meeting_date}. It would be a short talk, about %{speaking_time}. Does that Sunday work for your family? We would love to hear from %{speaker_pronoun}."
+          invitation_fallback: "We would like to invite %{first_name} to speak in Sacrament Meeting. It would be a short talk, about %{speaking_time}. Which Sundays work for your family? We would love to hear from %{speaker_pronoun}."
       youth:
         email:
           greeting: "Dear %{first_name},"

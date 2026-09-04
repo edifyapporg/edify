@@ -290,6 +290,12 @@ class SpeakerMessage
     I18n.t("speaker_messages.defaults.honorific.#{person.gender}")
   end
 
+  # The speaker in the third person, for a sentence addressed to their parents.
+  # @return [String]
+  def speaker_pronoun
+    I18n.t("speaker_messages.defaults.pronoun.#{member&.gender.presence || :unknown}")
+  end
+
   # @param [Member] person
   # @return [String]
   def surname_of(person)
@@ -365,6 +371,7 @@ class SpeakerMessage
       sender_honorific: sender.present? ? I18n.t("speaker_messages.defaults.sender_honorific") : nil,
       sender_last_name: sender&.last_name,
       sender_name: sender&.name,
+      speaker_pronoun: speaker_pronoun,
       speaking_time: speaking_time,
       topic: topic,
       unit_name: unit&.name,
