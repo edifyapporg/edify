@@ -7,7 +7,7 @@ class MembersController < ApplicationController
 
   # GET /members
   def index
-    @q = current_unit.members.with_last_talk_date.ransack(params[:q])
+    @q = visible_members.with_last_talk_date.ransack(params[:q])
     @q.sorts = ["name asc"] if @q.sorts.empty?
     @pagy, @members = pagy(@q.result.includes(:unit), items: params[:items])
   end
@@ -110,6 +110,16 @@ class MembersController < ApplicationController
 
   def set_member
     @member = current_unit.members.find(params[:id])
+  end
+
+  # "Hide moved members" is a saved user preference rather than a URL filter, so
+  # the roster is narrowed before Ransack sees it and the choice survives
+  # sorting, searching and paging. A unit that has never been imported has no
+  # notion of a member who has moved out, so nothing is hidden for one.
+  def visible_members
+    return current_unit.members unless current_user.hide_moved_members? && current_unit.last_synced_on?
+
+    current_unit.members.synced_since(current_unit.last_synced_on)
   end
 
   def member_params

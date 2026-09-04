@@ -40,6 +40,7 @@ class SettingsController < ApplicationController
       .expect(
         user: [:avatar,
                :email,
+               :hide_moved_members,
                :name,
                :notification_preference_email,
                :phone_number]
