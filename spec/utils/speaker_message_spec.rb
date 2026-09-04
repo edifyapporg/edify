@@ -266,7 +266,7 @@ describe SpeakerMessage do
     it "asks a child for the shortest talk and writes to the family" do
       message = message_for(member_aged(9))
 
-      expect(message.email_body).to start_with("Dear Junior and family,")
+      expect(message.email_body).to start_with("Dear Brother Hill,")
       expect(message.email_body).to include("about 30 seconds to 2 minutes long")
       expect(message.sms_body).to include("It would be a short talk, about 30 seconds to 2 minutes.")
     end
@@ -303,8 +303,10 @@ describe SpeakerMessage do
       end
 
       it "texts the child and the parent together" do
-        expect(message_for(child).sms_numbers).to eq(%w[8015550101 8015550202])
-        expect(message_for(child).sms_url).to start_with("sms:8015550101,8015550202?&body=")
+        # The parents are the ones being asked, so they lead: a device that cannot open a group message falls back
+        # to the first number.
+        expect(message_for(child).sms_numbers).to eq(%w[8015550202 8015550101])
+        expect(message_for(child).sms_url).to start_with("sms:8015550202,8015550101?&body=")
       end
 
       it "does not add parents to an adult's text" do
@@ -320,6 +322,153 @@ describe SpeakerMessage do
 
         expect(message_for(child).sms_numbers).to eq(["8015550202"])
         expect(message_for(child)).to be_sms_available
+      end
+    end
+  end
+
+  describe "who a message is addressed to" do
+    let(:unit) { units(:sunny_hills) }
+    let(:household) { unit.households.create!(name: "Ngarupe, Davis & Kim") }
+    let(:father) do
+      unit.members.create!(name: "Ngarupe, Davis", gender: :male, birthdate: 40.years.ago.to_date,
+                           phone_number: "801-555-0201", email: "davis@example.com")
+    end
+    let(:mother) do
+      unit.members.create!(name: "Ngarupe, Kim", gender: :female, birthdate: 39.years.ago.to_date,
+                           phone_number: "801-555-0202", email: "kim@example.com")
+    end
+
+    def add_parent(person, position)
+      household.household_members.create!(name: person.name, member: person, position: position, parent: true)
+    end
+
+    def speaker_aged(years, **attributes)
+      member = unit.members.create!(name: "Ngarupe, Junior", gender: :male, birthdate: years.years.ago.to_date,
+                                    **attributes)
+      household.household_members.create!(name: member.name, member: member, position: 9, listed_age: years)
+      member
+    end
+
+    def invitation_for(member)
+      described_class.for_member(member, template: :invitation, meeting_date: Date.new(2022, 4, 10), sender: sender)
+    end
+
+    context "when a child has both parents" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "addresses them together" do
+        message = invitation_for(speaker_aged(9))
+
+        expect(message.email_body).to start_with("Dear Brother and Sister Ngarupe,")
+        expect(message.sms_body).to start_with("Hi Brother and Sister Ngarupe,")
+      end
+
+      it "puts both parents on the message, and the child too when they have a phone" do
+        child = speaker_aged(9, phone_number: "801-555-0203", email: "junior@example.com")
+        message = invitation_for(child)
+
+        expect(message.sms_numbers).to eq(%w[8015550201 8015550202 8015550203])
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com junior@example.com])
+        expect(message.email_copied).to be_empty
+      end
+
+      it "leaves the child off the thread when they have no phone" do
+        expect(invitation_for(speaker_aged(9)).sms_numbers).to eq(%w[8015550201 8015550202])
+      end
+    end
+
+    context "when a child has one parent" do
+      before { add_parent(mother, 0) }
+
+      it "addresses that parent alone" do
+        message = invitation_for(speaker_aged(9))
+
+        expect(message.email_body).to start_with("Dear Sister Ngarupe,")
+        expect(message.sms_body).to start_with("Hi Sister Ngarupe,")
+      end
+    end
+
+    context "when the parents have different surnames" do
+      let(:mother) do
+        unit.members.create!(name: "Bentley-Ngarupe, Kim", gender: :female, birthdate: 39.years.ago.to_date,
+                             phone_number: "801-555-0202")
+      end
+
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "names each of them" do
+        expect(invitation_for(speaker_aged(9)).email_body)
+          .to start_with("Dear Brother Ngarupe and Sister Bentley-Ngarupe,")
+      end
+    end
+
+    context "when a youth has both parents" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "speaks to the youth rather than to their parents" do
+        youth = speaker_aged(15, phone_number: "801-555-0204", email: "teen@example.com")
+        message = invitation_for(youth)
+
+        expect(message.email_body).to start_with("Dear Junior,")
+        expect(message.sms_body).to start_with("Hi Brother Ngarupe, this is")
+      end
+
+      it "copies the parents rather than addressing them" do
+        youth = speaker_aged(15, phone_number: "801-555-0204", email: "teen@example.com")
+        message = invitation_for(youth)
+
+        expect(message.email_recipients).to eq(["teen@example.com"])
+        expect(message.email_copied).to eq(%w[davis@example.com kim@example.com])
+        expect(message.mailto_url).to include("cc=davis@example.com,kim@example.com")
+      end
+
+      it "tells the youth their parents are on the message" do
+        youth = speaker_aged(15, phone_number: "801-555-0204", email: "teen@example.com")
+        message = invitation_for(youth)
+
+        expect(message.email_body).to include("We have copied Davis and Kim on this message")
+        expect(message.sms_body).to include("We have included Davis and Kim on this text")
+      end
+
+      it "puts the youth first on the thread, ahead of their parents" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+
+        expect(invitation_for(youth).sms_numbers).to eq(%w[8015550204 8015550201 8015550202])
+      end
+
+      it "writes to the parents when the youth has no email of their own" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+        message = invitation_for(youth)
+
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com])
+        expect(message.email_copied).to be_empty
+      end
+    end
+
+    context "when the speaker is an adult" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "speaks to them alone" do
+        adult = speaker_aged(40, phone_number: "801-555-0205", email: "adult@example.com")
+        message = invitation_for(adult)
+
+        expect(message.email_body).to start_with("Dear Junior,")
+        expect(message.sms_numbers).to eq(["8015550205"])
+        expect(message.email_recipients).to eq(["adult@example.com"])
+        expect(message.email_copied).to be_empty
+        expect(message.email_body).not_to include("copied")
       end
     end
   end
