@@ -1,4 +1,11 @@
 class Member < ApplicationRecord
+  # Children are baptized at eight.
+  BAPTISM_AGE = 8
+  # The age at which a child joins the youth programs: January of the year they turn twelve.
+  YOUTH_AGE = 12
+  # The age at which someone is spoken to as an adult rather than a youth.
+  ADULT_AGE = 18
+
   has_many :talks, dependent: :nullify
   has_many :notes, dependent: :destroy
   belongs_to :unit
@@ -74,9 +81,31 @@ class Member < ApplicationRecord
     @time_in_unit = (Date.current - created_at.to_date).to_i.days
   end
 
+  # Younger than the age at which a child is baptized, and so never a speaker. Children between this and
+  # the youth programs are kept: baptized ones can be invited to speak.
   # @return [Boolean]
   def under_age?
-    birthdate.present? && birthdate >= 11.years.ago.beginning_of_year.to_date
+    birthdate.present? && birthdate > BAPTISM_AGE.years.ago.to_date
+  end
+
+  # Which of the three groups a speaker is invited and prepared as. Each is asked to speak for a different
+  # length and gets its own wording.
+  # @return [Symbol] :child, :youth or :adult
+  def speaker_category
+    return :child if child?
+    return :youth if youth?
+
+    :adult
+  end
+
+  # @return [Boolean] not yet old enough for the youth programs, which a child joins in the year they turn 12
+  def child?
+    birthdate.present? && birthdate >= (YOUTH_AGE - 1).years.ago.beginning_of_year.to_date
+  end
+
+  # @return [Boolean]
+  def youth?
+    birthdate.present? && !child? && birthdate >= (ADULT_AGE - 1).years.ago.beginning_of_year.to_date
   end
 
   private

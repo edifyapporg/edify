@@ -184,9 +184,15 @@ describe ::Member do
 
   describe "#under_age?" do
     let(:result) { member.under_age? }
-    context "when the member is below youth age" do
-      let(:member) { Member.new(birthdate: 10.years.ago) }
+
+    context "when the member is not yet old enough to be baptized" do
+      let(:member) { Member.new(birthdate: 7.years.ago) }
       it { expect(result).to eq(true) }
+    end
+
+    context "when the member is old enough to be baptized but not yet in the youth programs" do
+      let(:member) { Member.new(birthdate: 10.years.ago) }
+      it { expect(result).to eq(false) }
     end
 
     context "when the member is youth age" do
@@ -197,6 +203,37 @@ describe ::Member do
     context "when the member is older" do
       let(:member) { Member.new(birthdate: 90.years.ago) }
       it { expect(result).to eq(false) }
+    end
+  end
+
+  describe "#child?" do
+    it "covers baptism age up to the youth programs, which start in the year a child turns 12" do
+      expect(Member.new(birthdate: 9.years.ago)).to be_child
+      expect(Member.new(birthdate: 11.years.ago.beginning_of_year)).to be_child
+    end
+
+    it "excludes anyone already in the youth programs" do
+      expect(Member.new(birthdate: 13.years.ago)).not_to be_child
+    end
+
+    it "is false without a birthdate" do
+      expect(Member.new(birthdate: nil)).not_to be_child
+    end
+  end
+
+  describe "#speaker_category" do
+    it "calls anyone not yet in the youth programs a child" do
+      expect(Member.new(birthdate: 9.years.ago).speaker_category).to eq(:child)
+      expect(Member.new(birthdate: (Member::YOUTH_AGE - 1).years.ago.beginning_of_year).speaker_category).to eq(:child)
+    end
+
+    it "calls anyone in the youth programs but not yet an adult a youth" do
+      expect(Member.new(birthdate: 15.years.ago).speaker_category).to eq(:youth)
+    end
+
+    it "calls everyone else an adult" do
+      expect(Member.new(birthdate: 40.years.ago).speaker_category).to eq(:adult)
+      expect(Member.new(birthdate: nil).speaker_category).to eq(:adult)
     end
   end
 end
