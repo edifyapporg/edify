@@ -454,6 +454,111 @@ describe SpeakerMessage do
       end
     end
 
+    context "when a youth has no number of their own" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "asks the parents on their behalf, and addresses them" do
+        youth = speaker_aged(15, email: "teen@example.com")
+        message = invitation_for(youth)
+
+        expect(message.sms_body).to start_with("Hi Brother and Sister Ngarupe,")
+        expect(message.sms_body).to include("We would like to invite Junior to speak")
+        expect(message.sms_body).to include("Is Junior in town and available to speak that day?")
+        expect(message.sms_numbers).to eq(%w[8015550201 8015550202])
+      end
+
+      it "drops the line about copying the parents, who are now the audience" do
+        expect(invitation_for(speaker_aged(15)).sms_body).not_to include("included")
+      end
+
+      it "still speaks to them directly by email when they have an address" do
+        youth = speaker_aged(15, email: "teen@example.com")
+
+        expect(invitation_for(youth).email_body).to start_with("Dear Junior,")
+        expect(invitation_for(youth).email_recipients).to eq(["teen@example.com"])
+      end
+    end
+
+    context "when a youth shares a number with a parent" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "treats it as the parent's, and addresses the parents" do
+        youth = speaker_aged(15, phone_number: "(801) 555-0202")
+        message = invitation_for(youth)
+
+        expect(message.sms_body).to start_with("Hi Brother and Sister Ngarupe,")
+        expect(message.sms_numbers).to eq(%w[8015550201 8015550202])
+      end
+    end
+
+    context "when a youth has no email of their own" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "writes to the parents about them rather than copying them" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+        message = invitation_for(youth)
+
+        expect(message.email_body).to start_with("Dear Brother and Sister Ngarupe,")
+        expect(message.email_body).to include("invite Junior to speak")
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com])
+        expect(message.email_copied).to be_empty
+      end
+
+      it "still texts them directly when they have a number" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+
+        expect(invitation_for(youth).sms_body).to start_with("Hi Junior,")
+      end
+    end
+
+    context "when a child has an email of their own" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "writes to the child and the parents together" do
+        child = speaker_aged(9, email: "junior@example.com")
+        message = invitation_for(child)
+
+        expect(message.email_body).to start_with("Dear Junior and Brother and Sister Ngarupe,")
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com junior@example.com])
+      end
+
+      it "keeps writing to the parents alone when the address is one of theirs" do
+        child = speaker_aged(9, email: "KIM@example.com")
+        message = invitation_for(child)
+
+        expect(message.email_body).to start_with("Dear Brother and Sister Ngarupe,")
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com])
+      end
+    end
+
+    context "when an adult still lives in their parents' household" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "is written to alone" do
+        adult = speaker_aged(21, phone_number: "801-555-0206", email: "grown@example.com")
+        message = invitation_for(adult)
+
+        expect(message.sms_numbers).to eq(["8015550206"])
+        expect(message.email_recipients).to eq(["grown@example.com"])
+        expect(message.email_copied).to be_empty
+      end
+    end
+
     context "when a message is about a child rather than to them" do
       before do
         add_parent(father, 0)
