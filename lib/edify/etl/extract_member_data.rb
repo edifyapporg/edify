@@ -17,6 +17,9 @@ module Edify
       FILTERED_DATA_REGEX = /\(filtered from \d+ total\)/
       MEMBER_DATA_REGEX = /\A.*(^\t*Name.*)^Count:/m
       UNBAPTIZED_MEMBER_OF_RECORD_REGEX = /\A[*\s]*(.*)\z/
+      # The directory marks an unbaptized member of record two ways, depending on the export: an asterisk before
+      # the name, or a "Not Baptized" line between the name and the rest of the row. Both mean the same thing.
+      UNBAPTIZED_ANNOTATION = "Not Baptized".freeze
 
       def self.perform(import_job)
         new(import_job).perform
@@ -106,13 +109,13 @@ module Edify
         records = member_records
         import_job.update(row_count: records.size)
 
-        records.each.with_index(1) do |cells, row_index|
-          attributes = @headers.zip(cells).to_h.slice(*included_attributes)
+        records.each.with_index(1) do |record, row_index|
+          attributes = @headers.zip(record[:cells]).to_h.slice(*included_attributes)
           next if attributes.compact.empty?
 
           raw_member_row = RawMemberRow.new(**attributes)
 
-          strip_unbaptized_member_of_record(raw_member_row)
+          set_baptism_status(raw_member_row, record[:annotations])
 
           raw_member_rows << raw_member_row
           import_job.increment!(:succeeded_count)
@@ -137,11 +140,13 @@ module Edify
           next if cells.empty?
 
           if member_name?(cells.first)
-            records << cells
+            records << { cells: cells, annotations: [] }
           elsif cells.length > 1 && records.any?
-            records.last.concat(cells) # continuation columns for a wrapped record
+            records.last[:cells].concat(cells) # continuation columns for a wrapped record
+          elsif records.any? && cells.first == UNBAPTIZED_ANNOTATION
+            records.last[:annotations] << cells.first
           end
-          # otherwise a single-cell annotation line (e.g. "Not Baptized") — skip
+          # otherwise a single-cell line we have no use for -- skip
         end
       end
 
@@ -156,10 +161,13 @@ module Edify
         @included_attributes ||= RawMemberRow.members.map(&:to_s)
       end
 
-      def strip_unbaptized_member_of_record(raw_member_row)
+      # Records the status, and removes the asterisk, which is a marker rather than part of the name.
+      def set_baptism_status(raw_member_row, annotations)
         return if raw_member_row.name.blank?
 
+        starred = raw_member_row.name.lstrip.start_with?("*")
         raw_member_row.name = raw_member_row.name.match(UNBAPTIZED_MEMBER_OF_RECORD_REGEX)[1]
+        raw_member_row.baptized = !(starred || annotations.include?(UNBAPTIZED_ANNOTATION))
       end
     end
   end

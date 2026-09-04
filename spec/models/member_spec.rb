@@ -199,4 +199,20 @@ describe ::Member do
       it { expect(result).to eq(false) }
     end
   end
+
+  describe "#invitable_to_speak?" do
+    it "excludes an unbaptized member of record, whatever their age" do
+      expect(Member.new(birthdate: 9.years.ago, baptized: false)).not_to be_invitable_to_speak
+      expect(Member.new(birthdate: 16.years.ago, baptized: false)).not_to be_invitable_to_speak
+      expect(Member.new(birthdate: 40.years.ago, baptized: false)).not_to be_invitable_to_speak
+    end
+
+    it "includes a baptized member" do
+      expect(Member.new(baptized: true)).to be_invitable_to_speak
+    end
+
+    it "does not treat unknown as a refusal" do
+      expect(Member.new(baptized: nil)).to be_invitable_to_speak
+    end
+  end
 end
