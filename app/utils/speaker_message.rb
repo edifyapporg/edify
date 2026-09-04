@@ -83,7 +83,29 @@ class SpeakerMessage
 
   # @return [Boolean]
   def email_available?
-    member.present? && member.email.present?
+    email_recipients.any?
+  end
+
+  # Who the email is addressed to. A child's parents are written to about their child, so the parents are the
+  # recipients; a youth is written to directly, with their parents copied. A youth with no email address of
+  # their own is reached through their parents, who are then addressed rather than copied.
+  # @return [Array<String>]
+  def email_recipients
+    addresses = case category
+                when :child then [*parent_emails, member&.email]
+                when :youth then member&.email.presence ? [member.email] : parent_emails
+                else [member&.email]
+                end
+
+    addresses.compact_blank.uniq
+  end
+
+  # Copied rather than addressed: a youth's parents are told what their child has been asked to do.
+  # @return [Array<String>]
+  def email_copied
+    return [] unless category == :youth
+
+    parent_emails.compact_blank.uniq - email_recipients
   end
 
   # @return [String]
@@ -100,7 +122,11 @@ class SpeakerMessage
   def mailto_url
     return unless email_available?
 
-    "mailto:#{member.email}?subject=#{encode(subject)}&body=#{encode(email_body)}"
+    query = ["subject=#{encode(subject)}"]
+    query << "cc=#{email_copied.join(',')}" if email_copied.any?
+    query << "body=#{encode(email_body)}"
+
+    "mailto:#{email_recipients.join(',')}?#{query.join('&')}"
   end
 
   # A child with no phone of their own is still reachable, because the text goes to their parents too.
@@ -114,14 +140,19 @@ class SpeakerMessage
     body(:sms)
   end
 
-  # A child or a youth is invited alongside their parents, so the text goes to all of them at once. Comma-separated
-  # recipients open a group message on iOS; Android support varies by messaging app, and a device that does not
-  # understand the list falls back to the first number rather than failing.
+  # Everyone the text goes to. A child's parents are the ones being asked, and the child joins the thread when they
+  # have a phone of their own; a youth is asked directly, with their parents on the thread as well. Comma-separated
+  # recipients open a group message on iOS and on Android messaging apps that support it; one that does not falls
+  # back to the first number rather than failing, so the person being addressed is listed first.
   # @return [Array<String>]
   def sms_numbers
-    numbers = [member&.phone_number, *parent_phone_numbers].compact_blank
+    numbers = case category
+              when :child then [*parent_phone_numbers, member&.phone_number]
+              when :youth then [member&.phone_number, *parent_phone_numbers]
+              else [member&.phone_number]
+              end
 
-    numbers.map { |number| normalize_number(number) }.uniq
+    numbers.compact_blank.map { |number| normalize_number(number) }.uniq
   end
 
   # @return [String, nil]
@@ -168,9 +199,51 @@ class SpeakerMessage
 
   # @return [Array<String>]
   def parent_phone_numbers
-    return [] unless member && category.in?(%i[child youth])
+    parents.map(&:phone_number)
+  end
 
-    member.parents.map(&:phone_number)
+  # @return [Array<String>]
+  def parent_emails
+    parents.map(&:email)
+  end
+
+  # How the message opens: the person being addressed. A child's parents are addressed together where there are two of
+  # them -- "Brother and Sister Ngarupe" -- and everyone else is addressed by their own name.
+  # @return [String, nil]
+  def addressed_name
+    return parents_name if category == :child && parents.any?
+
+    [honorific, last_name].compact_blank.join(" ").presence
+  end
+
+  # "Brother and Sister Ngarupe" for two parents who share a surname, "Brother Dyches and Sister Bentley-Dyches" for
+  # two who do not, and "Sister Kapitan" for one.
+  # @return [String, nil]
+  def parents_name
+    named = parents.filter_map { |parent| [member_honorific(parent), surname_of(parent)] }
+    return if named.empty?
+    return named.first.compact_blank.join(" ").presence if named.one?
+
+    honorifics = named.map(&:first)
+    surnames = named.map(&:last)
+
+    if surnames.uniq.one? && honorifics.compact.length == named.length
+      "#{honorifics.join(' and ')} #{surnames.first}"
+    else
+      named.map { |pair| pair.compact_blank.join(" ") }.join(" and ")
+    end
+  end
+
+  # @return [String, nil] the given names of the parents, for a sentence that speaks to them by first name
+  def parents_first_names
+    given = parents.filter_map { |parent| given_name_of(parent) }
+
+    given.to_sentence if given.any?
+  end
+
+  # @return [Array<Member>]
+  def parents
+    @parents ||= member&.parents.to_a
   end
 
   # @param [String] text
@@ -206,9 +279,27 @@ class SpeakerMessage
 
   # @return [String, nil]
   def honorific
-    return if member&.gender.blank?
+    member_honorific(member)
+  end
 
-    I18n.t("speaker_messages.defaults.honorific.#{member.gender}")
+  # @param [Member, nil] person
+  # @return [String, nil] nil when we do not know how to address them
+  def member_honorific(person)
+    return if person&.gender.blank?
+
+    I18n.t("speaker_messages.defaults.honorific.#{person.gender}")
+  end
+
+  # @param [Member] person
+  # @return [String]
+  def surname_of(person)
+    person.name.to_s.split(",").first.to_s.strip
+  end
+
+  # @param [Member] person
+  # @return [String, nil]
+  def given_name_of(person)
+    person.name.to_s.split(",", 2).last.to_s.strip.split.first
   end
 
   # Members are named "Last, First Middle", so the surname is what comes before the comma. A name entered without
@@ -263,8 +354,11 @@ class SpeakerMessage
     @substitutions ||= {
       first_name: first_name,
       full_name: speaker_name,
+      addressed_name: addressed_name,
       honorific: honorific,
       last_name: last_name,
+      parents_first_names: parents_first_names,
+      parents_name: parents_name,
       meeting_date: formatted_meeting_date,
       meeting_end_time: I18n.t("speaker_messages.defaults.meeting_end_time"),
       purpose: purpose,
