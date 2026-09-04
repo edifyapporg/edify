@@ -26,7 +26,7 @@ describe "Hymn autocomplete on the song form" do
     it "lists hymns in numeric order" do
       visit new_meeting_song_path(meeting)
 
-      values = page.all("datalist#hymns_autocomplete option", visible: :all).map { |option| option[:value] }
+      values = page.all("datalist#hymns_autocomplete option", visible: :all).pluck(:value)
       numbers = values.map { |value| value[/#(\d+)\z/, 1].to_i }
       expect(numbers).to eq(numbers.sort)
     end
