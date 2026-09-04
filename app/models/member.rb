@@ -20,7 +20,7 @@ class Member < ApplicationRecord
            .order("members.id, meetings.date desc"), :members)
   }
 
-  after_save_commit :match_talks
+  after_save_commit :match_talks, :match_household_members
 
   def self.ransackable_attributes(_auth_object = nil)
     %w[birthdate gender last_talk_date name synced_on]
@@ -86,6 +86,25 @@ class Member < ApplicationRecord
   def match_talks
     talks = unit.talks.where(speaker_name: name, member_id: nil)
     talks.update_all(member_id: id)
+  end
+
+  # The household directory is imported separately and may name someone before their member record
+  # exists, or after it was merged away. Claiming the entry on save keeps the two halves together
+  # without waiting for the next import.
+  #
+  # Where the unit has two members of one name no link can be trusted, so any existing one is released
+  # rather than left pointing at whichever record happened to be saved first -- attaching a household
+  # to the wrong person is worse than leaving it unattached, and the importer draws the same line.
+  # Merging the duplicate away saves the survivor, which claims the entry back.
+  def match_household_members
+    entries = HouseholdMember.where(household: unit.households, name: name)
+    namesakes = unit.members.where(name: name)
+
+    if namesakes.many?
+      entries.where(member_id: namesakes.select(:id)).update_all(member_id: nil)
+    else
+      entries.unmatched.update_all(member_id: id)
+    end
   end
 
   def validate_age
