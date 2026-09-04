@@ -454,6 +454,37 @@ describe SpeakerMessage do
       end
     end
 
+    context "when a message is about a child rather than to them" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "refers to a boy as him" do
+        expect(invitation_for(speaker_aged(9)).sms_body).to end_with("We would love to hear from him.")
+      end
+
+      it "refers to a girl as her" do
+        daughter = speaker_aged(9)
+        daughter.update!(gender: :female)
+
+        expect(invitation_for(daughter).sms_body).to end_with("We would love to hear from her.")
+      end
+
+      it "keeps the sentence when the directory has no gender on record" do
+        child = speaker_aged(9)
+        child.update_column(:gender, nil)
+
+        expect(invitation_for(child).sms_body).to end_with("We would love to hear from them.")
+      end
+
+      it "still speaks to a youth in the second person" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+
+        expect(invitation_for(youth).sms_body).to include("We would love to hear from you.")
+      end
+    end
+
     context "when the speaker is an adult" do
       before do
         add_parent(father, 0)
