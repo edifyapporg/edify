@@ -1,6 +1,7 @@
 class Member < ApplicationRecord
-  # Children are baptized at eight.
-  BAPTISM_AGE = 8
+  # The youngest anyone can be and still appear in the list of potential speakers. Eight is the floor we
+  # chose; baptism is not part of the test.
+  MINIMUM_SPEAKER_AGE = 8
   # The age at which a child joins the youth programs: January of the year they turn twelve.
   YOUTH_AGE = 12
   # The age at which someone is spoken to as an adult rather than a youth.
@@ -81,11 +82,11 @@ class Member < ApplicationRecord
     @time_in_unit = (Date.current - created_at.to_date).to_i.days
   end
 
-  # Younger than the age at which a child is baptized, and so never a speaker. Children between this and
-  # the youth programs are kept: baptized ones can be invited to speak.
+  # Too young to be offered as a speaker, and so not worth storing. Age is the only test: a child of eight
+  # can be invited to speak whether or not they have been baptized.
   # @return [Boolean]
   def under_age?
-    birthdate.present? && birthdate > BAPTISM_AGE.years.ago.to_date
+    birthdate.present? && birthdate > MINIMUM_SPEAKER_AGE.years.ago.to_date
   end
 
   # Which of the three groups a speaker is invited and prepared as. Each is asked to speak for a different
