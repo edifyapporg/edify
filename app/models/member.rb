@@ -1,6 +1,8 @@
 class Member < ApplicationRecord
   has_many :talks, dependent: :nullify
   has_many :notes, dependent: :destroy
+  has_many :household_members, dependent: :nullify, inverse_of: :member
+  has_many :households, through: :household_members
   belongs_to :unit
 
   enum :gender, { male: 0, female: 1 }
