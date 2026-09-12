@@ -141,6 +141,7 @@ describe "Visit the members index" do
         click_on "All ages"
         click_on "Adults"
       end
+      expect(page).to have_no_selector("#member_#{youth_member.id}") # the filter has landed
 
       uncheck "Hide moved members"
 

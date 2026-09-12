@@ -46,6 +46,7 @@ Rails.application.routes.draw do
   end
 
   resources :members do
+    patch :moved_filter, on: :collection
     post :upsert, on: :collection
     resources :notes
   end

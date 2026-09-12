@@ -1,11 +1,16 @@
 <%# "Hide moved members" is a saved user preference (users.hide_moved_members)
     rather than a URL filter, so the choice sticks across visits and is applied
-    in MembersController#index. Hidden until the unit has been imported, since a
-    unit with no import has no notion of a member who has moved out. %>
+    in MembersController#index. Saving it replaces the list, the count and these
+    controls in place, and carries the current query string so an active sort,
+    filter or search survives the toggle. Hidden until the unit has been
+    imported, since a unit with no import has no notion of a member who has
+    moved out. %>
 <% if current_unit.last_synced_on.present? %>
   <%= form_with(model: current_user,
-                url: settings_update_path,
-                html: { method: :put, class: "d-inline-block", data: { controller: "form-auto-submit" } }) do |f| %>
+                url: moved_filter_members_path(request.query_parameters),
+                html: { method: :patch,
+                        class: "d-inline-block",
+                        data: { controller: "form-auto-submit" } }) do |f| %>
     <div class="form-check form-check-inline align-middle ms-md-2 mt-2 mt-md-0">
       <%= f.check_box :hide_moved_members, class: "form-check-input" %>
       <%= f.label :hide_moved_members, "Hide moved members", class: "form-check-label" %>
