@@ -19,7 +19,7 @@ class SettingsController < ApplicationController
   def update
     message = current_user.update(settings_update_params) ? nil : current_user.errors.full_messages.join("; ")
 
-    redirect_to request.referrer, notice: message
+    redirect_to request.referrer, notice: message, status: :see_other
   end
 
   # DELETE /settings/remove_avatar

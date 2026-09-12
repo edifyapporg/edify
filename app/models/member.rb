@@ -12,6 +12,7 @@ class Member < ApplicationRecord
   strip_attributes
 
   scope :alphabetized, -> { order(:name) }
+  scope :synced_since, ->(date) { where(synced_on: date..) }
   scope :with_last_talk_date, lambda {
     from(left_joins(talks: :meeting)
            .select("distinct on (members.id) members.*, meetings.date as last_talk_date")
@@ -57,6 +58,8 @@ class Member < ApplicationRecord
 
   # @return [Boolean]
   def not_in_most_recent_sync?
+    return false if unit.last_synced_on.blank? # a unit that has never imported has nothing to be missing from
+
     synced_on.nil? || (synced_on < unit.last_synced_on)
   end
 
