@@ -33,7 +33,10 @@ class ImportJob < ApplicationRecord
   def data_string
     return @data_string if defined?(@data_string)
 
-    @data_string = raw_data.download
+    # Active Storage hands a download back as binary. The directory is UTF-8, and a binary string never
+    # compares equal to the UTF-8 one the database returns for the same bytes -- nor can it be
+    # transliterated, which duplicate detection relies on.
+    @data_string = raw_data.download&.force_encoding(Encoding::UTF_8)
   end
 
   # A regular update with callbacks will wipe out errors on the ImportJob object.

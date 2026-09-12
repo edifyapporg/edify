@@ -48,7 +48,7 @@ module Edify
       delegate :errors, to: :import_job, private: true
 
       def download_member_data
-        self.raw_data = import_job.raw_data.download
+        self.raw_data = import_job.data_string
         errors.add(:raw_data, "was not provided") if raw_data.blank?
       end
 
