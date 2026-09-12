@@ -21,7 +21,7 @@ class Member < ApplicationRecord
   after_save_commit :match_talks
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[birthdate gender last_talk_date name synced_on]
+    %w[baptized birthdate gender last_talk_date name synced_on]
   end
 
   def self.ransackable_associations(_auth_object = nil)
@@ -48,6 +48,14 @@ class Member < ApplicationRecord
     return attributes["last_talk_date"] if attributes.key?("last_talk_date")
 
     talks.joins(:meeting).maximum("meetings.date")&.to_date
+  end
+
+  # An unbaptized member of record is not invited to speak, whatever their age -- the directory reports this,
+  # and it carries unbaptized teenagers as well as unbaptized children. Unknown is not a refusal: a member
+  # Edify has not seen since baptism status was recorded is still invitable.
+  # @return [Boolean]
+  def invitable_to_speak?
+    baptized != false
   end
 
   # @return [Boolean]

@@ -6,8 +6,10 @@ module SpeakerMessagesHelper
   # the member to speak on the Sunday shown. Every Sunday's message is built up front and carried on its option, and
   # the Stimulus controller swaps the link as the picker changes.
   # @param [Member] member
-  # @return [String, nil] nil when the member has no phone number to text
+  # @return [String, nil] nil when the member has no phone number to text, or is not baptized
   def speaker_invitation_box(member, options = {})
+    return unless member.invitable_to_speak?
+
     invitations = speaker_invitations(member)
 
     return unless invitations.first&.last&.sms_available?
@@ -22,6 +24,8 @@ module SpeakerMessagesHelper
   # @param [Talk] talk
   # @return [String, nil] nil when the speaker is not matched to a member with an email address
   def speaker_reminder_link(talk, options = {})
+    return if talk.member && !talk.member.invitable_to_speak?
+
     message = SpeakerMessage.for_talk(talk, template: :reminder, sender: current_user, unit: current_unit)
 
     return unless message.email_available?
@@ -35,6 +39,8 @@ module SpeakerMessagesHelper
   # @param [Talk] talk
   # @return [String, nil] nil when the speaker is not matched to a member who can be reached
   def speaker_message_dropdown_for_talk(talk, options = {})
+    return if talk.member && !talk.member.invitable_to_speak?
+
     messages = SpeakerMessage::TEMPLATES.map do |template|
       SpeakerMessage.for_talk(talk, template: template, sender: current_user, unit: current_unit)
     end

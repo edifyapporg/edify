@@ -130,6 +130,37 @@ describe ::Edify::Etl::ExtractMemberData do
     end
   end
 
+  describe "baptism status" do
+    let(:result) { subject.perform }
+
+    before do
+      import_job.raw_data.attach(io: file_fixture(raw_data_file_name).open, filename: "raw_data.txt",
+                                 content_type: "text/plain")
+    end
+
+    context "when the export marks it with a line of its own" do
+      let(:raw_data_file_name) { "raw_member_list_stacked_headers.txt" }
+
+      it "records who is not baptized" do
+        unbaptized = result.reject(&:baptized)
+
+        expect(unbaptized.map(&:name)).to eq(["Bentley, David"])
+        expect(result.first.baptized).to be(true)
+      end
+    end
+
+    context "when the export marks it with an asterisk before the name" do
+      let(:raw_data_file_name) { "raw_member_list_unbaptized_asterisk.txt" }
+
+      it "records who is not baptized and keeps the marker out of the name" do
+        row = result.find { |r| r.name.include?("Heidenrick") }
+
+        expect(row.name).to eq("Heidenrick, Kenneth")
+        expect(row.baptized).to be(false)
+      end
+    end
+  end
+
   describe "text encoding" do
     let(:import_job) { unit.import_jobs.create!(status: :waiting) }
 
