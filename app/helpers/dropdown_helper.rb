@@ -86,36 +86,35 @@ module DropdownHelper
   end
 
   def filter_members_age_dropdown(request_params, options = {})
-    adult_threshold = 18.years.ago.beginning_of_year.to_date.to_s
+    adult_threshold = (Member::ADULT_AGE - 1).years.ago.beginning_of_year.to_date.to_s
+    youth_threshold = (Member::YOUTH_AGE - 1).years.ago.beginning_of_year.to_date.to_s
+
     all_ages_filter = { birthdate_gteq: nil, birthdate_lt: nil }
     adult_filter = { birthdate_gteq: nil, birthdate_lt: adult_threshold }
-    youth_filter = { birthdate_gteq: adult_threshold, birthdate_lt: nil }
+    youth_filter = { birthdate_gteq: adult_threshold, birthdate_lt: youth_threshold }
+    child_filter = { birthdate_gteq: youth_threshold, birthdate_lt: nil }
 
     existing_age_filter = [:birthdate_gteq, :birthdate_lt].index_with do |attr|
       request_params.dig(:q, attr).presence
     end
 
     title = case existing_age_filter
-            when all_ages_filter
-              "All ages"
-            when adult_filter
-              "Adults"
-            when youth_filter
-              "Youth"
-            else
-              "Custom ages"
+            when all_ages_filter then "All ages"
+            when adult_filter then "Adults"
+            when youth_filter then "Youth"
+            when child_filter then "Children"
+            else "Custom ages"
             end
 
     dropdown_items = [
-      { name: "All",
-        link: request_params.deep_merge(q: all_ages_filter),
+      { name: "All", link: request_params.deep_merge(q: all_ages_filter),
         active: existing_age_filter == all_ages_filter },
-      { name: "Adults",
-        link: request_params.deep_merge(q: adult_filter),
+      { name: "Adults", link: request_params.deep_merge(q: adult_filter),
         active: existing_age_filter == adult_filter },
-      { name: "Youth",
-        link: request_params.deep_merge(q: youth_filter),
+      { name: "Youth", link: request_params.deep_merge(q: youth_filter),
         active: existing_age_filter == youth_filter },
+      { name: "Children", link: request_params.deep_merge(q: child_filter),
+        active: existing_age_filter == child_filter },
     ]
 
     build_dropdown_menu(title, dropdown_items, options)
