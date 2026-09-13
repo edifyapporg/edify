@@ -236,4 +236,28 @@ describe ::Member do
       expect(Member.new(birthdate: nil).speaker_category).to eq(:adult)
     end
   end
+
+  describe "#parents" do
+    let(:unit) { units(:sunny_hills) }
+    let(:household) { unit.households.create!(name: "Hill, Waylon & Wanda") }
+    let(:child) { unit.members.create!(name: "Hill, Junior", gender: :male, birthdate: 9.years.ago.to_date) }
+    let(:parent) { unit.members.create!(name: "Hill, Wanda", gender: :female, birthdate: 40.years.ago.to_date) }
+
+    it "returns the adults their household is named for" do
+      household.household_members.create!(name: parent.name, member: parent, position: 0, parent: true)
+      household.household_members.create!(name: child.name, member: child, position: 1, listed_age: 9)
+
+      expect(child.parents).to eq([parent])
+    end
+
+    it "never includes the member themselves" do
+      household.household_members.create!(name: parent.name, member: parent, position: 0, parent: true)
+
+      expect(parent.parents).to be_empty
+    end
+
+    it "is empty without a household" do
+      expect(child.parents).to be_empty
+    end
+  end
 end

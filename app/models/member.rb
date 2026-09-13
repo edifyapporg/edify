@@ -110,6 +110,12 @@ class Member < ApplicationRecord
     birthdate.present? && !child? && birthdate >= (ADULT_AGE - 1).years.ago.beginning_of_year.to_date
   end
 
+  # The adults of the household, whom a child or youth is invited alongside.
+  # @return [Array<Member>]
+  def parents
+    households.flat_map { |household| household.parents.filter_map(&:member) }.uniq - [self]
+  end
+
   private
 
   def match_talks
