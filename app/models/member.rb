@@ -50,14 +50,6 @@ class Member < ApplicationRecord
     talks.joins(:meeting).maximum("meetings.date")&.to_date
   end
 
-  # An unbaptized member of record is not invited to speak, whatever their age -- the directory reports this,
-  # and it carries unbaptized teenagers as well as unbaptized children. Unknown is not a refusal: a member
-  # Edify has not seen since baptism status was recorded is still invitable.
-  # @return [Boolean]
-  def invitable_to_speak?
-    baptized != false
-  end
-
   # @return [Boolean]
   def new_member?
     time_in_unit.present? && time_in_unit < 1.year
