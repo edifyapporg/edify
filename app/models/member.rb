@@ -23,7 +23,7 @@ class Member < ApplicationRecord
   after_save_commit :match_talks, :match_household_members
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[birthdate gender last_talk_date name synced_on]
+    %w[baptized birthdate gender last_talk_date name synced_on]
   end
 
   def self.ransackable_associations(_auth_object = nil)
