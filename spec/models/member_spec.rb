@@ -199,4 +199,57 @@ describe ::Member do
       it { expect(result).to eq(false) }
     end
   end
+
+  describe "matching household entries" do
+    let(:unit) { units(:sunny_hills) }
+    let(:household) { unit.households.create!(name: "Newcomer, Alma & Beth") }
+
+    it "claims an entry the household directory named before the member existed" do
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0, parent: true)
+
+      member = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+
+      expect(entry.reload.member).to eq(member)
+    end
+
+    it "claims an entry when a member is renamed onto it" do
+      entry = household.household_members.create!(name: "Newcomer, Beth", position: 0)
+      member = unit.members.create!(name: "Elsewhere, Beth", gender: :female, birthdate: 40.years.ago.to_date)
+      expect(entry.reload.member).to be_nil
+
+      member.update!(name: "Newcomer, Beth")
+
+      expect(entry.reload.member).to eq(member)
+    end
+
+    it "releases the link rather than guessing when a namesake appears" do
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0)
+      unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+      expect(entry.reload.member).to be_present
+
+      unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 41.years.ago.to_date)
+
+      expect(entry.reload.member).to be_nil
+    end
+
+    it "claims the entry back once the duplicate is merged away" do
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0, parent: true)
+      keep = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+      dupe = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 41.years.ago.to_date)
+      expect(entry.reload.member).to be_nil
+
+      Members::Merger.call(keep: keep, remove: dupe)
+
+      expect(entry.reload.member).to eq(keep)
+    end
+
+    it "leaves an entry that is already matched alone" do
+      taken = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0, member: taken)
+
+      taken.touch
+
+      expect(entry.reload.member).to eq(taken)
+    end
+  end
 end
