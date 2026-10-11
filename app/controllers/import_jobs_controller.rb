@@ -45,10 +45,10 @@ class ImportJobsController < ApplicationController
   private
 
   def import_job_params
-    params.expect(import_job: [:data_string])
+    params.expect(import_job: %i[data_string kind])
   end
 
   def set_import_job
-    @import_job = current_unit.import_jobs.find(params[:id])
+    @import_job = current_unit.import_jobs.find(params.expect(:id))
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_11_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_01_000004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,12 +106,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000001) do
     t.index ["sluggable_type", "sluggable_id"], name: "index_friendly_id_slugs_on_sluggable_type_and_sluggable_id"
   end
 
+  create_table "household_members", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "household_id", null: false
+    t.integer "listed_age"
+    t.bigint "member_id"
+    t.string "name", null: false
+    t.boolean "parent", default: false, null: false
+    t.integer "position", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id", "position"], name: "index_household_members_on_household_id_and_position", unique: true
+    t.index ["household_id"], name: "index_household_members_on_household_id"
+    t.index ["member_id"], name: "index_household_members_on_member_id"
+  end
+
+  create_table "households", force: :cascade do |t|
+    t.string "address_lines", default: [], null: false, array: true
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "name", null: false
+    t.string "phone_number"
+    t.date "synced_on"
+    t.bigint "unit_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["unit_id", "name"], name: "index_households_on_unit_id_and_name", unique: true
+    t.index ["unit_id"], name: "index_households_on_unit_id"
+  end
+
   create_table "import_jobs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "elapsed_seconds"
     t.string "error_message"
     t.integer "failed_count"
     t.integer "ignored_count"
+    t.integer "kind", default: 0, null: false
     t.string "logs"
     t.bigint "owner_id"
     t.integer "row_count"
@@ -144,6 +172,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000001) do
   end
 
   create_table "members", force: :cascade do |t|
+    t.boolean "baptized"
     t.date "birthdate"
     t.datetime "created_at", null: false
     t.string "email"
@@ -396,6 +425,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_11_000001) do
   add_foreign_key "access_requests", "users"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "household_members", "households"
+  add_foreign_key "household_members", "members"
+  add_foreign_key "households", "units"
   add_foreign_key "import_jobs", "units"
   add_foreign_key "import_jobs", "users", column: "owner_id"
   add_foreign_key "meetings", "units"

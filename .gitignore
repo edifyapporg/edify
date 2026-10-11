@@ -40,3 +40,8 @@
 
 # Claude Code
 .claude/
+
+# Editor swap files
+*.swp
+*.swo
+*~

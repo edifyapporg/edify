@@ -44,4 +44,15 @@ describe ::Members::Merger do
   it "refuses to merge a member into itself" do
     expect { described_class.call(keep: keep, remove: keep) }.to raise_error(ArgumentError)
   end
+
+  it "carries the removed record's household entry across" do
+    household = unit.households.create!(name: "Removed, Person & Spouse")
+    entry = household.household_members.create!(name: remove.name, member: remove, position: 0, parent: true)
+
+    described_class.call(keep: keep, remove: remove)
+
+    # Members nullify their household entries when destroyed, so without the reassignment the household quietly
+    # loses the person -- and a child in it loses a parent.
+    expect(entry.reload.member).to eq(keep)
+  end
 end
