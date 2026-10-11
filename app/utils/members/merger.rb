@@ -1,8 +1,9 @@
 module Members
   # Merges two member records that represent the same person. The +keep+ record
-  # is preserved; the +remove+ record's talks and notes are reassigned to it and
-  # any contact/pause details missing on +keep+ are backfilled, then +remove+ is
-  # deleted. Runs in a transaction so a failure leaves both records untouched.
+  # is preserved; the +remove+ record's talks, notes and household entries are
+  # reassigned to it and any contact/pause details missing on +keep+ are
+  # backfilled, then +remove+ is deleted. Runs in a transaction so a failure
+  # leaves both records untouched.
   class Merger
     CONTACT_ATTRIBUTES = %i[email phone_number].freeze
 
@@ -36,10 +37,12 @@ module Members
     attr_reader :keep, :remove
 
     def reassign_associations
-      # Talks nullify and notes are destroyed when a member is deleted, so both
-      # must be reassigned to the surviving record before removing the stale one.
+      # Talks and household entries nullify and notes are destroyed when a member is
+      # deleted, so all three must be reassigned to the surviving record before
+      # removing the stale one.
       Talk.where(member_id: remove.id).update_all(member_id: keep.id)
       Note.where(member_id: remove.id).update_all(member_id: keep.id)
+      HouseholdMember.where(member_id: remove.id).update_all(member_id: keep.id)
     end
 
     def backfill_missing_details
