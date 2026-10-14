@@ -116,24 +116,28 @@ describe ::Member do
 
       it { expect(result).to eq(true) }
     end
+
+    context "when the unit has never been imported" do
+      before do
+        unit.update(last_synced_on: nil)
+        member.update(synced_on: "2022-04-10")
+      end
+
+      it { expect(result).to eq(false) }
+    end
   end
 
-  describe "filtering out moved members via a synced_on_gteq ransack query" do
-    subject(:filtered) do
-      unit.members.with_last_talk_date.ransack(synced_on_gteq: unit.last_synced_on).result.to_a
-    end
+  describe ".synced_since" do
+    subject(:filtered) { unit.members.synced_since(unit.last_synced_on) }
 
     let(:unit) { units(:sunny_hills) }
     let(:current_member) { members(:bartell_randal) } # synced_on == unit.last_synced_on
     let(:moved_member) { members(:hill_waylon) } # synced_on before unit.last_synced_on
-
-    it "exposes synced_on to ransack" do
-      expect(described_class.ransackable_attributes).to include("synced_on")
-    end
+    let(:never_synced_member) { members(:user_unassigned) } # synced_on is nil
 
     it "keeps only members synced in the most recent import" do
       expect(filtered).to include(current_member)
-      expect(filtered).not_to include(moved_member)
+      expect(filtered).not_to include(moved_member, never_synced_member)
       expect(filtered.none?(&:not_in_most_recent_sync?)).to be(true)
     end
   end

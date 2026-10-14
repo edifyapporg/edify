@@ -7,7 +7,10 @@ export default class extends Controller {
 
         Array.from(form).forEach(function (el) {
             el.addEventListener("input", function () {
-                form.submit()
+                // requestSubmit, not submit: it fires the submit event, so Turbo
+                // handles the navigation instead of the browser tearing the
+                // document down and reloading it.
+                form.requestSubmit()
             })
         })
     }
