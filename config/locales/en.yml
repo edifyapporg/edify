@@ -12,6 +12,8 @@ en:
       unit_not_found: "We could not find a ward by the name %{unit_name}. Please try again or go back to create a new ward."
     application_controller:
       not_authorized: "Not authorized."
+    import_jobs_controller:
+      kind_missing: "Choose which tab you copied before importing."
     madmin:
       application_controller:
         not_authorized: "Not authorized."
