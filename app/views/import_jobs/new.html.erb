@@ -13,10 +13,11 @@
     on <%= link_to("the Church website", "https://lcr.churchofjesuschrist.org", target: "_blank") %></li>
   <li>Visit
     the <%= link_to("member list page", "https://lcr.churchofjesuschrist.org/records/member-list", target: "_blank") %>
-    to see your ward membership list
+    to see your ward membership list, and open the tab you want to import: <strong>Individuals</strong> or
+    <strong>Households</strong>.
   </li>
-  <li><strong>Scroll to the very bottom of the membership list.</strong> This is important. Members are loaded a page at
-    a time, and your member list will be incomplete if you do not scroll all the way down.
+  <li><strong>Scroll to the very bottom of the list.</strong> This is important. Members are loaded a page at
+    a time, and your list will be incomplete if you do not scroll all the way down.
   </li>
   <li>Click anywhere within the white space on the Church member list page. This shifts focus to the page itself. (Do
     not click on any names, phone numbers, or email addresses. In general, if your mouse cursor is over white space and
@@ -29,15 +30,18 @@
   <li>From your browser's "Edit" menu, choose "Copy" or type Command-C (on a Mac) or Control-C (on a Windows machine).
     This copies all of that text to your clipboard.
   </li>
-  <li>Return to this page in Edify and click in the "Raw Membership List" box below.</li>
+  <li>Return to this page in Edify, choose the tab you copied below, and click in the box for that tab.</li>
   <li>From your browser's "Edit" menu, choose "Paste" or type Command-V (on a Mac) or Control-V (on a Windows machine).
     You should see the raw text appear in the box, including menus ("Membership", "Organizations", etc.), headers, and
     membership information for all members of your ward.
     <strong>Don't worry; Edify will filter out all of the extra text during the import process.</strong>
   </li>
   <li>Scroll down to ensure the list is complete. Near the bottom, you should see something that looks like "Count: XXX"
-    (where XXX is the number of members in your ward).
+    (where XXX is the number of entries on that tab).
     <strong>If this line is not present, the import will fail.</strong>
+  </li>
+  <li>To import both tabs at once, choose "Individuals + Households" and repeat these steps for the second tab, pasting
+    it into its own box.
   </li>
   <li>Once you have ensured the raw information is complete, click the "Import" button below. Your members will be
     imported.
@@ -48,26 +52,49 @@
   members that appeared in a previous import but not in this import will be marked as "Moved Out".</p>
 <p><strong>With some practice, this process will take just a minute or two.</strong></p>
 
-<%= form_with(model: @import_job) do |form| %>
-  <div class="mb-3">
-    <%= form.label :kind, "Which tab did you copy?", class: "form-label" %>
-    <%= form.select :kind,
-                    [["Individuals — names, genders, birthdates and contact details", "individuals"],
-                     ["Households — who lives together, and the family contact details", "households"]],
-                    {}, class: "form-select" %>
-    <div class="form-text">
+<%= form_with(scope: :import_job, url: import_jobs_path, data: { controller: "import-kind" }) do |form| %>
+  <fieldset class="mb-4">
+    <legend class="h5">Which tab did you copy?</legend>
+    <div class="row g-3">
+      <% import_kind_options.each do |kind, title, description| %>
+        <div class="col-md">
+          <%= form.radio_button :kind, kind,
+                                checked: @kind == kind,
+                                class: "btn-check",
+                                autocomplete: "off",
+                                data: { import_kind_target: "option", action: "import-kind#select" } %>
+          <%= form.label :kind, for: "import_job_kind_#{kind}",
+                         class: "btn btn-outline-primary import-kind-option w-100 h-100 p-3 text-start" do %>
+            <span class="d-flex justify-content-between align-items-start">
+              <span class="fs-5 fw-bold"><%= title %></span>
+              <i class="bi bi-check-circle-fill fs-4 import-kind-check"></i>
+            </span>
+            <span class="d-block mt-1"><%= description %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <div class="form-text mt-2">
       Import the Individuals tab first. The Households tab records who lives with whom, but it carries no
       genders or birthdates, so it cannot add anyone Edify has not already seen.
+    </div>
+  </fieldset>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md" data-import-kind-target="field" data-kinds="individuals both">
+      <%= form.label :individuals_data, "Individuals tab", class: "form-label" %>
+      <%= form.text_area :individuals_data, value: @individuals_data, class: "form-control", rows: 20,
+                         placeholder: "Paste the Individuals tab here" %>
+    </div>
+    <div class="col-md" data-import-kind-target="field" data-kinds="households both">
+      <%= form.label :households_data, "Households tab", class: "form-label" %>
+      <%= form.text_area :households_data, value: @households_data, class: "form-control", rows: 20,
+                         placeholder: "Paste the Households tab here" %>
     </div>
   </div>
 
   <div class="mb-3">
-    <%= form.label :raw_membership_list, class: "form-label" %>
-    <%= form.text_area :data_string, class: "form-control", rows: 20, autofocus: true, placeholder: "Paste your membership list here" %>
-  </div>
-
-  <div class="mb-3">
-    <%= form.submit "Import", class: "btn btn-primary" %>
+    <%= form.submit "Import", class: "btn btn-primary", data: { import_kind_target: "submit" } %>
 
     <%= link_to "Cancel", import_jobs_path, class: "btn btn-link" %>
   </div>
