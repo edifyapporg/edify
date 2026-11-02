@@ -1,7 +1,19 @@
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) and any other LLM coding
-assistant working in this repository.
+assistant working in this repository. `AGENTS.md` is a symlink to this file, so tools that
+read that name get the same instructions.
+
+## Project basics
+
+- Rails app on PostgreSQL. Ruby and Node versions are pinned in `.tool-versions`; the Rails
+  version is in `Gemfile.lock`. Local setup is in `README.md`; production operations are in
+  `OPERATIONS.md`.
+- Run the test suite with `bin/rspec`. New or changed logic needs specs.
+- Run the linter with `bundle exec rubocop -a`. CI lints **every file the PR touches**, not just
+  the changed lines, so fix all offenses in each file you modify, including ones that were
+  already there.
+- CI also runs `bin/brakeman -q -w2` and `bin/bundle-audit check --update`.
 
 ## Pull request discipline
 
@@ -16,10 +28,10 @@ reviewer who will miss bugs.
 
 ### 1. No huge PRs
 
-Do not submit 2,000-line PRs. Large changes must be broken up into a sequence of smaller,
-independently reviewable PRs.
+Large changes must be broken up into a sequence of smaller, independently reviewable PRs.
 
-- Aim for a PR a reviewer can read carefully in one sitting.
+- Aim for **under ~500 changed lines**, not counting lockfiles, `db/schema.rb`, and data or
+  seed files. This is a soft target, not a hard cap, but a PR well past it needs a reason.
 - If the change is getting large, stop and find the seams: scaffolding first, then behavior;
   one model/feature per PR; refactor-only PRs separate from behavior-change PRs.
 - Pure mechanical churn (renames, formatting, generated files, dependency bumps) goes in its
@@ -32,8 +44,9 @@ independently reviewable PRs.
 Every PR must reference an issue so the reviewer knows what you are trying to do and why.
 
 - Link it in the PR description (`Closes #123`, or `Refs #123` for one PR in a series).
-- If no issue exists yet, create one before opening the PR — a short statement of the problem
-  and the intended outcome is enough.
+- If no issue exists yet, draft one (a short statement of the problem and the intended
+  outcome is enough) and create it once the developer confirms. Don't open issues without
+  asking.
 - When a large change is split into several PRs, they can share a tracking issue; each PR
   says which slice of that issue it delivers.
 
@@ -43,16 +56,31 @@ All database changes — migrations, schema changes, new tables/columns, indexes
 backfills — go in a **separate PR from code changes**. This keeps review focused and makes
 rollback possible without reverting unrelated application code.
 
-- Ship the migration PR first, merge and deploy it, then ship the code that uses it.
+Deploy order depends on the direction of the change:
+
+- **Additive changes** (new table, new nullable column, new index, widening a column): ship
+  the migration PR first, merge and deploy it, then ship the code that uses it.
+- **Destructive changes** (dropping or renaming a column or table, adding `NOT NULL`,
+  narrowing a type): ship the code first. That PR stops reading and writing the column and
+  adds it to the model's `self.ignored_columns`. Once that is deployed, ship the migration
+  that drops or changes it. Dropping a column the running code still knows about causes
+  errors, because Rails caches the column list at boot.
+
+In every case:
+
 - Write migrations so they are safe to run against the existing production schema and safe to
-  roll back on their own.
+  roll back on their own (e.g. give `remove_column` the column type so it is reversible).
 - Note in the migration PR whether it is backward-compatible with the currently deployed code
   (it should be).
+- **Allowed exception:** a migration PR may carry the small code change that is tied directly
+  to it and to nothing else, such as regenerated `db/schema.rb` or removing the
+  `ignored_columns` entry for the column being dropped. Anything with its own behavior goes
+  in its own PR.
 
 ### 4. Code changes get their own PR
 
-Application code changes live in their own PR, separate from migrations and separate from
-unrelated concerns. One PR, one purpose.
+Application code changes live in their own PR, separate from migrations (apart from the
+exception above) and separate from unrelated concerns. One PR, one purpose.
 
 ### 5. Make the reviewer's job easy
 
@@ -68,11 +96,15 @@ add screenshots for user-visible UI changes.
 
 ### Pre-PR checklist
 
-Before opening a PR, confirm and report each of these to the developer:
+Before opening a PR, check each item below. Report any item that fails, along with how you
+propose to fix it; if everything passes, say so in one line.
 
-- [ ] Diff is small enough to review in one sitting; if not, it has been split.
+- [ ] Diff is under the size target (or the description explains why not); otherwise it has
+      been split.
 - [ ] An issue exists and is linked in the description.
-- [ ] Database/migration changes are isolated in their own PR.
+- [ ] Database/migration changes are isolated in their own PR, in the right deploy order for
+      an additive or destructive change.
 - [ ] Code changes are isolated from schema changes and from unrelated work.
 - [ ] Description covers what, why, how to verify, and risk.
+- [ ] Rubocop is clean on every touched file, and specs pass.
 - [ ] No unrelated files, formatting churn, or stray debug code in the diff.
