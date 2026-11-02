@@ -1,6 +1,15 @@
 class Member < ApplicationRecord
+  # Children are baptized at eight.
+  BAPTISM_AGE = 8
+  # The age at which a child joins the youth programs: January of the year they turn twelve.
+  YOUTH_AGE = 12
+  # The age at which someone is spoken to as an adult rather than a youth.
+  ADULT_AGE = 18
+
   has_many :talks, dependent: :nullify
   has_many :notes, dependent: :destroy
+  has_many :household_members, dependent: :nullify, inverse_of: :member
+  has_many :households, through: :household_members
   belongs_to :unit
 
   enum :gender, { male: 0, female: 1 }
@@ -12,16 +21,17 @@ class Member < ApplicationRecord
   strip_attributes
 
   scope :alphabetized, -> { order(:name) }
+  scope :synced_since, ->(date) { where(synced_on: date..) }
   scope :with_last_talk_date, lambda {
     from(left_joins(talks: :meeting)
            .select("distinct on (members.id) members.*, meetings.date as last_talk_date")
            .order("members.id, meetings.date desc"), :members)
   }
 
-  after_save_commit :match_talks
+  after_save_commit :match_talks, :match_household_members
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[birthdate gender last_talk_date name synced_on]
+    %w[baptized birthdate gender last_talk_date name synced_on]
   end
 
   def self.ransackable_associations(_auth_object = nil)
@@ -57,6 +67,8 @@ class Member < ApplicationRecord
 
   # @return [Boolean]
   def not_in_most_recent_sync?
+    return false if unit.last_synced_on.blank? # a unit that has never imported has nothing to be missing from
+
     synced_on.nil? || (synced_on < unit.last_synced_on)
   end
 
@@ -74,9 +86,31 @@ class Member < ApplicationRecord
     @time_in_unit = (Date.current - created_at.to_date).to_i.days
   end
 
+  # Younger than the age at which a child is baptized, and so never a speaker. Children between this and
+  # the youth programs are kept: baptized ones can be invited to speak.
   # @return [Boolean]
   def under_age?
-    birthdate.present? && birthdate >= 11.years.ago.beginning_of_year.to_date
+    birthdate.present? && birthdate > BAPTISM_AGE.years.ago.to_date
+  end
+
+  # Which of the three groups a speaker is invited and prepared as. Each is asked to speak for a different
+  # length and gets its own wording.
+  # @return [Symbol] :child, :youth or :adult
+  def speaker_category
+    return :child if child?
+    return :youth if youth?
+
+    :adult
+  end
+
+  # @return [Boolean] not yet old enough for the youth programs, which a child joins in the year they turn 12
+  def child?
+    birthdate.present? && birthdate >= (YOUTH_AGE - 1).years.ago.beginning_of_year.to_date
+  end
+
+  # @return [Boolean]
+  def youth?
+    birthdate.present? && !child? && birthdate >= (ADULT_AGE - 1).years.ago.beginning_of_year.to_date
   end
 
   private
@@ -84,6 +118,25 @@ class Member < ApplicationRecord
   def match_talks
     talks = unit.talks.where(speaker_name: name, member_id: nil)
     talks.update_all(member_id: id)
+  end
+
+  # The household directory is imported separately and may name someone before their member record
+  # exists, or after it was merged away. Claiming the entry on save keeps the two halves together
+  # without waiting for the next import.
+  #
+  # Where the unit has two members of one name no link can be trusted, so any existing one is released
+  # rather than left pointing at whichever record happened to be saved first -- attaching a household
+  # to the wrong person is worse than leaving it unattached, and the importer draws the same line.
+  # Merging the duplicate away saves the survivor, which claims the entry back.
+  def match_household_members
+    entries = HouseholdMember.where(household: unit.households, name: name)
+    namesakes = unit.members.where(name: name)
+
+    if namesakes.many?
+      entries.where(member_id: namesakes.select(:id)).update_all(member_id: nil)
+    else
+      entries.unmatched.update_all(member_id: id)
+    end
   end
 
   def validate_age

@@ -86,62 +86,38 @@ module DropdownHelper
   end
 
   def filter_members_age_dropdown(request_params, options = {})
-    adult_threshold = 18.years.ago.beginning_of_year.to_date.to_s
+    adult_threshold = (Member::ADULT_AGE - 1).years.ago.beginning_of_year.to_date.to_s
+    youth_threshold = (Member::YOUTH_AGE - 1).years.ago.beginning_of_year.to_date.to_s
+
     all_ages_filter = { birthdate_gteq: nil, birthdate_lt: nil }
     adult_filter = { birthdate_gteq: nil, birthdate_lt: adult_threshold }
-    youth_filter = { birthdate_gteq: adult_threshold, birthdate_lt: nil }
+    youth_filter = { birthdate_gteq: adult_threshold, birthdate_lt: youth_threshold }
+    child_filter = { birthdate_gteq: youth_threshold, birthdate_lt: nil }
 
     existing_age_filter = [:birthdate_gteq, :birthdate_lt].index_with do |attr|
       request_params.dig(:q, attr).presence
     end
 
     title = case existing_age_filter
-            when all_ages_filter
-              "All ages"
-            when adult_filter
-              "Adults"
-            when youth_filter
-              "Youth"
-            else
-              "Custom ages"
+            when all_ages_filter then "All ages"
+            when adult_filter then "Adults"
+            when youth_filter then "Youth"
+            when child_filter then "Children"
+            else "Custom ages"
             end
 
     dropdown_items = [
-      { name: "All",
-        link: request_params.deep_merge(q: all_ages_filter),
+      { name: "All", link: request_params.deep_merge(q: all_ages_filter),
         active: existing_age_filter == all_ages_filter },
-      { name: "Adults",
-        link: request_params.deep_merge(q: adult_filter),
+      { name: "Adults", link: request_params.deep_merge(q: adult_filter),
         active: existing_age_filter == adult_filter },
-      { name: "Youth",
-        link: request_params.deep_merge(q: youth_filter),
+      { name: "Youth", link: request_params.deep_merge(q: youth_filter),
         active: existing_age_filter == youth_filter },
+      { name: "Children", link: request_params.deep_merge(q: child_filter),
+        active: existing_age_filter == child_filter },
     ]
 
     build_dropdown_menu(title, dropdown_items, options)
-  end
-
-  # Checkbox that hides "moved" members (those not in the unit's most recent
-  # import). "Not moved" is exactly synced_on >= unit.last_synced_on, so the
-  # checkbox rides the same Ransack `q` params as the filter dropdowns: checking
-  # it adds synced_on_gteq, unchecking clears it, while deep_merge preserves any
-  # other active filters/sort/search. Hidden until the unit has been imported.
-  def moved_filter_checkbox(request_params, unit)
-    return if unit.last_synced_on.blank?
-
-    currently_hidden = request_params.dig(:q, :synced_on_gteq).present?
-    toggle_url = url_for(request_params.deep_merge(q: { synced_on_gteq: currently_hidden ? nil : unit.last_synced_on }))
-
-    content_tag(:div, class: "form-check form-check-inline align-middle ms-md-2 mt-2 mt-md-0") do
-      concat check_box_tag("hide_moved", "1", currently_hidden,
-                           class: "form-check-input",
-                           data: {
-                             controller: "toggle-filter",
-                             toggle_filter_url_value: toggle_url,
-                             action: "change->toggle-filter#toggle",
-                           })
-      concat label_tag("hide_moved", "Hide moved members", class: "form-check-label")
-    end
   end
 
   def filter_talks_matched_dropdown(request_params, options = {})

@@ -1,0 +1,3 @@
+<%= turbo_stream.replace "members_and_pager", partial: "members_and_pager", locals: { members: @members, pagy: @pagy } %>
+<%= turbo_stream.replace "member_count", partial: "member_count", locals: { pagy: @pagy } %>
+<%= turbo_stream.replace "sort_and_filter_dropdowns", partial: "sort_and_filter_dropdowns", locals: { q: @q } %>
