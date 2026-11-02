@@ -132,7 +132,7 @@ class MeetingsController < ApplicationController
   end
 
   def set_meeting
-    @meeting = current_unit.meetings.find(params[:id])
+    @meeting = current_unit.meetings.find(params.expect(:id))
   end
 
   def meeting_params
