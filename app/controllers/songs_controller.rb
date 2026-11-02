@@ -72,11 +72,11 @@ class SongsController < ApplicationController
   private
 
   def set_meeting
-    @meeting = current_unit.meetings.find(params[:meeting_id])
+    @meeting = current_unit.meetings.find(params.expect(:meeting_id))
   end
 
   def set_song
-    @song = @meeting.songs.find(params[:id])
+    @song = @meeting.songs.find(params.expect(:id))
   end
 
   def song_params

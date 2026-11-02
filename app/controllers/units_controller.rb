@@ -42,7 +42,7 @@ class UnitsController < ApplicationController
   # GET /units/1/song_last_sung?title=SongTitle&date=2022-04-10
   def song_last_sung
     title = params[:title]
-    date = params[:date].to_date
+    date = params[:date].to_date # rubocop:disable Rails/StrongParametersExpect -- blank date is allowed
     previous_song = title.present? && date.present? ? @unit.song_last_sung(title, date) : nil
     duration = date.present? && previous_song.present? ? (date - previous_song.meeting_date).to_i.days : nil
 
@@ -58,7 +58,7 @@ class UnitsController < ApplicationController
   # GET /units/1/speaker_last_spoke?name=SmithsonViolet&date=2022-04-10
   def speaker_last_spoke
     name = params[:name]
-    date = params[:date].to_date
+    date = params[:date].to_date # rubocop:disable Rails/StrongParametersExpect -- blank date is allowed
     previous_talk = name.present? && date.present? ? @unit.speaker_last_talk(name, date) : nil
     duration = date.present? && previous_talk.present? ? (date - previous_talk.meeting_date).to_i.days : nil
 
@@ -78,6 +78,6 @@ class UnitsController < ApplicationController
   end
 
   def set_unit
-    @unit = ::Unit.find(params[:id])
+    @unit = ::Unit.find(params.expect(:id))
   end
 end
