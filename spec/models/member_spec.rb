@@ -116,24 +116,28 @@ describe ::Member do
 
       it { expect(result).to eq(true) }
     end
+
+    context "when the unit has never been imported" do
+      before do
+        unit.update(last_synced_on: nil)
+        member.update(synced_on: "2022-04-10")
+      end
+
+      it { expect(result).to eq(false) }
+    end
   end
 
-  describe "filtering out moved members via a synced_on_gteq ransack query" do
-    subject(:filtered) do
-      unit.members.with_last_talk_date.ransack(synced_on_gteq: unit.last_synced_on).result.to_a
-    end
+  describe ".synced_since" do
+    subject(:filtered) { unit.members.synced_since(unit.last_synced_on) }
 
     let(:unit) { units(:sunny_hills) }
     let(:current_member) { members(:bartell_randal) } # synced_on == unit.last_synced_on
     let(:moved_member) { members(:hill_waylon) } # synced_on before unit.last_synced_on
-
-    it "exposes synced_on to ransack" do
-      expect(described_class.ransackable_attributes).to include("synced_on")
-    end
+    let(:never_synced_member) { members(:user_unassigned) } # synced_on is nil
 
     it "keeps only members synced in the most recent import" do
       expect(filtered).to include(current_member)
-      expect(filtered).not_to include(moved_member)
+      expect(filtered).not_to include(moved_member, never_synced_member)
       expect(filtered.none?(&:not_in_most_recent_sync?)).to be(true)
     end
   end
@@ -208,6 +212,59 @@ describe ::Member do
     context "when the member is older" do
       let(:member) { Member.new(birthdate: 90.years.ago) }
       it { expect(result).to eq(false) }
+    end
+  end
+
+  describe "matching household entries" do
+    let(:unit) { units(:sunny_hills) }
+    let(:household) { unit.households.create!(name: "Newcomer, Alma & Beth") }
+
+    it "claims an entry the household directory named before the member existed" do
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0, parent: true)
+
+      member = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+
+      expect(entry.reload.member).to eq(member)
+    end
+
+    it "claims an entry when a member is renamed onto it" do
+      entry = household.household_members.create!(name: "Newcomer, Beth", position: 0)
+      member = unit.members.create!(name: "Elsewhere, Beth", gender: :female, birthdate: 40.years.ago.to_date)
+      expect(entry.reload.member).to be_nil
+
+      member.update!(name: "Newcomer, Beth")
+
+      expect(entry.reload.member).to eq(member)
+    end
+
+    it "releases the link rather than guessing when a namesake appears" do
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0)
+      unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+      expect(entry.reload.member).to be_present
+
+      unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 41.years.ago.to_date)
+
+      expect(entry.reload.member).to be_nil
+    end
+
+    it "claims the entry back once the duplicate is merged away" do
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0, parent: true)
+      keep = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+      dupe = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 41.years.ago.to_date)
+      expect(entry.reload.member).to be_nil
+
+      Members::Merger.call(keep: keep, remove: dupe)
+
+      expect(entry.reload.member).to eq(keep)
+    end
+
+    it "leaves an entry that is already matched alone" do
+      taken = unit.members.create!(name: "Newcomer, Alma", gender: :female, birthdate: 40.years.ago.to_date)
+      entry = household.household_members.create!(name: "Newcomer, Alma", position: 0, member: taken)
+
+      taken.touch
+
+      expect(entry.reload.member).to eq(taken)
     end
   end
 
