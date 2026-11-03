@@ -1,6 +1,6 @@
 module PagyStubHelper
   # PagyStub overrides #next and #prev but that's ok here
-  # rubocop:disable Lint/StructNewOverride
+  # rubocop:disable-next Lint/StructNewOverride
   PagyStub = Struct.new(
     :page,
     :last,
@@ -10,7 +10,6 @@ module PagyStubHelper
     :limit,
     :count
   )
-  # rubocop:enable Lint/StructNewOverride
 
   # Usage with a real collection:
   #   pagy = pagy_stub_for(collection, page: 2, limit: 10)
