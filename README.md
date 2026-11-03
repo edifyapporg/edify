@@ -181,6 +181,10 @@ Writing code for something is the fastest way to get feedback. It doesn't matter
 just a spike of an idea we'd love to see it. Testing is critical to our long-term success, so code submissions must 
 include tests covering all critical logic. :heart:
 
+Work-in-progress and spike PRs are welcome as drafts. A PR that is ready for review should follow the
+[pull request rules in CLAUDE.md](CLAUDE.md#pull-request-discipline): small and focused, linked to an issue, and with
+database changes in their own PR. Those rules apply to everyone, not just AI assistants.
+
 ### Issues
 
 Be detailed. They only person who knows the bug you are experiencing or feature that you want is you! So please be as 
