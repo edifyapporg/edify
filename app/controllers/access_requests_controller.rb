@@ -74,7 +74,7 @@ class AccessRequestsController < ApplicationController
   end
 
   def set_access_request
-    @access_request = AccessRequest.find(params[:id])
+    @access_request = AccessRequest.find(params.expect(:id))
   end
 
   def access_request_params

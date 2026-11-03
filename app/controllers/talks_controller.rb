@@ -120,11 +120,11 @@ class TalksController < ApplicationController
   private
 
   def set_meeting
-    @meeting = current_unit.meetings.find(params[:meeting_id])
+    @meeting = current_unit.meetings.find(params.expect(:meeting_id))
   end
 
   def set_talk
-    @talk = @meeting.talks.find(params[:id])
+    @talk = @meeting.talks.find(params.expect(:id))
   end
 
   def talk_params

@@ -55,7 +55,7 @@ class UsersController < ApplicationController
   private
 
   def set_user
-    @user = current_user.unit.users.find(params[:id])
+    @user = current_user.unit.users.find(params.expect(:id))
   end
 
   def authorize_user

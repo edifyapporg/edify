@@ -129,4 +129,68 @@ describe ::Edify::Etl::ExtractMemberData do
       end
     end
   end
+
+  describe "baptism status" do
+    let(:result) { subject.perform }
+
+    before do
+      import_job.raw_data.attach(io: file_fixture(raw_data_file_name).open, filename: "raw_data.txt",
+                                 content_type: "text/plain")
+    end
+
+    context "when the export marks it with a line of its own" do
+      let(:raw_data_file_name) { "raw_member_list_stacked_headers.txt" }
+
+      it "records who is not baptized" do
+        unbaptized = result.reject(&:baptized)
+
+        expect(unbaptized.map(&:name)).to eq(["Bentley, David"])
+        expect(result.first.baptized).to be(true)
+      end
+    end
+
+    context "when the export marks it with an asterisk before the name" do
+      let(:raw_data_file_name) { "raw_member_list_unbaptized_asterisk.txt" }
+
+      it "records who is not baptized and keeps the marker out of the name" do
+        row = result.find { |r| r.name.include?("Heidenrick") }
+
+        expect(row.name).to eq("Heidenrick, Kenneth")
+        expect(row.baptized).to be(false)
+      end
+    end
+  end
+
+  describe "text encoding" do
+    let(:import_job) { unit.import_jobs.create!(status: :waiting) }
+
+    before do
+      import_job.raw_data.attach(io: file_fixture("raw_member_list.txt").open, filename: "raw_data.txt",
+                                 content_type: "text/plain")
+    end
+
+    # Active Storage hands a download back as binary. A binary name compares unequal to the UTF-8 one the database
+    # returns for the same bytes, and cannot be transliterated at all, so a name outside ASCII quietly stops
+    # matching anything.
+    it "reads names as UTF-8 rather than binary" do
+      row = subject.perform.find { |raw_member_row| raw_member_row.name.include?("King") }
+
+      expect(row.name.encoding).to eq(Encoding::UTF_8)
+      expect(row.name).to eq("King, Amelia Kalā’auolaniwao")
+    end
+
+    it "produces a name that matches the one the database gives back" do
+      row = subject.perform.find { |raw_member_row| raw_member_row.name.include?("King") }
+      member = unit.members.create!(name: row.name, gender: :female, birthdate: Date.new(2014, 4, 10))
+
+      expect(member.reload.name).to eq(row.name)
+      expect({ member.name => :found }[row.name]).to eq(:found)
+    end
+
+    it "can be transliterated, which duplicate detection depends on" do
+      row = subject.perform.find { |raw_member_row| raw_member_row.name.include?("King") }
+
+      expect { ActiveSupport::Inflector.transliterate(row.name) }.not_to raise_error
+    end
+  end
 end
