@@ -1,7 +1,7 @@
 import {Controller} from "@hotwired/stimulus"
 
 // Shows the paste field for each tab the chosen import reads, and holds the Import button back until a choice is made.
-// Without JavaScript every field shows and the server refuses a submit with no choice.
+// Without JavaScript every field shows and the server refuses a submit with no choice or an empty paste.
 export default class extends Controller {
 
     static targets = ["option", "field", "submit"]
@@ -16,7 +16,10 @@ export default class extends Controller {
         this.fieldTargets.forEach(function (field) {
             const shown = kind !== null && field.dataset.kinds.split(" ").includes(kind)
             field.classList.toggle("d-none", !shown)
-            field.querySelectorAll("textarea").forEach(textarea => textarea.disabled = !shown)
+            field.querySelectorAll("textarea").forEach(function (textarea) {
+                textarea.disabled = !shown
+                textarea.required = shown
+            })
         })
 
         this.submitTarget.disabled = kind === null

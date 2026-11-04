@@ -4,7 +4,7 @@ class ImportJobsController < ApplicationController
   before_action :set_import_job, only: %i[show destroy]
   after_action :verify_authorized
 
-  KINDS = %w[individuals households both].freeze
+  KINDS = ImportJobsHelper::IMPORT_KIND_OPTIONS.map(&:first).freeze
 
   # GET /import_jobs
   def index
@@ -33,10 +33,16 @@ class ImportJobsController < ApplicationController
       return render "new", status: :unprocessable_content
     end
 
+    blank_kind = kinds_to_import.find { |kind| import_job_params[:"#{kind}_data"].blank? }
+    if blank_kind
+      flash.now[:danger] = t("controllers.import_jobs_controller.paste_missing", tab: blank_kind.titleize)
+      return render "new", status: :unprocessable_content
+    end
+
     import_jobs = kinds_to_import.map { |kind| build_import_job(kind) }
 
     if save_all(import_jobs)
-      ::ImporterJob.perform_later(import_job: import_jobs.first, next_import_job: import_jobs.second)
+      ::ImporterJob.perform_later(import_job: import_jobs.first, next_import_job_id: import_jobs.second&.id)
       redirect_to import_jobs_path
     else
       messages = import_jobs.flat_map { |import_job| import_job.errors.full_messages }

@@ -14,6 +14,7 @@ en:
       not_authorized: "Not authorized."
     import_jobs_controller:
       kind_missing: "Choose which tab you copied before importing."
+      paste_missing: "Paste the %{tab} tab before importing."
     madmin:
       application_controller:
         not_authorized: "Not authorized."

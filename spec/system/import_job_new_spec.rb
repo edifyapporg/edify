@@ -20,7 +20,7 @@ describe "Start a membership list import" do
     expect(page).to have_field("import_job_kind_households", type: "radio", checked: false, visible: :all)
     expect(page).to have_field("import_job_kind_both", type: "radio", checked: false, visible: :all)
     expect(page).to have_css("label[for=import_job_kind_both]", text: "Individuals + Households")
-    expect(page).to have_content("Import the Individuals tab first")
+    expect(page).to have_content("If you import the tabs separately, import Individuals first")
   end
 
   it "imports the Individuals tab" do
@@ -33,7 +33,7 @@ describe "Start a membership list import" do
     import_job = ImportJob.order(:id).last
     expect(import_job).to be_individuals
     expect(import_job.data_string).to eq(submitted(individuals_paste))
-    expect(ImporterJob).to have_been_enqueued.with(import_job: import_job, next_import_job: nil)
+    expect(ImporterJob).to have_been_enqueued.with(import_job: import_job, next_import_job_id: nil)
     expect(page).to have_current_path(import_jobs_path)
   end
 
@@ -64,7 +64,7 @@ describe "Start a membership list import" do
     expect(households_job.data_string).to eq(submitted(households_paste))
     expect(households_job).to be_waiting
     expect(ImporterJob).to have_been_enqueued.exactly(:once)
-    expect(ImporterJob).to have_been_enqueued.with(import_job: individuals_job, next_import_job: households_job)
+    expect(ImporterJob).to have_been_enqueued.with(import_job: individuals_job, next_import_job_id: households_job.id)
   end
 
   it "ignores the other tab's box when only one tab is chosen" do
@@ -84,6 +84,29 @@ describe "Start a membership list import" do
     expect { click_button "Import" }.not_to change(ImportJob, :count)
 
     expect(page).to have_content("Choose which tab you copied before importing.")
+    expect(page).to have_field("Individuals tab", with: submitted(individuals_paste))
+    expect(ImporterJob).not_to have_been_enqueued
+  end
+
+  it "refuses an import whose chosen tab has no paste" do
+    visit new_import_job_path
+    choose "import_job_kind_households", allow_label_click: true
+    fill_in "Individuals tab", with: individuals_paste
+
+    expect { click_button "Import" }.not_to change(ImportJob, :count)
+
+    expect(page).to have_content("Paste the Households tab before importing.")
+    expect(ImporterJob).not_to have_been_enqueued
+  end
+
+  it "refuses both tabs when only one is pasted, keeping the paste" do
+    visit new_import_job_path
+    choose "import_job_kind_both", allow_label_click: true
+    fill_in "Individuals tab", with: individuals_paste
+
+    expect { click_button "Import" }.not_to change(ImportJob, :count)
+
+    expect(page).to have_content("Paste the Households tab before importing.")
     expect(page).to have_field("Individuals tab", with: submitted(individuals_paste))
     expect(ImporterJob).not_to have_been_enqueued
   end
@@ -108,6 +131,17 @@ describe "Start a membership list import" do
       find("label[for=import_job_kind_individuals]").click
       expect(page).to have_field("Individuals tab")
       expect(page).to have_no_field("Households tab")
+    end
+
+    it "requires a paste in each box it shows" do
+      visit new_import_job_path
+
+      find("label[for=import_job_kind_both]").click
+      expect(page).to have_css("textarea#import_job_individuals_data[required]")
+      expect(page).to have_css("textarea#import_job_households_data[required]")
+
+      find("label[for=import_job_kind_individuals]").click
+      expect(page).to have_css("textarea#import_job_individuals_data[required]")
     end
   end
 end
