@@ -58,7 +58,7 @@ class Meeting < ApplicationRecord
 
   def status
     case meeting_type.to_sym
-    when :sacrament_meeting || :ward_conference
+    when :sacrament_meeting, :ward_conference
       sacrament_status
     else
       :ok
