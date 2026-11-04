@@ -38,8 +38,6 @@ en:
       created: "Talk was successfully created."
       updated: "Talk was successfully updated."
       destroyed: "Talk was successfully destroyed."
-    units_controller:
-      updated: "Unit was successfully updated."
     users_controller:
       updated: "User was successfully updated."
       destroyed: "User was successfully destroyed."
