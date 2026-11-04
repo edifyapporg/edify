@@ -21,4 +21,31 @@ describe ::Meeting do
       it { expect(result).to eq(true) }
     end
   end
+
+  describe "#status" do
+    let(:meeting) { meetings(:meeting_2) }
+    let(:result) { meeting.status }
+
+    before { meeting.talks.where(position: (talk_count + 1)..).delete_all }
+
+    context "when a sacrament meeting has no talks" do
+      let(:talk_count) { 0 }
+      it { expect(result).to eq(:empty) }
+    end
+
+    context "when a sacrament meeting has fewer talks than the minimum" do
+      let(:talk_count) { Meeting::MINIMUM_SPEAKERS - 1 }
+      it { expect(result).to eq(:incomplete) }
+    end
+
+    context "when a sacrament meeting has exactly the minimum number of talks" do
+      let(:talk_count) { Meeting::MINIMUM_SPEAKERS }
+      it { expect(result).to eq(:ok) }
+    end
+
+    context "when a sacrament meeting has more talks than the minimum" do
+      let(:talk_count) { 3 }
+      it { expect(result).to eq(:ok) }
+    end
+  end
 end
