@@ -3,24 +3,21 @@ class UnitPolicy < ApplicationPolicy
     user.needs_onboarding?
   end
 
-  def edit?
-    user.unit_admin? &&
-      user.unit_id == record.id
-  end
-
   def create?
     new?
   end
 
-  def update?
-    edit?
-  end
-
   def song_last_sung?
-    user.music_editor?
+    user.music_editor? && own_unit?
   end
 
   def speaker_last_spoke?
-    user.unit_admin?
+    user.unit_admin? && own_unit?
+  end
+
+  private
+
+  def own_unit?
+    record.present? && user.unit_id == record.id
   end
 end

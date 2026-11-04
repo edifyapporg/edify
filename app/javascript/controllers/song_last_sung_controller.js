@@ -5,11 +5,10 @@ export default class extends Controller {
 
   static values = {
     date: String,
-    unitId: String,
   }
 
   update() {
-    const url = "/units/" + this.unitIdValue + "/song_last_sung"
+    const url = "/unit/song_last_sung"
 
     get(url, {
       query: {
