@@ -1,19 +1,15 @@
 class UnitsController < ApplicationController
   before_action :authenticate_user!
-  before_action :authorize_user
-  before_action :set_unit, except: [:new, :create]
+  before_action :authorize_user, only: [:new, :create]
+  before_action :set_and_authorize_unit, only: [:song_last_sung, :speaker_last_spoke]
   after_action :verify_authorized
 
-  # GET /units/new
+  # GET /unit/new
   def new
     @unit = ::Unit.new
   end
 
-  # GET /units/1/edit
-  def edit
-  end
-
-  # POST /units
+  # POST /unit
   def create
     @unit = ::Unit.new(unit_params)
     current_user.role = :bishopric
@@ -26,20 +22,7 @@ class UnitsController < ApplicationController
     end
   end
 
-  # PATCH/PUT /units/1
-  def update
-    if @unit.update(unit_params)
-      respond_to do |format|
-        format.html do
-          redirect_to @unit, notice: t("controllers.units_controller.updated")
-        end
-      end
-    else
-      render :edit, status: :unprocessable_content
-    end
-  end
-
-  # GET /units/1/song_last_sung?title=SongTitle&date=2022-04-10
+  # GET /unit/song_last_sung?title=SongTitle&date=2022-04-10
   def song_last_sung
     title = params[:title]
     date = params[:date].to_date # rubocop:disable Rails/StrongParametersExpect -- blank date is allowed
@@ -55,7 +38,7 @@ class UnitsController < ApplicationController
     end
   end
 
-  # GET /units/1/speaker_last_spoke?name=SmithsonViolet&date=2022-04-10
+  # GET /unit/speaker_last_spoke?name=SmithsonViolet&date=2022-04-10
   def speaker_last_spoke
     name = params[:name]
     date = params[:date].to_date # rubocop:disable Rails/StrongParametersExpect -- blank date is allowed
@@ -77,7 +60,11 @@ class UnitsController < ApplicationController
     params.expect(unit: [:name])
   end
 
-  def set_unit
-    @unit = ::Unit.find(params.expect(:id))
+  # The unit always comes from the signed-in user, never from the request.
+  # current_unit is nil for users not yet assigned to a unit, so name the
+  # policy explicitly rather than letting Pundit infer it from the record.
+  def set_and_authorize_unit
+    @unit = current_unit
+    authorize @unit, policy_class: ::UnitPolicy
   end
 end
