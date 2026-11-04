@@ -109,17 +109,17 @@ describe ::Edify::Etl::ImportManager do
   describe "the age a member has to reach to be stored" do
     let(:raw_member_rows) do
       [
-        ::Edify::Etl::RawMemberRow.new(name: "Newly, Baptized", gender: "M",
-                                       birthdate: Member::BAPTISM_AGE.years.ago.to_date.to_s),
+        ::Edify::Etl::RawMemberRow.new(name: "Unbaptized, Eight", gender: "M",
+                                       birthdate: Member::MINIMUM_SPEAKER_AGE.years.ago.to_date.to_s),
         ::Edify::Etl::RawMemberRow.new(name: "Toddler, Tiny", gender: "F", birthdate: 3.years.ago.to_date.to_s),
       ]
     end
 
-    it "keeps a child old enough to have been baptized" do
+    it "keeps a child who has reached the minimum age, baptized or not" do
       expect { subject.perform! }.to change(::Member, :count).by(1)
 
-      child = unit.members.find_by(name: "Newly, Baptized")
-      expect(child.age).to eq(Member::BAPTISM_AGE)
+      child = unit.members.find_by(name: "Unbaptized, Eight")
+      expect(child.age).to eq(Member::MINIMUM_SPEAKER_AGE)
       expect(child.speaker_category).to eq(:child)
     end
 
