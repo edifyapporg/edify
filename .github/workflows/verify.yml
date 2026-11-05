@@ -109,7 +109,6 @@ jobs:
         env:
           RAILS_ENV: test
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
-          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
           bin/rails db:setup
 
@@ -117,5 +116,4 @@ jobs:
         env:
           RAILS_ENV: test
           POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
-          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: bin/rspec
