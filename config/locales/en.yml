@@ -49,7 +49,7 @@ en:
       notification:
         message:
           zero: "The %{meeting_type} scheduled for %{date} has no speakers yet scheduled."
-          one: "The %{meeting_type} meeting scheduled for %{date} has only one speaker scheduled at this time."
+          one: "The %{meeting_type} scheduled for %{date} has only one speaker scheduled at this time."
           other: "The %{meeting_type} scheduled for %{date} has only %{count} speakers scheduled at this time."
         subject: "Meeting for %{date} is not fully scheduled in Edify"
     missing_meetings_notification:
