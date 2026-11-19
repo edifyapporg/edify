@@ -334,6 +334,9 @@ Devise.setup do |config|
   # config.sign_in_after_change_password = true
 
   config.jwt do |jwt|
-    jwt.secret = Rails.application.credentials.dig(:devise, :jwt_secret_key)
+    # Outside production, fall back to the app's secret_key_base so tests and local development run
+    # without the master key. Production always uses the secret from credentials.
+    jwt.secret = Rails.application.credentials.dig(:devise, :jwt_secret_key) ||
+                 (Rails.application.secret_key_base unless Rails.env.production?)
   end
 end

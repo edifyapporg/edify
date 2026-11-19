@@ -62,6 +62,19 @@ describe CheckMeetingsAndNotify do
         expect(event.notifications.pluck(:recipient_id)).to eq([scheduler.id])
       end
     end
+
+    context "when the meeting has two speakers" do
+      before do
+        incomplete_meeting.talks.create!(speaker_name: "Speaker, First", position: 1)
+        incomplete_meeting.talks.create!(speaker_name: "Speaker, Second", position: 2)
+      end
+
+      it "does not send an incomplete meeting notification" do
+        expect do
+          subject.perform!
+        end.not_to(change { Noticed::Event.where(type: "IncompleteMeetingNotification").count })
+      end
+    end
   end
 
   context "when there are no incomplete meetings in the relevant timeframe" do

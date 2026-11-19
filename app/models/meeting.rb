@@ -7,6 +7,9 @@ class Meeting < ApplicationRecord
     opening_prayer_name: "Opening Prayer",
     closing_prayer_name: "Closing Prayer",
   }.freeze
+  # The fewest talks a sacrament meeting needs to count as fully scheduled. Fewer than this and the meeting's
+  # schedulers are notified that it still needs speakers.
+  MINIMUM_SPEAKERS = 2
 
   has_many :talks, -> { order(position: :asc) }, dependent: nil
   has_many :songs, dependent: :destroy
@@ -55,7 +58,7 @@ class Meeting < ApplicationRecord
 
   def status
     case meeting_type.to_sym
-    when :sacrament_meeting || :ward_conference
+    when :sacrament_meeting, :ward_conference
       sacrament_status
     else
       :ok
@@ -65,7 +68,7 @@ class Meeting < ApplicationRecord
   def sacrament_status
     if talk_count.zero?
       :empty
-    elsif talk_count < 3
+    elsif talk_count < MINIMUM_SPEAKERS
       :incomplete
     else
       :ok
