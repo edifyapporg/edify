@@ -31,6 +31,14 @@ en:
         female: "her"
         male: "him"
         unknown: "them"
+      pronoun_possessive:
+        female: "her"
+        male: "his"
+        unknown: "their"
+      pronoun_subject:
+        female: "she"
+        male: "he"
+        unknown: "they"
       meeting_end_time: "9:55 am"
       # A bishopric is made up of men, and users have no gender on record, so the sender is always "Brother".
       sender_honorific: "Brother"
@@ -55,6 +63,10 @@ en:
           greeting_fallback: "Hi %{addressed_name}, this is a member of the bishopric."
           invitation: "We would like to invite %{first_name} to speak in Sacrament Meeting on %{meeting_date}. It would be a short talk, about %{speaking_time}. Does that Sunday work for your family? We would love to hear from %{speaker_pronoun}."
           invitation_fallback: "We would like to invite %{first_name} to speak in Sacrament Meeting. It would be a short talk, about %{speaking_time}. Which Sundays work for your family? We would love to hear from %{speaker_pronoun}."
+        # Used when the child has an email address of their own, so the message reaches them and their parents.
+        email_family:
+          greeting: "Dear %{first_name} and %{addressed_name},"
+          greeting_fallback: "Dear %{first_name} and family,"
       youth:
         email:
           greeting: "Dear %{first_name},"
@@ -87,8 +99,27 @@ en:
           greeting: "Hi %{first_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
           greeting_fallback: "Hi %{first_name}, this is a member of the bishopric."
           invitation: "We would like to invite you to speak in Sacrament Meeting on %{meeting_date}. The talk would be about %{speaking_time}. Are you in town and available to speak that day? We would love to hear from you."
-          parents_copied: "We have included %{parents_first_names} on this text so they know."
           invitation_fallback: "We would like to invite you to speak in Sacrament Meeting. The talk would be about %{speaking_time}. Are you available to speak? We would love to hear from you."
+          parents_copied: "We have included %{parents_first_names} on this text so they know."
+        # Used when the directory has no number for the youth: the parents are asked on their behalf.
+        sms_guardian:
+          greeting: "Hi %{addressed_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
+          greeting_fallback: "Hi %{addressed_name}, this is a member of the bishopric."
+          invitation: "We would like to invite %{first_name} to speak in Sacrament Meeting on %{meeting_date}. The talk would be about %{speaking_time}. Is %{first_name} in town and available to speak that day? We would love to hear from %{speaker_pronoun}."
+          invitation_fallback: "We would like to invite %{first_name} to speak in Sacrament Meeting. The talk would be about %{speaking_time}. Is %{first_name} available to speak? We would love to hear from %{speaker_pronoun}."
+          parents_copied: ""
+        # Used when the directory has no email address for the youth.
+        email_guardian:
+          greeting: "Dear %{addressed_name},"
+          opening: "The Bishopric would like to invite %{first_name} to speak in sacrament meeting on %{meeting_date}. We are writing to you so you can pass this along. If that Sunday does not work, please let us know and we can look at another one."
+          opening_fallback: "The Bishopric would like to invite %{first_name} to speak in sacrament meeting. We are writing to you so you can pass this along. If you let us know which Sundays work, we will find one."
+          assignment: "The talk will be approximately %{speaking_time} in length, and the assigned topic is %{topic}."
+          assignment_fallback: "The talk will be approximately %{speaking_time} in length."
+          preparation: "As %{first_name} prepares, encourage %{speaker_pronoun} to think about what this gospel principle has meant in %{speaker_possessive} own life. A scripture, something from a recent general conference talk, and an experience of %{speaker_possessive} own are plenty for a talk this length."
+          timing: "Please have %{first_name} prepare and practice beforehand so the talk stays within its time. Writing it out and reading it is perfectly acceptable."
+          worship: "Sacrament meeting is a sacred opportunity to worship the Savior and strengthen the faith of those who hear. As %{first_name} prepares prayerfully, %{speaker_subject} will be blessed and will bless those %{speaker_subject} teaches."
+          confirmation: "Please reply to confirm that %{first_name} received this invitation, and feel free to reach out with any questions."
+          parents_copied: ""
       adult:
         email:
           greeting: "Dear %{first_name},"
@@ -147,6 +178,10 @@ en:
           length: "Please plan on about %{speaking_time} -- one scripture and one experience in their own words is plenty."
           logistics: "Come a few minutes early and sit near the front. Notes are welcome, and a parent can stand with them."
           offer: "Let us know if we can help."
+        # Used when the child has an email address of their own, so the message reaches them and their parents.
+        email_family:
+          greeting: "Dear %{first_name} and %{addressed_name},"
+          greeting_fallback: "Dear %{first_name} and family,"
       youth:
         email:
           greeting: "Dear %{first_name},"
@@ -167,6 +202,24 @@ en:
           topic: "Your topic is %{topic}."
           length: "Please plan on %{speaking_time}, and arrive about ten minutes early to sit on the stand."
           offer: "Let us know if you have questions or would like any help."
+        sms_guardian:
+          greeting: "Hi %{addressed_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
+          greeting_fallback: "Hi %{addressed_name}, this is a member of the bishopric."
+          opening: "Thanks again for letting %{first_name} speak in Sacrament Meeting."
+          meeting_date: "The talk is on %{meeting_date}."
+          topic: "The topic is %{topic}."
+          length: "Please plan on %{speaking_time}, and arrive about ten minutes early so %{speaker_subject} can sit on the stand."
+          offer: "Let us know if you have questions or would like any help."
+        email_guardian:
+          greeting: "Dear %{addressed_name},"
+          opening: "Thank you for letting %{first_name} speak in sacrament meeting. Here are a few things that may help as %{speaker_subject} prepares -- please pass them along."
+          meeting_date: "The talk is scheduled for %{meeting_date}."
+          topic: "The assigned topic is %{topic}."
+          length: "Please plan on %{speaking_time}."
+          preparation: "Encourage %{first_name} to study the topic in the scriptures and in a recent general conference talk, and to think of one experience of %{speaker_possessive} own that fits it. Writing the talk out and reading it is perfectly acceptable, and ending with %{speaker_possessive} testimony is the most important part."
+          logistics: "Please plan to arrive about ten minutes before the meeting begins so %{first_name} can sit on the stand with the bishopric."
+          offer: "If %{speaker_subject} would like to talk through %{speaker_possessive} ideas, or have a member of the bishopric look over the talk beforehand, we are glad to help."
+          closing: "Sincerely,\nThe Bishopric"
       adult:
         email:
           greeting: "Dear %{first_name},"
@@ -208,6 +261,10 @@ en:
           meeting_date: "It is on %{meeting_date}."
           length: "About %{speaking_time} is perfect."
           request: "Let us know if anything has changed."
+        # Used when the child has an email address of their own, so the message reaches them and their parents.
+        email_family:
+          greeting: "Dear %{first_name} and %{addressed_name},"
+          greeting_fallback: "Dear %{first_name} and family,"
       youth:
         email:
           greeting: "Dear %{first_name},"
@@ -227,6 +284,24 @@ en:
           topic: "Your topic is %{topic}."
           length: "Please plan on %{speaking_time}, and arrive about ten minutes early to sit on the stand."
           request: "Let us know if anything has changed."
+        sms_guardian:
+          greeting: "Hi %{addressed_name}, this is %{sender_honorific} %{sender_last_name} from the bishopric."
+          greeting_fallback: "Hi %{addressed_name}, this is a member of the bishopric."
+          opening: "A friendly reminder that %{first_name} is speaking in Sacrament Meeting."
+          meeting_date: "The meeting is on %{meeting_date}."
+          topic: "The topic is %{topic}."
+          length: "Please plan on %{speaking_time}, and arrive about ten minutes early so %{speaker_subject} can sit on the stand."
+          request: "Let us know if anything has changed."
+        email_guardian:
+          greeting: "Dear %{addressed_name},"
+          opening: "This is a friendly reminder that %{first_name} is scheduled to speak in sacrament meeting -- please pass this along."
+          meeting_date: "The meeting is on %{meeting_date}."
+          topic: "The assigned topic is %{topic}."
+          length: "Please plan on %{speaking_time}."
+          logistics: "Please plan to arrive about ten minutes before the meeting begins so %{first_name} can sit on the stand with the bishopric."
+          request: "Please let us know right away if anything has changed or if you have questions."
+          parents_copied: ""
+          closing: "Sincerely,\nThe Bishopric"
       adult:
         email:
           greeting: "Dear %{first_name},"

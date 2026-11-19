@@ -13,6 +13,8 @@ class SpeakerMessage
   SEGMENT_SEPARATORS = { email: "\n\n", sms: "\n" }.freeze
   INTERPOLATION_PATTERN = /%\{(\w+)\}/
   FALLBACK_SUFFIX = "_fallback".freeze
+  # The voice a category is written in when nothing about the speaker's contact details changes it.
+  DEFAULT_VOICES = { adult: :speaker, child: :guardian, youth: :speaker }.freeze
 
   class << self
     # @param [Talk] talk
@@ -91,9 +93,11 @@ class SpeakerMessage
   # their own is reached through their parents, who are then addressed rather than copied.
   # @return [Array<String>]
   def email_recipients
-    addresses = case category
-                when :child then [*parent_emails, member&.email]
-                when :youth then member&.email.presence ? [member.email] : parent_emails
+    addresses = case voice(:email)
+                # Written to the parents about the speaker, so only they are addressed.
+                when :guardian then category == :adult ? [member&.email] : parent_emails
+                # A child with an address of their own is written to alongside their parents.
+                when :family then [*parent_emails, member&.email]
                 else [member&.email]
                 end
 
@@ -103,7 +107,7 @@ class SpeakerMessage
   # Copied rather than addressed: a youth's parents are told what their child has been asked to do.
   # @return [Array<String>]
   def email_copied
-    return [] unless category == :youth
+    return [] unless category == :youth && voice(:email) == :speaker
 
     parent_emails.compact_blank.uniq - email_recipients
   end
@@ -147,9 +151,12 @@ class SpeakerMessage
   # @return [Array<String>]
   def sms_numbers
     numbers = case category
+              # An adult is texted alone, even one still living in their parents' household.
+              when :adult then [member&.phone_number]
+              # The parents are the ones being asked; the child joins the thread if they have a number.
               when :child then [*parent_phone_numbers, member&.phone_number]
-              when :youth then [member&.phone_number, *parent_phone_numbers]
-              else [member&.phone_number]
+              # A youth we can reach leads their own thread. One we cannot is asked for through their parents.
+              else voice(:sms) == :speaker ? [member&.phone_number, *parent_phone_numbers] : parent_phone_numbers
               end
 
     numbers.compact_blank.map { |number| normalize_number(number) }.uniq
@@ -211,7 +218,7 @@ class SpeakerMessage
   # them -- "Brother and Sister Ngarupe" -- and everyone else is addressed by their own name.
   # @return [String, nil]
   def addressed_name
-    return parents_name if category == :child && parents.any?
+    return parents_name if parents.any?
 
     [honorific, last_name].compact_blank.join(" ").presence
   end
@@ -250,6 +257,18 @@ class SpeakerMessage
   # @return [String]
   def encode(text)
     ERB::Util.url_encode(text)
+  end
+
+  # The sentences that have to change when a message is not written in its category's usual voice. Only the
+  # differing segments are restated, so the two versions cannot drift apart; overriding one with an empty
+  # string drops it, which is how a line about copying the parents disappears when they are the audience.
+  # @param [Symbol] medium
+  # @return [Hash]
+  def voice_overrides(medium)
+    spoken = voice(medium)
+    return {} if spoken == DEFAULT_VOICES.fetch(category)
+
+    I18n.t("speaker_messages.#{template}.#{category}.#{medium}_#{spoken}", default: {})
   end
 
   # @param [Symbol] key
@@ -293,7 +312,58 @@ class SpeakerMessage
   # The speaker in the third person, for a sentence addressed to their parents.
   # @return [String]
   def speaker_pronoun
-    I18n.t("speaker_messages.defaults.pronoun.#{member&.gender.presence || :unknown}")
+    gendered_pronoun(:pronoun)
+  end
+
+  # @return [String]
+  def speaker_possessive
+    gendered_pronoun(:pronoun_possessive)
+  end
+
+  # @return [String]
+  def speaker_subject
+    gendered_pronoun(:pronoun_subject)
+  end
+
+  # @param [Symbol] kind
+  # @return [String]
+  def gendered_pronoun(kind)
+    I18n.t("speaker_messages.defaults.#{kind}.#{member&.gender.presence || :unknown}")
+  end
+
+  # Whether the speaker has contact details of their own for a medium. A number or address they share with a parent is
+  # the parent's -- texting it does not reach the speaker, so it does not earn them being addressed directly.
+  # @param [Symbol] medium
+  # @return [Boolean]
+  def own_contact?(medium)
+    if medium == :sms
+      own = normalize_number(member&.phone_number.to_s)
+      own.present? && parent_phone_numbers.compact_blank.none? { |number| normalize_number(number) == own }
+    else
+      own = member&.email.to_s.strip.downcase
+      own.present? && parent_emails.compact_blank.none? { |address| address.strip.downcase == own }
+    end
+  end
+
+  # Who a message speaks to, which rises with the responsibility the speaker can carry for their own invitation:
+  #
+  #   :guardian -- written to the parents about the speaker, for a child, or a youth we have no way to reach directly
+  #   :family   -- written to the speaker and their parents together, for a child with an address of their own
+  #   :speaker  -- written to the speaker alone, with parents copied, for a youth who can answer for themselves
+  #
+  # It is decided per medium, because a youth may have an email address of their own but no phone.
+  # @param [Symbol] medium
+  # @return [Symbol]
+  def voice(medium)
+    # Speaking to the parents takes parents to speak to. Without any, the speaker is addressed themselves,
+    # whatever we can or cannot reach them on.
+    return :speaker if category == :adult || parents.none?
+
+    if category == :youth
+      own_contact?(medium) ? :speaker : :guardian
+    else
+      own_contact?(medium) && medium == :email ? :family : :guardian
+    end
   end
 
   # @param [Member] person
@@ -333,8 +403,8 @@ class SpeakerMessage
   # @param [Symbol] medium
   # @return [Array<String>]
   def segments(medium)
-    key = "speaker_messages.#{template}.#{category}.#{medium}"
-    rendered = I18n.t(key).transform_values { |segment| render(segment) }
+    wording = I18n.t("speaker_messages.#{template}.#{category}.#{medium}").merge(voice_overrides(medium))
+    rendered = wording.transform_values { |segment| render(segment) }
 
     rendered.filter_map do |key, text|
       next if text.blank?
@@ -371,7 +441,9 @@ class SpeakerMessage
       sender_honorific: sender.present? ? I18n.t("speaker_messages.defaults.sender_honorific") : nil,
       sender_last_name: sender&.last_name,
       sender_name: sender&.name,
+      speaker_possessive: speaker_possessive,
       speaker_pronoun: speaker_pronoun,
+      speaker_subject: speaker_subject,
       speaking_time: speaking_time,
       topic: topic,
       unit_name: unit&.name,
