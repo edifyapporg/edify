@@ -103,10 +103,9 @@ class SpeakerMessage
     "mailto:#{member.email}?subject=#{encode(subject)}&body=#{encode(email_body)}"
   end
 
-  # A child with no phone of their own is still reachable, because the text goes to their parents too.
   # @return [Boolean]
   def sms_available?
-    sms_numbers.any?
+    member.present? && member.phone_number.present?
   end
 
   # @return [String]
@@ -114,22 +113,12 @@ class SpeakerMessage
     body(:sms)
   end
 
-  # A child or a youth is invited alongside their parents, so the text goes to all of them at once. Comma-separated
-  # recipients open a group message on iOS; Android support varies by messaging app, and a device that does not
-  # understand the list falls back to the first number rather than failing.
-  # @return [Array<String>]
-  def sms_numbers
-    numbers = [member&.phone_number, *parent_phone_numbers].compact_blank
-
-    numbers.map { |number| normalize_number(number) }.uniq
-  end
-
   # @return [String, nil]
   def sms_url
     return unless sms_available?
 
     # `?&body=` is the one separator both iOS and Android accept for a pre-filled message.
-    "sms:#{sms_numbers.join(',')}?&body=#{encode(sms_body)}"
+    "sms:#{normalize_number(member.phone_number)}?&body=#{encode(sms_body)}"
   end
 
   # @return [String, nil] the speaker's name as it is said aloud, rather than the way the roster sorts it
@@ -164,13 +153,6 @@ class SpeakerMessage
   # @return [String]
   def speaking_time
     I18n.t("speaker_messages.defaults.speaking_time.#{category}")
-  end
-
-  # @return [Array<String>]
-  def parent_phone_numbers
-    return [] unless member && category.in?(%i[child youth])
-
-    member.parents.map(&:phone_number)
   end
 
   # @param [String] text

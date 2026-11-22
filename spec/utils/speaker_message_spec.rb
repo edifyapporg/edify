@@ -291,7 +291,8 @@ describe SpeakerMessage do
       expect(message.email_body).to include("approximately 8 to 10 minutes in length")
     end
 
-    describe "inviting a child alongside their parents" do
+    # Texting the parents comes with the wording that addresses them, so until then a child's text is theirs alone.
+    describe "texting a child whose parents are on record" do
       let(:child) { member_aged(9) }
       let(:parent) { unit.members.create!(name: "Hill, Waylon", gender: :male, birthdate: 40.years.ago.to_date) }
 
@@ -302,24 +303,15 @@ describe SpeakerMessage do
         household.household_members.create!(name: child.name, member: child, position: 1, listed_age: 9)
       end
 
-      it "texts the child and the parent together" do
-        expect(message_for(child).sms_numbers).to eq(%w[8015550101 8015550202])
-        expect(message_for(child).sms_url).to start_with("sms:8015550101,8015550202?&body=")
+      it "texts only the child" do
+        expect(message_for(child).sms_url).to start_with("sms:8015550101?&body=")
       end
 
-      it "does not add parents to an adult's text" do
-        adult = member_aged(40, name: "Hill, Grandpa")
-        adult.update!(phone_number: "801-555-0303")
-        household.household_members.create!(name: adult.name, member: adult, position: 2)
-
-        expect(message_for(adult).sms_numbers).to eq(["8015550303"])
-      end
-
-      it "still reaches the parents when the child has no phone of their own" do
+      it "offers no text when the child has no phone of their own" do
         child.update!(phone_number: nil)
 
-        expect(message_for(child).sms_numbers).to eq(["8015550202"])
-        expect(message_for(child)).to be_sms_available
+        expect(message_for(child)).not_to be_sms_available
+        expect(message_for(child).sms_url).to be_nil
       end
     end
   end
