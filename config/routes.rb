@@ -67,6 +67,10 @@ Rails.application.routes.draw do
     get :password
     put :update
     put :remove_avatar
+
+    resources :api_tokens, only: [:index, :create] do
+      patch :revoke, on: :member
+    end
   end
 
   namespace :webhooks do

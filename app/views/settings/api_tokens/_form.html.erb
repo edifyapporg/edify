@@ -1,0 +1,28 @@
+<%# locals: (api_token:, expires_in:) %>
+
+<%= form_with(model: api_token, url: settings_api_tokens_path, scope: :api_token, data: { turbo: false }) do |f| %>
+  <% if api_token.errors.any? %>
+    <div id="error_explanation" class="alert alert-danger">
+      <ul class="mb-0">
+        <% api_token.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= f.label :name, "Name" %>
+    <%= f.text_field :name, class: "form-control", maxlength: 100, placeholder: "e.g. Laptop CLI or Claude Code" %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :expires_in, "Expires after" %>
+    <%= f.select :expires_in,
+                 ::Settings::ApiTokensController::EXPIRY_CHOICES.keys,
+                 { selected: expires_in },
+                 class: "form-select" %>
+  </div>
+
+  <%= f.submit "Create Token", class: "btn btn-primary" %>
+<% end %>

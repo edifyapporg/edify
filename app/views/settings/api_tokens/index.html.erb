@@ -1,0 +1,40 @@
+<div class="row">
+  <div class="col-md">
+    <h2 class="mt-md-4 mt-2"><strong>User Settings</strong></h2>
+  </div>
+</div>
+
+<hr/>
+
+<div class="container-fluid">
+  <div class="row flex-nowrap">
+    <%= render partial: "settings/sidebar" %>
+    <div class="col px-md-4 py-3">
+      <% if @created_token %>
+        <%= render partial: "created_token", locals: { api_token: @created_token } %>
+      <% end %>
+
+      <div class="card mb-5">
+        <div class="card-header">
+          <h4>New API Token</h4>
+        </div>
+        <div class="card-body">
+          <p>
+            An API token lets the Edify command-line tool or an AI assistant read your unit's speaker and music
+            information as you. It never gives access to member notes, phone numbers or email addresses.
+          </p>
+          <%= render partial: "form", locals: { api_token: @api_token, expires_in: @expires_in } %>
+        </div>
+      </div>
+
+      <div class="card mb-5">
+        <div class="card-header">
+          <h4>Your API Tokens</h4>
+        </div>
+        <div class="card-body">
+          <%= render partial: "api_tokens_table", locals: { api_tokens: @api_tokens } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

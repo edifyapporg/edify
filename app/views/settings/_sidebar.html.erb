@@ -16,6 +16,13 @@
           <i class="fs-3 bi-shield-check"></i> <span class="ms-2 d-none d-md-inline fs-5">Password</span>
         <% end %>
       </li>
+      <% if current_user.assigned_to_unit? %>
+        <li class="nav-item border-sidebar w-100 <%= controller_name == "api_tokens" ? "active" : nil %>">
+          <%= link_to settings_api_tokens_path, class: "nav-link align-middle px-0" do %>
+            <i class="fs-3 bi-key"></i> <span class="ms-2 d-none d-md-inline fs-5">API Tokens</span>
+          <% end %>
+        </li>
+      <% end %>
     </ul>
   </div>
 </div>

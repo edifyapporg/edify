@@ -1,0 +1,27 @@
+<%# locals: (api_token:) %>
+
+<tr id="<%= dom_id(api_token) %>">
+  <td><%= api_token.name %></td>
+  <td><%= api_token.scope?(:write) ? "Read and write" : "Read only" %></td>
+  <td><%= l(api_token.created_at.to_date, format: :long) %></td>
+  <td><%= api_token.last_used_at ? "#{time_ago_in_words(api_token.last_used_at)} ago" : "Never" %></td>
+  <td><%= api_token.expires_at ? l(api_token.expires_at.to_date, format: :long) : "Never" %></td>
+  <td>
+    <% if api_token.revoked? %>
+      <span class="badge bg-secondary">Revoked</span>
+    <% elsif api_token.expired? %>
+      <span class="badge bg-secondary">Expired</span>
+    <% else %>
+      <span class="badge bg-success">Active</span>
+    <% end %>
+  </td>
+  <td class="text-end">
+    <% if api_token.active? %>
+      <%= button_to "Revoke",
+                    revoke_settings_api_token_path(api_token),
+                    method: :patch,
+                    class: "btn btn-sm btn-outline-danger",
+                    form: { data: { turbo_confirm: "Revoke \"#{api_token.name}\"? Anything using it will lose access." } } %>
+    <% end %>
+  </td>
+</tr>
