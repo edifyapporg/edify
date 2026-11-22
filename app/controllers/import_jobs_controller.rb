@@ -29,13 +29,13 @@ class ImportJobsController < ApplicationController
     @households_data = import_job_params[:households_data]
 
     unless @kind.in?(KINDS)
-      flash.now[:danger] = t("controllers.import_jobs_controller.kind_missing")
+      flash.now[:alert] = t("controllers.import_jobs_controller.kind_missing")
       return render "new", status: :unprocessable_content
     end
 
     blank_kind = kinds_to_import.find { |kind| import_job_params[:"#{kind}_data"].blank? }
     if blank_kind
-      flash.now[:danger] = t("controllers.import_jobs_controller.paste_missing", tab: blank_kind.titleize)
+      flash.now[:alert] = t("controllers.import_jobs_controller.paste_missing", tab: blank_kind.titleize)
       return render "new", status: :unprocessable_content
     end
 
@@ -46,7 +46,7 @@ class ImportJobsController < ApplicationController
       redirect_to import_jobs_path
     else
       messages = import_jobs.flat_map { |import_job| import_job.errors.full_messages }
-      flash.now[:danger] = "Unable to create import job: #{messages.join(', ')}"
+      flash.now[:alert] = "Unable to create import job: #{messages.join(', ')}"
       render "new", status: :unprocessable_content
     end
   end
@@ -54,7 +54,7 @@ class ImportJobsController < ApplicationController
   # DELETE /import_jobs/:id
   def destroy
     unless @import_job.destroy
-      flash[:danger] = "Unable to delete import job: #{@import_job.errors.full_messages.join(', ')}"
+      flash[:alert] = "Unable to delete import job: #{@import_job.errors.full_messages.join(', ')}"
     end
 
     redirect_to import_jobs_path(user_id: @user.id)

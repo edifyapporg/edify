@@ -83,7 +83,7 @@ describe "Start a membership list import" do
 
     expect { click_button "Import" }.not_to change(ImportJob, :count)
 
-    expect(page).to have_content("Choose which tab you copied before importing.")
+    expect(page).to have_css(".alert-warning", text: "Choose which tab you copied before importing.")
     expect(page).to have_field("Individuals tab", with: submitted(individuals_paste))
     expect(ImporterJob).not_to have_been_enqueued
   end
@@ -95,7 +95,7 @@ describe "Start a membership list import" do
 
     expect { click_button "Import" }.not_to change(ImportJob, :count)
 
-    expect(page).to have_content("Paste the Households tab before importing.")
+    expect(page).to have_css(".alert-warning", text: "Paste the Households tab before importing.")
     expect(ImporterJob).not_to have_been_enqueued
   end
 
@@ -106,7 +106,7 @@ describe "Start a membership list import" do
 
     expect { click_button "Import" }.not_to change(ImportJob, :count)
 
-    expect(page).to have_content("Paste the Households tab before importing.")
+    expect(page).to have_css(".alert-warning", text: "Paste the Households tab before importing.")
     expect(page).to have_field("Individuals tab", with: submitted(individuals_paste))
     expect(ImporterJob).not_to have_been_enqueued
   end
