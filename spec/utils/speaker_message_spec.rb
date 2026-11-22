@@ -445,12 +445,50 @@ describe SpeakerMessage do
         expect(invitation_for(youth).sms_numbers).to eq(%w[8015550204 8015550201 8015550202])
       end
 
-      it "writes to the parents when the youth has no email of their own" do
+      # The youth wording speaks to the youth, so it is not sent to their parents in their place.
+      it "offers no email when the youth has no email of their own" do
         youth = speaker_aged(15, phone_number: "801-555-0204")
         message = invitation_for(youth)
 
-        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com])
+        expect(message).not_to be_email_available
         expect(message.email_copied).to be_empty
+        expect(message.mailto_url).to be_nil
+      end
+
+      it "offers no text when the youth has no phone of their own" do
+        youth = speaker_aged(15, email: "teen@example.com")
+        message = invitation_for(youth)
+
+        expect(message).not_to be_sms_available
+        expect(message.sms_url).to be_nil
+      end
+    end
+
+    context "when only some of a youth's parents can be reached" do
+      let(:youth) { speaker_aged(15, phone_number: "801-555-0204", email: "teen@example.com") }
+
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "names only the parents on each message" do
+        father.update!(email: nil)
+        mother.update!(phone_number: nil)
+        message = invitation_for(youth)
+
+        expect(message.sms_body).to include("We have included Davis on this text")
+        expect(message.email_body).to include("We have copied Kim on this message")
+      end
+
+      it "leaves out the sentence when no parent is on the message" do
+        father.update!(phone_number: nil, email: nil)
+        mother.update!(phone_number: nil, email: nil)
+        message = invitation_for(youth)
+
+        expect(message.sms_body).not_to include("We have included")
+        expect(message.email_body).not_to include("We have copied")
+        expect(message.mailto_url).not_to include("cc=")
       end
     end
 
