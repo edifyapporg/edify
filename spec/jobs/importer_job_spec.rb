@@ -64,6 +64,27 @@ RSpec.describe ImporterJob, type: :job do
 
         expect(::Edify::Etl::ImportManager).not_to have_received(:perform!).with(households_job)
         expect(households_job.reload).to be_failed
+        expect(households_job.parsed_errors).to eq([described_class::CRASHED_MESSAGE])
+      end
+
+      it "fails the next import without running it when the first saves some rows and then raises" do
+        allow(::Edify::Etl::ImportManager).to receive(:perform!).with(individuals_job) do
+          individuals_job.update!(succeeded_count: 50)
+          raise StandardError, "boom"
+        end
+
+        expect { perform_job }.to raise_error(StandardError, "boom")
+
+        expect(::Edify::Etl::ImportManager).not_to have_received(:perform!).with(households_job)
+        expect(households_job.reload).to be_failed
+        expect(households_job.parsed_errors).to eq([described_class::CRASHED_MESSAGE])
+      end
+
+      it "re-raises the first import's error when it raises and the next has been deleted" do
+        allow(::Edify::Etl::ImportManager).to receive(:perform!).with(individuals_job).and_raise(StandardError, "boom")
+        households_job.destroy!
+
+        expect { perform_job }.to raise_error(StandardError, "boom")
       end
 
       it "runs the first import and skips the next when the next has been deleted" do
