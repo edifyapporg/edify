@@ -13,7 +13,6 @@ class SpeakerMessage
   SEGMENT_SEPARATORS = { email: "\n\n", sms: "\n" }.freeze
   INTERPOLATION_PATTERN = /%\{(\w+)\}/
   FALLBACK_SUFFIX = "_fallback".freeze
-  YOUTH_MAX_AGE = 17
 
   class << self
     # @param [Talk] talk
@@ -119,7 +118,7 @@ class SpeakerMessage
     return unless sms_available?
 
     # `?&body=` is the one separator both iOS and Android accept for a pre-filled message.
-    "sms:#{sms_number}?&body=#{encode(sms_body)}"
+    "sms:#{normalize_number(member.phone_number)}?&body=#{encode(sms_body)}"
   end
 
   # @return [String, nil] the speaker's name as it is said aloud, rather than the way the roster sorts it
@@ -142,13 +141,18 @@ class SpeakerMessage
     segments(medium).join(SEGMENT_SEPARATORS.fetch(medium))
   end
 
-  # Youth are asked to speak for less time than adults. Without a member on record, or without their birthdate, we
-  # cannot tell, so we assume an adult -- the longer talk is the safer thing to over-prepare for.
-  # @return [String]
-  def duration
-    youth = member&.birthdate.present? && member.age <= YOUTH_MAX_AGE
+  # Which group's wording and speaking time to use. Without a member on record, or without their birthdate, we
+  # cannot tell, so we treat them as an adult -- the longer talk is the safer thing to over-prepare for.
+  # @return [Symbol]
+  def category
+    return :adult if member&.birthdate.blank?
 
-    I18n.t("speaker_messages.defaults.duration.#{youth ? :youth : :adult}")
+    member.speaker_category
+  end
+
+  # @return [String]
+  def speaking_time
+    I18n.t("speaker_messages.defaults.speaking_time.#{category}")
   end
 
   # @param [String] text
@@ -214,7 +218,8 @@ class SpeakerMessage
   # @param [Symbol] medium
   # @return [Array<String>]
   def segments(medium)
-    rendered = I18n.t("speaker_messages.#{template}.#{medium}").transform_values { |segment| render(segment) }
+    key = "speaker_messages.#{template}.#{category}.#{medium}"
+    rendered = I18n.t(key).transform_values { |segment| render(segment) }
 
     rendered.filter_map do |key, text|
       next if text.blank?
@@ -226,18 +231,18 @@ class SpeakerMessage
     end
   end
 
+  # @param [String] number
   # @return [String]
-  def sms_number
-    number = member.phone_number.to_s.strip
-    digits = number.gsub(/\D/, "")
+  def normalize_number(number)
+    stripped = number.to_s.strip
+    digits = stripped.gsub(/\D/, "")
 
-    number.start_with?("+") ? "+#{digits}" : digits
+    stripped.start_with?("+") ? "+#{digits}" : digits
   end
 
   # @return [Hash]
   def substitutions
     @substitutions ||= {
-      duration: duration,
       first_name: first_name,
       full_name: speaker_name,
       honorific: honorific,
@@ -248,6 +253,7 @@ class SpeakerMessage
       sender_honorific: sender.present? ? I18n.t("speaker_messages.defaults.sender_honorific") : nil,
       sender_last_name: sender&.last_name,
       sender_name: sender&.name,
+      speaking_time: speaking_time,
       topic: topic,
       unit_name: unit&.name,
     }
