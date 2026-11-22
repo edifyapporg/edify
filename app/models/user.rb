@@ -18,6 +18,7 @@ class User < ApplicationRecord
     program: 4,
   }
 
+  has_many :api_tokens, dependent: :destroy
   has_many :import_jobs, foreign_key: :owner_id, dependent: :nullify
   has_many :scheduled_meetings, class_name: "Meeting", foreign_key: :scheduler_id, dependent: :nullify
   has_many :notifications, as: :recipient, dependent: :destroy, class_name: "Noticed::Notification"
