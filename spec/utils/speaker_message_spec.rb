@@ -566,6 +566,28 @@ describe SpeakerMessage do
 
         expect(invitation_for(youth).sms_body).to start_with("Hi Junior,")
       end
+
+      it "writes the lists of what to focus on and avoid about them, not to them" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+        youth.update!(gender: :female)
+        body = invitation_for(youth).email_body
+
+        expect(body).to include("Please help Junior focus on:", "* Keeping the message centered on Jesus Christ.",
+                                "* Sharing an experience of her own", "* Ending with her testimony.",
+                                "* Avoid mentioning how or why Junior was asked to speak.")
+        expect(body).not_to include("your message", "you were asked")
+      end
+
+      # Every template, not only the ones whose wording remembers to blank the line.
+      SpeakerMessage::TEMPLATES.each do |template|
+        it "never tells the parents in the #{template} email that they were copied" do
+          youth = speaker_aged(15, phone_number: "801-555-0204")
+          message = described_class.for_member(youth, template: template, meeting_date: Date.new(2022, 4, 10),
+                                                      sender: sender)
+
+          expect(message.email_body).not_to include("We have copied")
+        end
+      end
     end
 
     context "when a child has an email of their own" do
@@ -578,7 +600,7 @@ describe SpeakerMessage do
         child = speaker_aged(9, email: "junior@example.com")
         message = invitation_for(child)
 
-        expect(message.email_body).to start_with("Dear Junior and Brother and Sister Ngarupe,")
+        expect(message.email_body).to start_with("Dear Brother and Sister Ngarupe and Junior,")
         expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com junior@example.com])
       end
 

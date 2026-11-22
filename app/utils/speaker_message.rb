@@ -95,7 +95,7 @@ class SpeakerMessage
   def email_recipients
     addresses = case voice(:email)
                 # Written to the parents about the speaker, so only they are addressed.
-                when :guardian then category == :adult ? [member&.email] : parent_emails
+                when :guardian then parent_emails
                 # A child with an address of their own is written to alongside their parents.
                 when :family then [*parent_emails, member&.email]
                 else [member&.email]
@@ -249,10 +249,13 @@ class SpeakerMessage
 
   # The given names of the parents a message in this medium actually goes to, for the sentence that tells the speaker
   # who else is on it. A parent can have a phone and no email, or the reverse, so this differs by medium; with none of
-  # them on the message it is nil, which drops that sentence.
+  # them on the message it is nil, which drops that sentence. Parents are only copied when the speaker is the one
+  # written to, so a message addressed to the parents themselves never tells them they were copied.
   # @param [Symbol] medium
   # @return [String, nil]
   def parents_first_names(medium)
+    return unless voice(medium) == :speaker
+
     given = parents_on(medium).filter_map { |parent| given_name_of(parent) }
 
     given.to_sentence if given.any?
@@ -283,7 +286,7 @@ class SpeakerMessage
 
   # The sentences that have to change when a message is not written in its category's usual voice. Only the
   # differing segments are restated, so the two versions cannot drift apart; overriding one with an empty
-  # string drops it, which is how a line about copying the parents disappears when they are the audience.
+  # string drops it.
   # @param [Symbol] medium
   # @return [Hash]
   def voice_overrides(medium)
