@@ -39,6 +39,8 @@ en:
         female: "she"
         male: "he"
         unknown: "they"
+      # How a child is addressed when their message reaches only them, not their parents.
+      child_and_family: "%{first_name} and family"
       meeting_end_time: "9:55 am"
       # A bishopric is made up of men, and users have no gender on record, so the sender is always "Brother".
       sender_honorific: "Brother"

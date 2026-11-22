@@ -89,8 +89,8 @@ class SpeakerMessage
   end
 
   # Who the email is addressed to. A child's parents are written to about their child, so the parents are the
-  # recipients; a youth is written to directly, with their parents copied. A youth with no email address of
-  # their own is reached through their parents, who are then addressed rather than copied.
+  # recipients; a youth is written to directly, with their parents copied. The youth wording speaks to the youth, so a
+  # youth with no email address of their own gets no email rather than one their parents would receive in their place.
   # @return [Array<String>]
   def email_recipients
     addresses = case voice(:email)
@@ -145,9 +145,10 @@ class SpeakerMessage
   end
 
   # Everyone the text goes to. A child's parents are the ones being asked, and the child joins the thread when they
-  # have a phone of their own; a youth is asked directly, with their parents on the thread as well. Comma-separated
-  # recipients open a group message on iOS and on Android messaging apps that support it; one that does not falls
-  # back to the first number rather than failing, so the person being addressed is listed first.
+  # have a phone of their own; a youth is asked directly, with their parents on the thread as well, and a youth with no
+  # phone of their own gets no text, since the wording speaks to them. Comma-separated recipients open a group message
+  # on iOS and on Android messaging apps that support it; one that does not falls back to the first number rather than
+  # failing, so the person being addressed is listed first.
   # @return [Array<String>]
   def sms_numbers
     numbers = case category
@@ -214,11 +215,16 @@ class SpeakerMessage
     parents.map(&:email)
   end
 
-  # How the message opens: the person being addressed. A child's parents are addressed together where there are two of
-  # them -- "Brother and Sister Ngarupe" -- and everyone else is addressed by their own name.
+  # How the message opens: the person being addressed. Parents are addressed only when the message is written to them,
+  # together where there are two of them -- "Brother and Sister Ngarupe". A child's message that reaches only the child
+  # goes to "Junior and family", and everyone else is addressed by their own name.
+  # @param [Symbol] medium
   # @return [String, nil]
-  def addressed_name
-    return parents_name if parents.any?
+  def addressed_name(medium)
+    return parents_name unless voice(medium) == :speaker
+    if category == :child && first_name
+      return I18n.t("speaker_messages.defaults.child_and_family", first_name: first_name)
+    end
 
     [honorific, last_name].compact_blank.join(" ").presence
   end
@@ -241,11 +247,27 @@ class SpeakerMessage
     end
   end
 
-  # @return [String, nil] the given names of the parents, for a sentence that speaks to them by first name
-  def parents_first_names
-    given = parents.filter_map { |parent| given_name_of(parent) }
+  # The given names of the parents a message in this medium actually goes to, for the sentence that tells the speaker
+  # who else is on it. A parent can have a phone and no email, or the reverse, so this differs by medium; with none of
+  # them on the message it is nil, which drops that sentence.
+  # @param [Symbol] medium
+  # @return [String, nil]
+  def parents_first_names(medium)
+    given = parents_on(medium).filter_map { |parent| given_name_of(parent) }
 
     given.to_sentence if given.any?
+  end
+
+  # @param [Symbol] medium
+  # @return [Array<Member>] the parents whose number or address is among the message's recipients
+  def parents_on(medium)
+    if medium == :sms
+      numbers = sms_numbers
+      parents.select { |parent| parent.phone_number.present? && normalize_number(parent.phone_number).in?(numbers) }
+    else
+      addresses = email_recipients + email_copied
+      parents.select { |parent| parent.email.present? && parent.email.in?(addresses) }
+    end
   end
 
   # @return [Array<Member>]
@@ -331,6 +353,12 @@ class SpeakerMessage
     I18n.t("speaker_messages.defaults.#{kind}.#{member&.gender.presence || :unknown}")
   end
 
+  # @param [Symbol] medium
+  # @return [Array<Member>] the parents with a number or address for this medium
+  def reachable_parents(medium)
+    parents.select { |parent| (medium == :sms ? parent.phone_number : parent.email).present? }
+  end
+
   # Whether the speaker has contact details of their own for a medium. A number or address they share with a parent is
   # the parent's -- texting it does not reach the speaker, so it does not earn them being addressed directly.
   # @param [Symbol] medium
@@ -355,9 +383,9 @@ class SpeakerMessage
   # @param [Symbol] medium
   # @return [Symbol]
   def voice(medium)
-    # Speaking to the parents takes parents to speak to. Without any, the speaker is addressed themselves,
+    # Speaking to the parents takes parents the message can reach. Without any, the speaker is addressed themselves,
     # whatever we can or cannot reach them on.
-    return :speaker if category == :adult || parents.none?
+    return :speaker if category == :adult || reachable_parents(medium).none?
 
     if category == :youth
       own_contact?(medium) ? :speaker : :guardian
@@ -392,19 +420,21 @@ class SpeakerMessage
   # Substituted by hand rather than with `format`, which raises on a literal % -- the wording is meant to be edited
   # freely, and "Give 100% effort" should not be able to break a page.
   # @param [String] segment
+  # @param [Symbol] medium
   # @return [String, nil] nil when the segment depends on a detail we do not have
-  def render(segment)
+  def render(segment, medium)
+    values = substitutions(medium)
     keys = segment.scan(INTERPOLATION_PATTERN).flatten.map(&:to_sym)
-    return if keys.any? { |key| substitutions[key].blank? }
+    return if keys.any? { |key| values[key].blank? }
 
-    segment.gsub(INTERPOLATION_PATTERN) { substitutions[Regexp.last_match(1).to_sym] }
+    segment.gsub(INTERPOLATION_PATTERN) { values[Regexp.last_match(1).to_sym] }
   end
 
   # @param [Symbol] medium
   # @return [Array<String>]
   def segments(medium)
     wording = I18n.t("speaker_messages.#{template}.#{category}.#{medium}").merge(voice_overrides(medium))
-    rendered = wording.transform_values { |segment| render(segment) }
+    rendered = wording.transform_values { |segment| render(segment, medium) }
 
     rendered.filter_map do |key, text|
       next if text.blank?
@@ -425,15 +455,18 @@ class SpeakerMessage
     stripped.start_with?("+") ? "+#{digits}" : digits
   end
 
+  # Most details are the same in every medium; who else is on the message is not.
+  # @param [Symbol] medium
   # @return [Hash]
-  def substitutions
-    @substitutions ||= {
+  def substitutions(medium)
+    @substitutions ||= {}
+    @substitutions[medium] ||= {
       first_name: first_name,
       full_name: speaker_name,
-      addressed_name: addressed_name,
+      addressed_name: addressed_name(medium),
       honorific: honorific,
       last_name: last_name,
-      parents_first_names: parents_first_names,
+      parents_first_names: parents_first_names(medium),
       parents_name: parents_name,
       meeting_date: formatted_meeting_date,
       meeting_end_time: I18n.t("speaker_messages.defaults.meeting_end_time"),

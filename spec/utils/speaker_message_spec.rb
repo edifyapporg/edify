@@ -266,7 +266,7 @@ describe SpeakerMessage do
     it "asks a child for the shortest talk and writes to the family" do
       message = message_for(member_aged(9))
 
-      expect(message.email_body).to start_with("Dear Brother Hill,")
+      expect(message.email_body).to start_with("Dear Junior and family,")
       expect(message.email_body).to include("about 30 seconds to 2 minutes long")
       expect(message.sms_body).to include("It would be a short talk, about 30 seconds to 2 minutes.")
     end
@@ -380,6 +380,34 @@ describe SpeakerMessage do
       end
     end
 
+    context "when a child's parents cannot be reached" do
+      before do
+        father.update!(phone_number: nil, email: nil)
+        mother.update!(phone_number: nil, email: nil)
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "writes to the child and family rather than to parents the message does not reach" do
+        child = speaker_aged(10, phone_number: "801-555-0203", email: "junior@example.com")
+        message = invitation_for(child)
+
+        expect(message.sms_numbers).to eq(["8015550203"])
+        expect(message.sms_body).to start_with("Hi Junior and family, this is")
+        expect(message.email_recipients).to eq(["junior@example.com"])
+        expect(message.email_body).to start_with("Dear Junior and family,")
+      end
+
+      it "addresses the parents only in the medium that reaches them" do
+        mother.update!(phone_number: "801-555-0202")
+        child = speaker_aged(10, email: "junior@example.com")
+        message = invitation_for(child)
+
+        expect(message.sms_body).to start_with("Hi Brother and Sister Ngarupe,")
+        expect(message.email_body).to start_with("Dear Junior and family,")
+      end
+    end
+
     context "when a child has one parent" do
       before { add_parent(mother, 0) }
 
@@ -444,13 +472,33 @@ describe SpeakerMessage do
 
         expect(invitation_for(youth).sms_numbers).to eq(%w[8015550204 8015550201 8015550202])
       end
+    end
 
-      it "writes to the parents when the youth has no email of their own" do
-        youth = speaker_aged(15, phone_number: "801-555-0204")
+    context "when only some of a youth's parents can be reached" do
+      let(:youth) { speaker_aged(15, phone_number: "801-555-0204", email: "teen@example.com") }
+
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "names only the parents on each message" do
+        father.update!(email: nil)
+        mother.update!(phone_number: nil)
         message = invitation_for(youth)
 
-        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com])
-        expect(message.email_copied).to be_empty
+        expect(message.sms_body).to include("We have included Davis on this text")
+        expect(message.email_body).to include("We have copied Kim on this message")
+      end
+
+      it "leaves out the sentence when no parent is on the message" do
+        father.update!(phone_number: nil, email: nil)
+        mother.update!(phone_number: nil, email: nil)
+        message = invitation_for(youth)
+
+        expect(message.sms_body).not_to include("We have included")
+        expect(message.email_body).not_to include("We have copied")
+        expect(message.mailto_url).not_to include("cc=")
       end
     end
 
