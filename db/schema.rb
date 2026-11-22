@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_04_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_22_222251) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -93,6 +93,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_04_000001) do
     t.string "name"
     t.datetime "published_at"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "api_tokens", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name", null: false
+    t.string "token_digest", null: false
+    t.string "scopes", default: ["read"], null: false, array: true
+    t.datetime "last_used_at"
+    t.datetime "expires_at"
+    t.datetime "revoked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_api_tokens_on_user_id"
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
@@ -426,6 +440,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_04_000001) do
   add_foreign_key "access_requests", "users"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "api_tokens", "users"
   add_foreign_key "household_members", "households"
   add_foreign_key "household_members", "members"
   add_foreign_key "households", "units"
