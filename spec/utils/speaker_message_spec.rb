@@ -266,7 +266,7 @@ describe SpeakerMessage do
     it "asks a child for the shortest talk and writes to the family" do
       message = message_for(member_aged(9))
 
-      expect(message.email_body).to start_with("Dear Brother Hill,")
+      expect(message.email_body).to start_with("Dear Junior and family,")
       expect(message.email_body).to include("about 30 seconds to 2 minutes long")
       expect(message.sms_body).to include("It would be a short talk, about 30 seconds to 2 minutes.")
     end
@@ -380,6 +380,34 @@ describe SpeakerMessage do
       end
     end
 
+    context "when a child's parents cannot be reached" do
+      before do
+        father.update!(phone_number: nil, email: nil)
+        mother.update!(phone_number: nil, email: nil)
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "writes to the child and family rather than to parents the message does not reach" do
+        child = speaker_aged(10, phone_number: "801-555-0203", email: "junior@example.com")
+        message = invitation_for(child)
+
+        expect(message.sms_numbers).to eq(["8015550203"])
+        expect(message.sms_body).to start_with("Hi Junior and family, this is")
+        expect(message.email_recipients).to eq(["junior@example.com"])
+        expect(message.email_body).to start_with("Dear Junior and family,")
+      end
+
+      it "addresses the parents only in the medium that reaches them" do
+        mother.update!(phone_number: "801-555-0202")
+        child = speaker_aged(10, email: "junior@example.com")
+        message = invitation_for(child)
+
+        expect(message.sms_body).to start_with("Hi Brother and Sister Ngarupe,")
+        expect(message.email_body).to start_with("Dear Junior and family,")
+      end
+    end
+
     context "when a child has one parent" do
       before { add_parent(mother, 0) }
 
@@ -444,24 +472,6 @@ describe SpeakerMessage do
 
         expect(invitation_for(youth).sms_numbers).to eq(%w[8015550204 8015550201 8015550202])
       end
-
-      # The youth wording speaks to the youth, so it is not sent to their parents in their place.
-      it "offers no email when the youth has no email of their own" do
-        youth = speaker_aged(15, phone_number: "801-555-0204")
-        message = invitation_for(youth)
-
-        expect(message).not_to be_email_available
-        expect(message.email_copied).to be_empty
-        expect(message.mailto_url).to be_nil
-      end
-
-      it "offers no text when the youth has no phone of their own" do
-        youth = speaker_aged(15, email: "teen@example.com")
-        message = invitation_for(youth)
-
-        expect(message).not_to be_sms_available
-        expect(message.sms_url).to be_nil
-      end
     end
 
     context "when only some of a youth's parents can be reached" do
@@ -489,6 +499,133 @@ describe SpeakerMessage do
         expect(message.sms_body).not_to include("We have included")
         expect(message.email_body).not_to include("We have copied")
         expect(message.mailto_url).not_to include("cc=")
+      end
+    end
+
+    context "when a youth has no number of their own" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "asks the parents on their behalf, and addresses them" do
+        youth = speaker_aged(15, email: "teen@example.com")
+        message = invitation_for(youth)
+
+        expect(message.sms_body).to start_with("Hi Brother and Sister Ngarupe,")
+        expect(message.sms_body).to include("We would like to invite Junior to speak")
+        expect(message.sms_body).to include("Is Junior in town and available to speak that day?")
+        expect(message.sms_numbers).to eq(%w[8015550201 8015550202])
+      end
+
+      it "drops the line about copying the parents, who are now the audience" do
+        expect(invitation_for(speaker_aged(15)).sms_body).not_to include("included")
+      end
+
+      it "still speaks to them directly by email when they have an address" do
+        youth = speaker_aged(15, email: "teen@example.com")
+
+        expect(invitation_for(youth).email_body).to start_with("Dear Junior,")
+        expect(invitation_for(youth).email_recipients).to eq(["teen@example.com"])
+      end
+    end
+
+    context "when a youth shares a number with a parent" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "treats it as the parent's, and addresses the parents" do
+        youth = speaker_aged(15, phone_number: "(801) 555-0202")
+        message = invitation_for(youth)
+
+        expect(message.sms_body).to start_with("Hi Brother and Sister Ngarupe,")
+        expect(message.sms_numbers).to eq(%w[8015550201 8015550202])
+      end
+    end
+
+    context "when a youth has no email of their own" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "writes to the parents about them rather than copying them" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+        message = invitation_for(youth)
+
+        expect(message.email_body).to start_with("Dear Brother and Sister Ngarupe,")
+        expect(message.email_body).to include("invite Junior to speak")
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com])
+        expect(message.email_copied).to be_empty
+      end
+
+      it "still texts them directly when they have a number" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+
+        expect(invitation_for(youth).sms_body).to start_with("Hi Junior,")
+      end
+
+      it "writes the lists of what to focus on and avoid about them, not to them" do
+        youth = speaker_aged(15, phone_number: "801-555-0204")
+        youth.update!(gender: :female)
+        body = invitation_for(youth).email_body
+
+        expect(body).to include("Please help Junior focus on:", "* Keeping the message centered on Jesus Christ.",
+                                "* Sharing an experience of her own", "* Ending with her testimony.",
+                                "* Avoid mentioning how or why Junior was asked to speak.")
+        expect(body).not_to include("your message", "you were asked")
+      end
+
+      # Every template, not only the ones whose wording remembers to blank the line.
+      SpeakerMessage::TEMPLATES.each do |template|
+        it "never tells the parents in the #{template} email that they were copied" do
+          youth = speaker_aged(15, phone_number: "801-555-0204")
+          message = described_class.for_member(youth, template: template, meeting_date: Date.new(2022, 4, 10),
+                                                      sender: sender)
+
+          expect(message.email_body).not_to include("We have copied")
+        end
+      end
+    end
+
+    context "when a child has an email of their own" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "writes to the child and the parents together" do
+        child = speaker_aged(9, email: "junior@example.com")
+        message = invitation_for(child)
+
+        expect(message.email_body).to start_with("Dear Brother and Sister Ngarupe and Junior,")
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com junior@example.com])
+      end
+
+      it "keeps writing to the parents alone when the address is one of theirs" do
+        child = speaker_aged(9, email: "KIM@example.com")
+        message = invitation_for(child)
+
+        expect(message.email_body).to start_with("Dear Brother and Sister Ngarupe,")
+        expect(message.email_recipients).to eq(%w[davis@example.com kim@example.com])
+      end
+    end
+
+    context "when an adult still lives in their parents' household" do
+      before do
+        add_parent(father, 0)
+        add_parent(mother, 1)
+      end
+
+      it "is written to alone" do
+        adult = speaker_aged(21, phone_number: "801-555-0206", email: "grown@example.com")
+        message = invitation_for(adult)
+
+        expect(message.sms_numbers).to eq(["8015550206"])
+        expect(message.email_recipients).to eq(["grown@example.com"])
+        expect(message.email_copied).to be_empty
       end
     end
 
