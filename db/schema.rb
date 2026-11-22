@@ -99,6 +99,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_22_222251) do
     t.bigint "user_id", null: false
     t.string "name", null: false
     t.string "token_digest", null: false
+    t.string "scopes", default: ["read"], null: false, array: true
     t.datetime "last_used_at"
     t.datetime "expires_at"
     t.datetime "revoked_at"
