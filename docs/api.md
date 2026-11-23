@@ -80,5 +80,11 @@ so both front ends always agree.
 | `GET /api/v1/meetings/:date` | all unit roles | the meeting's date, `YYYY-MM-DD` |
 | `GET /api/v1/members` | bishopric, clerk | `q` (2-100 characters; every word must appear in the name), `limit` (1-100, 25) |
 
-MCP tools at `/mcp`, each answering what its endpoint answers: `list_stale_speakers` (speakers/stale), `list_recent_songs`
-(songs/recent) and `get_meeting` (meetings/:date). Access is limited to site admins until `MCP_ENABLED=true`.
+MCP tools at `/mcp`, each answering what its endpoint answers. Access is limited to site admins until `MCP_ENABLED=true`.
+
+| Tool | Answers like | Roles |
+|---|---|---|
+| `list_stale_speakers` | `GET /api/v1/speakers/stale` | bishopric, clerk |
+| `list_recent_songs` | `GET /api/v1/songs/recent` | all unit roles |
+| `get_meeting` | `GET /api/v1/meetings/:date` | all unit roles |
+| `search_members` | `GET /api/v1/members` | bishopric, clerk |

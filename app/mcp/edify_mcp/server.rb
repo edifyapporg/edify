@@ -6,6 +6,7 @@ module EdifyMcp
       Tools::ListStaleSpeakers,
       Tools::ListRecentSongs,
       Tools::GetMeeting,
+      Tools::SearchMembers,
     ].freeze
 
     INSTRUCTIONS = <<~TEXT.squish.freeze

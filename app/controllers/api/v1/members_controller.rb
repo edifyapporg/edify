@@ -1,9 +1,9 @@
 module Api
   module V1
     class MembersController < BaseController
-      QUERY_LENGTH = (2..100)
-      DEFAULT_LIMIT = 25
-      LIMIT_RANGE = (1..100)
+      QUERY_LENGTH = ::Member::SEARCH_QUERY_LENGTH
+      DEFAULT_LIMIT = ::Member::SEARCH_DEFAULT_LIMIT
+      LIMIT_RANGE = ::Member::SEARCH_LIMIT_RANGE
 
       # GET /api/v1/members?q=smith&limit=25
       # Members of the user's unit whose name contains every word of `q`, alphabetically, from the same roster as the
