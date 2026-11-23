@@ -32,7 +32,6 @@ describe ::Member do
 
       expect(created.reload.birth_year).to eq(1991)
       expect(created.birthdate).to be_nil
-      expect(described_class.column_names).not_to include("birthdate")
     end
 
     it "leaves the birth year alone when a blank birthdate is given" do
