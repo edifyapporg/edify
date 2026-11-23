@@ -31,23 +31,26 @@ RSpec.describe "API v1 speakers" do
 
   describe "GET /api/v1/speakers/stale" do
     context "with a valid token for a bishopric member" do
-      it "lists the unit's members who have not spoken in a year, with names and dates only" do
+      it "lists the unit's members who have not spoken in a year, with name, gender, group and date only" do
         freeze_time do
           make_request
 
           expect(response).to have_http_status(:ok)
           expect(json["months"]).to eq(12)
+          expect(json["group"]).to be_nil
           expect(json["spoken_before"]).to eq(12.months.ago.to_date.iso8601)
-          expect(json["speakers"]).to all(match("name" => a_kind_of(String), "last_talk_date" => anything))
-          expect(json["speakers"].map(&:keys).uniq).to eq([%w[name last_talk_date]])
+          expect(json["speakers"].map(&:keys).uniq).to eq([%w[name gender group last_talk_date]])
+          expect(json["speakers"]).to include("name" => never_spoke.name, "gender" => "female", "group" => "adult",
+                                              "last_talk_date" => nil)
           expect(speaker_names).to include(never_spoke.name)
           expect(speaker_names).not_to include(recent_speaker.name)
         end
       end
 
-      it "never includes contact details or notes" do
+      it "never includes contact details, notes, ages or birthdates" do
         make_request(limit: 200)
-        expect(response.body).not_to include("@", "phone", "email", "note")
+        expect(response.body).not_to include("@", "phone", "email", "note", "birthdate", "age\"")
+        expect(response.body).not_to include(never_spoke.birthdate.iso8601)
       end
 
       it "uses the months asked for" do
@@ -70,6 +73,41 @@ RSpec.describe "API v1 speakers" do
         make_request(unit_id: units(:pleasant_forest).id, limit: 200)
         expect(speaker_names).not_to include(other_member.name)
         expect(speaker_names).to include(never_spoke.name)
+      end
+
+      context "with members in each age group" do
+        let!(:primary_child) { create_member("Zz, Primary Child", birthdate: 9.years.ago.to_date) }
+        let!(:youth) { create_member("Zz, Youth Member", birthdate: 15.years.ago.to_date, gender: :male) }
+
+        it "labels each speaker's group" do
+          make_request(limit: 200)
+          groups = json["speakers"].to_h { [it["name"], it["group"]] }
+          expect(groups).to include(primary_child.name => "primary", youth.name => "youth", never_spoke.name => "adult")
+        end
+
+        { "primary" => "Zz, Primary Child", "youth" => "Zz, Youth Member", "adult" => "Zz, Never Spoke" }.each do |group, name|
+          it "returns only #{group} members when asked" do
+            make_request(group: group, limit: 200)
+            expect(response).to have_http_status(:ok)
+            expect(json["group"]).to eq(group)
+            expect(json["speakers"].pluck("group").uniq).to eq([group])
+            expect(speaker_names).to include(name)
+          end
+        end
+
+        it "returns every group when none is given" do
+          make_request(limit: 200)
+          expect(json["speakers"].pluck("group").uniq).to contain_exactly("primary", "youth", "adult")
+        end
+      end
+
+      [{ group: "child" }, { group: "" }, { group: "Youth" }, { group: ["youth"] }].each do |params|
+        it "rejects the group #{params[:group].inspect}" do
+          make_request(params)
+          expect(response).to have_http_status(:unprocessable_content)
+          expect(json["error"]).to eq("code" => "invalid_request",
+                                      "message" => "group must be one of primary, youth, adult.")
+        end
       end
 
       it "reads leading zeros as decimal, not octal" do
