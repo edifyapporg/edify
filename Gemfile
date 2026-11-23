@@ -18,7 +18,6 @@ gem "aws-sdk-s3", require: false
 gem "cssbundling-rails"
 gem "csv"
 gem "devise"
-gem "devise-jwt"
 gem "font_awesome5_rails"
 gem "friendly_id"
 gem "image_processing", "~> 1.2"
