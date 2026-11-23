@@ -15,6 +15,11 @@ describe "Manage personal API tokens" do
       fill_in "Name", with: "Claude Code"
       select "30 days", from: "Expires after"
       click_button "Create Token"
+      expect(page).to have_text("reviewed the General Handbook's guidance")
+      expect(page).to have_no_css("#created_api_token")
+
+      check "api_token_guidance_acknowledged"
+      click_button "Create Token"
 
       plaintext = find_by_id("created_api_token").find("code").text
       expect(plaintext).to start_with("edify_")
