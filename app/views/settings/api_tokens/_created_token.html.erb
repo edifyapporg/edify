@@ -1,0 +1,14 @@
+<%# locals: (api_token:) %>
+
+<div class="alert alert-success mb-5" role="alert" id="created_api_token">
+  <h5 class="alert-heading">Created "<%= api_token.name %>"</h5>
+  <p>Copy this token now. For your security, Edify stores only a fingerprint of it, so it cannot be shown again.</p>
+  <div class="d-flex align-items-center" data-controller="clipboard">
+    <code class="fs-5 text-break" data-clipboard-target="source"><%= api_token.plaintext_token %></code>
+    <%= button_tag(fa_icon("clipboard"),
+                   type: "button",
+                   class: "btn btn-sm btn-outline-primary ms-2",
+                   title: "Copy to clipboard",
+                   data: { action: "clipboard#copy", clipboard_target: "button" }) %>
+  </div>
+</div>

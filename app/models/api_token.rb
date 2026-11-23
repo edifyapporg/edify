@@ -8,8 +8,20 @@ class ApiToken < ApplicationRecord
   PREFIX = "edify_".freeze
   SCOPES = %w[read write].freeze
   LAST_USED_THROTTLE = 5.minutes
+  # How long a new token lasts, by the code the settings form submits. Labels live in config/locales/en.yml under
+  # models.api_token.expiry_choices.
+  EXPIRY_CHOICES = {
+    "30d" => 30.days,
+    "90d" => 90.days,
+    "1y" => 1.year,
+    "never" => nil,
+  }.freeze
+  DEFAULT_EXPIRY = "90d".freeze
 
   belongs_to :user
+
+  # A code from EXPIRY_CHOICES. Assigning one sets expires_at from now. Code that sets expires_at directly can skip it.
+  attribute :expires_in, :string
 
   attr_reader :plaintext_token
 
@@ -17,6 +29,9 @@ class ApiToken < ApplicationRecord
 
   validates :name, presence: true, length: { maximum: 100 }
   validates :token_digest, presence: true, uniqueness: true
+  validates :expires_in,
+            inclusion: { in: EXPIRY_CHOICES.keys, message: I18n.t("models.api_token.expiry_not_offered") },
+            allow_nil: true
   validate :scopes_are_known
   validate :user_is_assigned_to_unit, on: :create
   validate :expires_in_the_future, on: :create
@@ -42,6 +57,11 @@ class ApiToken < ApplicationRecord
 
   def active?
     !revoked? && !expired?
+  end
+
+  def expires_in=(code)
+    super
+    self.expires_at = EXPIRY_CHOICES[code]&.from_now if EXPIRY_CHOICES.key?(code)
   end
 
   def expired?
