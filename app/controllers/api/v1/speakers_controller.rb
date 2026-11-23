@@ -27,20 +27,11 @@ module Api
           months: months,
           group: group,
           spoken_before: query.spoken_before,
-          speakers: query.call.map { |member| speaker_json(member) },
+          speakers: query.call.map { |member| StaleSpeakers.speaker_json(member) },
         }
       end
 
       private
-
-      def speaker_json(member)
-        {
-          name: member.name,
-          gender: member.gender,
-          group: StaleSpeakers.group_of(member),
-          last_talk_date: member.last_talk_date,
-        }
-      end
 
       # Accepts plain digits only. Kernel#Integer would also read "010" as octal 8, "0x10" as 16 and "1_2" as 12.
       # @return [Integer, nil] the default when absent, nil unless the value is plain digits

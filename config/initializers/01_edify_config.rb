@@ -23,6 +23,11 @@ class EdifyConfig
     "no-reply@#{app_url}"
   end
 
+  # The MCP endpoint is open to site admins only until this is set, pending the privacy review in #315.
+  def self.mcp_enabled_for_everyone?
+    ::ENV["MCP_ENABLED"] == "true" # rubocop:disable Rails/EnvironmentVariableAccess
+  end
+
   def self.mailgun_api_key
     Rails.application.credentials.dig(:mailgun, :api_key)
   end

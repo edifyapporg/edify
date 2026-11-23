@@ -80,6 +80,8 @@ Rails.application.routes.draw do
     end
   end
 
+  match "/mcp", to: "mcp#handle", via: [:get, :post, :delete]
+
   namespace :webhooks do
     resources :mailgun_events, only: [:create]
   end
