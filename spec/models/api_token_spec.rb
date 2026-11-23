@@ -191,6 +191,17 @@ describe ::ApiToken do
     end
   end
 
+  describe ".active_first" do
+    it "lists active tokens before revoked and expired ones, newest first within each group" do
+      old_active = create_token(created_at: 3.days.ago)
+      new_active = create_token(created_at: 1.day.ago, expires_at: 1.week.from_now)
+      revoked = create_token(created_at: 1.hour.ago).tap(&:revoke!)
+      expired = create_token(created_at: 2.days.ago).tap { it.update_column(:expires_at, 1.minute.ago) }
+
+      expect(user.api_tokens.active_first).to eq([new_active, old_active, revoked, expired])
+    end
+  end
+
   describe "#revoke!" do
     subject { create_token }
 

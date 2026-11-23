@@ -8,7 +8,7 @@ module Settings
     def index
       authorize ::ApiToken
       @api_token = new_api_token
-      @api_tokens = current_user.api_tokens.newest_first
+      @api_tokens = current_user.api_tokens.active_first
     end
 
     # POST /settings/api_tokens
@@ -29,7 +29,7 @@ module Settings
         status = :unprocessable_content
       end
 
-      @api_tokens = current_user.api_tokens.newest_first
+      @api_tokens = current_user.api_tokens.active_first
       render :index, status: status
     end
 
