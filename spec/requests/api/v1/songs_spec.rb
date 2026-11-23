@@ -16,9 +16,9 @@ RSpec.describe "API v1 songs" do
     sing("Other Ward Hymn", on: Date.new(2026, 6, 7), in_unit: units(:pleasant_forest))
   end
 
-  def sing(title, on:, in_unit: unit)
+  def sing(title, on:, in_unit: unit, type: :opening_hymn)
     meeting = in_unit.meetings.find_or_create_by!(date: on) { |m| m.meeting_type = :sacrament_meeting }
-    meeting.songs.create!(title: title, song_type: :opening_hymn)
+    meeting.songs.create!(title: title, song_type: type)
   end
 
   def make_request(params = {}, request_headers = headers)
@@ -32,10 +32,13 @@ RSpec.describe "API v1 songs" do
       expect(response).to have_http_status(:ok)
       expect(json).to eq(
         "weeks" => 12,
+        "song_type" => nil,
         "since" => "2026-03-23",
         "songs" => [
-          { "title" => "Come, Follow Me #116", "times_sung" => 2, "last_sung" => "2026-06-07" },
-          { "title" => "Abide with Me #166", "times_sung" => 1, "last_sung" => "2026-05-31" },
+          { "title" => "Come, Follow Me #116", "times_sung" => 2, "last_sung" => "2026-06-07",
+            "song_types" => ["opening_hymn"] },
+          { "title" => "Abide with Me #166", "times_sung" => 1, "last_sung" => "2026-05-31",
+            "song_types" => ["opening_hymn"] },
         ]
       )
     end
@@ -45,6 +48,25 @@ RSpec.describe "API v1 songs" do
 
       expect(json).to include("weeks" => 4, "since" => "2026-05-18")
       expect(json["songs"].pluck("title")).to eq(["Come, Follow Me #116"])
+    end
+
+    it "counts only the song type asked for" do
+      sing("I Stand All Amazed #193", on: Date.new(2026, 6, 14), type: :sacrament_hymn)
+
+      make_request(song_type: "sacrament_hymn")
+
+      expect(json).to include("song_type" => "sacrament_hymn")
+      expect(json["songs"]).to eq([{ "title" => "I Stand All Amazed #193", "times_sung" => 1,
+                                     "last_sung" => "2026-06-14", "song_types" => ["sacrament_hymn"] }])
+    end
+
+    [{ song_type: "prelude" }, { song_type: "Sacrament_Hymn" }, { song_type: "" }, { song_type: ["sacrament_hymn"] }]
+      .each do |params|
+      it "rejects the song type #{params[:song_type].inspect}" do
+        make_request(params)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(json["error"]["message"]).to start_with("song_type must be one of opening_hymn, sacrament_hymn")
+      end
     end
 
     it "ignores a unit id supplied in the request" do

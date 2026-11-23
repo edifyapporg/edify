@@ -21,9 +21,11 @@ RSpec.describe ::Songs::RecentlySung do
     sing("Abide with Me #166", on: Date.new(2026, 5, 31))
 
     expected = [
-      { title: "Come, Follow Me #116", times_sung: 2, last_sung: Date.new(2026, 6, 7) },
-      { title: "I Stand All Amazed #193", times_sung: 1, last_sung: Date.new(2026, 6, 14) },
-      { title: "Abide with Me #166", times_sung: 1, last_sung: Date.new(2026, 5, 31) },
+      { title: "Come, Follow Me #116", times_sung: 2, last_sung: Date.new(2026, 6, 7),
+        song_types: %w[opening_hymn closing_hymn] },
+      { title: "I Stand All Amazed #193", times_sung: 1, last_sung: Date.new(2026, 6, 14),
+        song_types: %w[sacrament_hymn] },
+      { title: "Abide with Me #166", times_sung: 1, last_sung: Date.new(2026, 5, 31), song_types: %w[opening_hymn] },
     ]
     expect(result).to eq(expected)
   end
@@ -32,7 +34,8 @@ RSpec.describe ::Songs::RecentlySung do
     sing("come follow me #116", on: Date.new(2026, 5, 3))
     sing("Come Follow  Me #116 ", on: Date.new(2026, 6, 7))
 
-    expect(result).to eq([{ title: "Come Follow Me #116", times_sung: 2, last_sung: Date.new(2026, 6, 7) }])
+    expect(result).to eq([{ title: "Come Follow Me #116", times_sung: 2, last_sung: Date.new(2026, 6, 7),
+                            song_types: %w[opening_hymn] }])
   end
 
   it "leaves out prelude and postlude, as the last-sung check does" do
@@ -64,6 +67,38 @@ RSpec.describe ::Songs::RecentlySung do
   it "counts only the unit's own meetings" do
     sing("Other Ward Hymn", on: Date.new(2026, 6, 7), in_unit: units(:pleasant_forest))
     expect(result).to be_empty
+  end
+
+  describe "song types" do
+    before do
+      sing("Come, Follow Me #116", on: Date.new(2026, 6, 7), type: :closing_hymn)
+      sing("Come, Follow Me #116", on: Date.new(2026, 5, 3), type: :closing_hymn)
+      sing("Come, Follow Me #116", on: Date.new(2026, 4, 5), type: :opening_hymn)
+      sing("I Stand All Amazed #193", on: Date.new(2026, 6, 14), type: :sacrament_hymn)
+      sing("I Stand All Amazed #193", on: Date.new(2026, 5, 10), type: :musical_number)
+    end
+
+    it "lists each hymn's distinct types in program order, whatever order they were sung in" do
+      types = result.to_h { [it[:title], it[:song_types]] }
+      expect(types).to eq("Come, Follow Me #116" => %w[opening_hymn closing_hymn],
+                          "I Stand All Amazed #193" => %w[sacrament_hymn musical_number])
+    end
+
+    it "counts only songs sung as the type asked for" do
+      sacrament = { title: "I Stand All Amazed #193", times_sung: 1, last_sung: Date.new(2026, 6, 14),
+                    song_types: %w[sacrament_hymn] }
+      closing = { title: "Come, Follow Me #116", times_sung: 2, last_sung: Date.new(2026, 6, 7),
+                  song_types: %w[closing_hymn] }
+
+      expect(result(song_type: "sacrament_hymn")).to eq([sacrament])
+      expect(result(song_type: "closing_hymn")).to eq([closing])
+    end
+
+    it "refuses prelude, postlude and unknown types" do
+      %w[prelude postlude hymn].each do |type|
+        expect { result(song_type: type) }.to raise_error(ArgumentError, /song_type must be one of/)
+      end
+    end
   end
 
   it "rejects weeks and limits outside the allowed ranges" do
