@@ -6,6 +6,8 @@ class Member < ApplicationRecord
   YOUTH_AGE = 12
   # The age at which someone is spoken to as an adult rather than a youth.
   ADULT_AGE = 18
+  # What the API, MCP tools and leaders call each speaker category: "primary", not "child".
+  AGE_GROUPS = { child: "primary", youth: "youth", adult: "adult" }.freeze
 
   has_many :talks, dependent: :nullify
   has_many :notes, dependent: :destroy
@@ -22,6 +24,13 @@ class Member < ApplicationRecord
   strip_attributes
 
   scope :alphabetized, -> { order(:name) }
+  # Members whose name contains every word of the query, in any order and ignoring case, so "jane smith" finds
+  # "Smith, Jane". LIKE wildcards in the query match only themselves.
+  scope :matching_name, lambda { |query|
+    query.to_s.split.reduce(all) do |relation, word|
+      relation.where("members.name ILIKE ?", "%#{sanitize_sql_like(word)}%")
+    end
+  }
   scope :synced_since, ->(date) { where(synced_on: date..) }
   scope :with_last_talk_date, lambda {
     from(left_joins(talks: :meeting)
@@ -117,6 +126,12 @@ class Member < ApplicationRecord
   # @return [Boolean]
   def under_age?
     birthdate.present? && birthdate > MINIMUM_SPEAKER_AGE.years.ago.to_date
+  end
+
+  # The speaker category as clients name it.
+  # @return [String] "primary", "youth" or "adult"
+  def age_group
+    AGE_GROUPS.fetch(speaker_category)
   end
 
   # Which of the three groups a speaker is invited and prepared as. Each is asked to speak for a different

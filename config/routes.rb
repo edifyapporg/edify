@@ -75,6 +75,7 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     namespace :v1 do # rubocop:disable Naming/VariableNumber
       get "meetings", to: "meetings#index"
+      get "members", to: "members#index"
       get "meetings/:date", to: "meetings#show", as: :meeting
       get "songs/recent", to: "songs#recent"
       get "speakers/stale", to: "speakers#stale"

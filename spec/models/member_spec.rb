@@ -361,4 +361,34 @@ describe ::Member do
       expect(child.parents).to be_empty
     end
   end
+
+  describe ".matching_name" do
+    let(:unit) { units(:sunny_hills) }
+    let!(:jane) { unit.members.create!(name: "Smithson, Jane Marie", gender: :female, birthdate: "1980-01-01") }
+    let!(:john) { unit.members.create!(name: "Smith, John", gender: :male, birthdate: "1980-01-01") }
+    let!(:percent) { unit.members.create!(name: "Odd 100% Name", gender: :male, birthdate: "1980-01-01") }
+
+    def names_for(query)
+      unit.members.where(id: [jane, john, percent].map(&:id)).matching_name(query).pluck(:name)
+    end
+
+    it "matches every word, in any order, ignoring case" do
+      expect(names_for("jane smith")).to eq(["Smithson, Jane Marie"])
+      expect(names_for("SMITH")).to contain_exactly("Smithson, Jane Marie", "Smith, John")
+      expect(names_for("john marie")).to be_empty
+    end
+
+    it "treats LIKE wildcards in the query as plain characters" do
+      expect(names_for("%")).to eq(["Odd 100% Name"])
+      expect(names_for("_")).to be_empty
+    end
+  end
+
+  describe "#age_group" do
+    it "names each speaker category as clients do" do
+      expect(Member.new(birthdate: 9.years.ago).age_group).to eq("primary")
+      expect(Member.new(birthdate: 15.years.ago).age_group).to eq("youth")
+      expect(Member.new(birthdate: 40.years.ago).age_group).to eq("adult")
+    end
+  end
 end

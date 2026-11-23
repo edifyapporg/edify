@@ -11,7 +11,7 @@ module Members
     DEFAULT_LIMIT = 25
     LIMIT_RANGE = (1..200)
     # The age groups clients see, by the Member#speaker_category each stands for. Leaders say "Primary", not "child".
-    GROUPS = { "primary" => :child, "youth" => :youth, "adult" => :adult }.freeze
+    GROUPS = ::Member::AGE_GROUPS.invert.freeze
 
     # @param members [ActiveRecord::Relation<Member>] the roster to search, already scoped to what the user may see
     # @param months [Integer]
@@ -25,7 +25,7 @@ module Members
     # @param member [Member]
     # @return [String] the GROUPS key for the member's speaker category
     def self.group_of(member)
-      GROUPS.key(member.speaker_category)
+      member.age_group
     end
 
     def initialize(members:, months:, limit:, group: nil)
