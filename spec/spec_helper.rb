@@ -13,6 +13,13 @@
 # it.
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+
+# Edify's files have no `# frozen_string_literal: true` comment (removed in #190), so string literals are mutable.
+# Since Ruby 3.4 they are "chilled": mutating one still works, but a future Ruby will freeze them and raise
+# FrozenError instead. Ruby prints a warning for each such mutation only when deprecation warnings are on, so turn them
+# on here and any spec that runs that code shows "literal string will be frozen in the future" with its location.
+Warning[:deprecated] = true
+
 RSpec.configure do |config|
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
