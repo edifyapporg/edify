@@ -47,6 +47,21 @@ describe ::Member do
       expect(young.errors.full_messages).to include("Birthdate member is not old enough")
     end
 
+    it "checks the minimum speaker age by year when only a birth year is given" do
+      turns_eight = unit.members.new(name: "Year, Eight", gender: :male, birth_year: Date.current.year - 8)
+      turns_seven = unit.members.new(name: "Year, Seven", gender: :male, birth_year: Date.current.year - 7)
+
+      expect(turns_eight).to be_valid
+      expect(turns_seven).not_to be_valid
+      expect(turns_seven.errors.full_messages).to include("Birth year member is not old enough")
+    end
+
+    it "refuses a birth year before 1900, in the future, or not a whole number" do
+      [1899, Date.current.year + 1, "1990.5"].each do |year|
+        expect(unit.members.new(name: "Odd, Year", gender: :male, birth_year: year)).not_to be_valid
+      end
+    end
+
     it "allows the same name and birth year in different units, but not in one" do
       other_unit = units.find { it != member.unit }
 
