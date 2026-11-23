@@ -10,6 +10,10 @@ class Meeting < ApplicationRecord
   # The fewest talks a sacrament meeting needs to count as fully scheduled. Fewer than this and the meeting's
   # schedulers are notified that it still needs speakers.
   MINIMUM_SPEAKERS = 2
+  # How many days a list of meetings covers when a client gives no end date, and the most one request may cover.
+  # Shared by the API and the MCP tools.
+  DEFAULT_LISTING_DAYS = 84
+  MAX_LISTING_DAYS = 366
 
   has_many :talks, -> { order(position: :asc) }, dependent: nil
   has_many :songs, dependent: :destroy
@@ -38,6 +42,7 @@ class Meeting < ApplicationRecord
   scope :occurring_after, ->(date) { where("date > ?", date) }
   scope :occurring_on_or_after, ->(date) { where(date: date..) }
   scope :occurring_on_or_before, ->(date) { where(date: ..date) }
+  scope :occurring_between, ->(from, to) { where(date: from..to) }
   scope :oldest_first, -> { order(date: :asc) }
 
   def self.ransackable_attributes(_auth_object = nil)

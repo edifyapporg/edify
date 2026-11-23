@@ -1,27 +1,28 @@
 module Api
   module V1
     class MeetingsController < BaseController
-      InDateRange = ::Meetings::InDateRange
       ApiJson = ::Meetings::ApiJson
       ISO_DATE = /\A\d{4}-\d{2}-\d{2}\z/
 
       # GET /api/v1/meetings?from=2026-11-01&to=2027-01-31
       # The unit's meetings in the range, earliest first, with their speakers. `from` defaults to today and `to` to
-      # 84 days after `from`; the range may span at most 366 days.
+      # Meeting::DEFAULT_LISTING_DAYS after `from`; the range may span at most Meeting::MAX_LISTING_DAYS.
       def index
         authorize ::Meeting, :index?
 
         from = params.key?(:from) ? parse_date(params[:from]) : ::Date.current
         return invalid_request(date_message(:from)) unless from
 
-        to = params.key?(:to) ? parse_date(params[:to]) : InDateRange.default_to(from)
+        to = params.key?(:to) ? parse_date(params[:to]) : from + ::Meeting::DEFAULT_LISTING_DAYS
         error = to ? range_message(from, to) : date_message(:to)
         return invalid_request(error) if error
+
+        meetings = current_unit.meetings.occurring_between(from, to).order(:date).includes(:talks)
 
         render json: {
           from: from,
           to: to,
-          meetings: InDateRange.call(unit: current_unit, from: from, to: to).map { |m| ApiJson.summary(m) },
+          meetings: meetings.map { |meeting| ApiJson.summary(meeting) },
         }
       end
 
@@ -54,7 +55,7 @@ module Api
       def range_message(from, to)
         return "to must not be before from." if to < from
 
-        "The range may span at most #{InDateRange::MAX_SPAN_DAYS} days." if (to - from) > InDateRange::MAX_SPAN_DAYS
+        "The range may span at most #{::Meeting::MAX_LISTING_DAYS} days." if (to - from) > ::Meeting::MAX_LISTING_DAYS
       end
     end
   end

@@ -69,4 +69,17 @@ describe ::Meeting do
       it { expect(result).to eq(:ok) }
     end
   end
+
+  describe ".occurring_between" do
+    let(:unit) { units(:sunny_hills) }
+
+    it "includes meetings on both end dates and none outside them" do
+      dates = %w[2026-10-31 2026-11-01 2026-11-15 2026-11-29 2026-11-30].map { |d| Date.iso8601(d) }
+      dates.each { |d| unit.meetings.create!(date: d, meeting_type: :sacrament_meeting) }
+
+      found = unit.meetings.occurring_between(Date.new(2026, 11, 1), Date.new(2026, 11, 29)).pluck(:date)
+
+      expect(found).to contain_exactly(Date.new(2026, 11, 1), Date.new(2026, 11, 15), Date.new(2026, 11, 29))
+    end
+  end
 end
