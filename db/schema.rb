@@ -121,13 +121,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
   end
 
   create_table "household_members", force: :cascade do |t|
-    t.datetime "created_at", null: false
     t.bigint "household_id", null: false
-    t.integer "listed_age"
     t.bigint "member_id"
     t.string "name", null: false
-    t.boolean "parent", default: false, null: false
+    t.integer "listed_age"
     t.integer "position", null: false
+    t.boolean "parent", default: false, null: false
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["household_id", "position"], name: "index_household_members_on_household_id_and_position", unique: true
     t.index ["household_id"], name: "index_household_members_on_household_id"
@@ -135,13 +135,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
   end
 
   create_table "households", force: :cascade do |t|
-    t.string "address_lines", default: [], null: false, array: true
-    t.datetime "created_at", null: false
-    t.string "email"
-    t.string "name", null: false
-    t.string "phone_number"
-    t.date "synced_on"
     t.bigint "unit_id", null: false
+    t.string "name", null: false
+    t.string "address_lines", default: [], null: false, array: true
+    t.string "phone_number"
+    t.string "email"
+    t.date "synced_on"
+    t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["unit_id", "name"], name: "index_households_on_unit_id_and_name", unique: true
     t.index ["unit_id"], name: "index_households_on_unit_id"
@@ -153,7 +153,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
     t.string "error_message"
     t.integer "failed_count"
     t.integer "ignored_count"
-    t.integer "kind", default: 0, null: false
     t.string "logs"
     t.bigint "owner_id"
     t.integer "row_count"
@@ -163,6 +162,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
     t.integer "succeeded_count"
     t.bigint "unit_id", null: false
     t.datetime "updated_at", null: false
+    t.integer "kind", default: 0, null: false
     t.index ["owner_id"], name: "index_import_jobs_on_owner_id"
     t.index ["unit_id"], name: "index_import_jobs_on_unit_id"
   end
@@ -186,8 +186,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
   end
 
   create_table "members", force: :cascade do |t|
-    t.boolean "baptized"
-    t.integer "birth_year"
     t.datetime "created_at", null: false
     t.string "email"
     t.integer "gender"
@@ -199,6 +197,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
     t.date "synced_on"
     t.bigint "unit_id"
     t.datetime "updated_at", null: false
+    t.boolean "baptized"
+    t.integer "birth_year"
     t.index ["unit_id", "name", "birth_year"], name: "index_members_on_unit_id_and_name_and_birth_year", unique: true
     t.index ["unit_id"], name: "index_members_on_unit_id"
   end
@@ -421,7 +421,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name"
-    t.boolean "hide_moved_members", default: true, null: false
     t.string "last_name"
     t.boolean "notification_preference_email"
     t.string "phone_number"
@@ -431,6 +430,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_000000) do
     t.integer "role"
     t.bigint "unit_id"
     t.datetime "updated_at", null: false
+    t.boolean "hide_moved_members", default: true, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unit_id"], name: "index_users_on_unit_id"
