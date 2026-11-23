@@ -3,7 +3,7 @@ class MemberResource < Madmin::Resource
   attribute :id, form: false
   attribute :name
   attribute :gender
-  attribute :birthdate
+  attribute :birth_year
   attribute :phone_number
   attribute :email
   attribute :created_at, form: false

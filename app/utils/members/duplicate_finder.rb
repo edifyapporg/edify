@@ -1,17 +1,17 @@
 module Members
   # Finds likely-duplicate member records within a unit.
   #
-  # The importer keys members on exact (name, birthdate), so an official name
+  # The importer keys members on (unit, name, birth year), so an official name
   # change (a new/added surname or middle name) produces a second record for one
-  # real person. We anchor on an identical birthdate (guaranteed to be a different
-  # name by the unique index) and then require the names to be related:
+  # real person. We anchor on an identical birth year (guaranteed to be a different
+  # name by the uniqueness rule) and then require the names to be related:
   #
   #   * surnames are equal or one is a subset of the other (e.g. a hyphenation
   #     change like "Bentley-Dyches" -> "Dyches"), AND
   #   * the shorter given-name is a prefix of the longer (e.g. "Kellianne" ->
   #     "Kellianne Huntington", "Berkley" -> "Berkley Janet Noel").
   #
-  # Requiring both keeps precision high and excludes same-birthdate siblings/twins
+  # Requiring both keeps precision high and excludes same-year siblings and twins
   # (same surname, different first names). Pairs a reviewer has dismissed are
   # skipped.
   class DuplicateFinder
@@ -28,12 +28,12 @@ module Members
 
     # @return [Array<Members::DuplicatePair>]
     def call
-      # Members without a birthdate are excluded: a nil birthdate is an absence of
+      # Members without a birth year are excluded: a nil birth year is an absence of
       # data, not a match, so grouping them together would flag unrelated people.
-      unit.members.where.not(birthdate: nil).to_a
-          .group_by(&:birthdate)
+      unit.members.where.not(birth_year: nil).to_a
+          .group_by(&:birth_year)
           .each_value
-          .flat_map { |members_sharing_birthdate| pairs_within(members_sharing_birthdate) }
+          .flat_map { |members_sharing_birth_year| pairs_within(members_sharing_birth_year) }
           .sort_by { |pair| pair.keep.name }
     end
 

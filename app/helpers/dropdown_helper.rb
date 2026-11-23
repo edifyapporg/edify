@@ -86,15 +86,15 @@ module DropdownHelper
   end
 
   def filter_members_age_dropdown(request_params, options = {})
-    adult_threshold = (Member::ADULT_AGE - 1).years.ago.beginning_of_year.to_date.to_s
-    youth_threshold = (Member::YOUTH_AGE - 1).years.ago.beginning_of_year.to_date.to_s
+    adult_threshold = Member.earliest_youth_birth_year.to_s
+    youth_threshold = Member.earliest_child_birth_year.to_s
 
-    all_ages_filter = { birthdate_gteq: nil, birthdate_lt: nil }
-    adult_filter = { birthdate_gteq: nil, birthdate_lt: adult_threshold }
-    youth_filter = { birthdate_gteq: adult_threshold, birthdate_lt: youth_threshold }
-    child_filter = { birthdate_gteq: youth_threshold, birthdate_lt: nil }
+    all_ages_filter = { birth_year_gteq: nil, birth_year_lt: nil }
+    adult_filter = { birth_year_gteq: nil, birth_year_lt: adult_threshold }
+    youth_filter = { birth_year_gteq: adult_threshold, birth_year_lt: youth_threshold }
+    child_filter = { birth_year_gteq: youth_threshold, birth_year_lt: nil }
 
-    existing_age_filter = [:birthdate_gteq, :birthdate_lt].index_with do |attr|
+    existing_age_filter = [:birth_year_gteq, :birth_year_lt].index_with do |attr|
       request_params.dig(:q, attr).presence
     end
 
@@ -173,7 +173,7 @@ module DropdownHelper
     title = case existing_sort_attribute
             when "name"
               "By name"
-            when "birthdate"
+            when "birth_year"
               "By age"
             when "paused_until"
               "By last talk"
@@ -186,8 +186,8 @@ module DropdownHelper
         link: request_params.deep_merge(q: { s: "name asc" }),
         active: existing_sort_attribute == "name" },
       { name: "Age",
-        link: request_params.deep_merge(q: { s: "birthdate desc" }),
-        active: existing_sort_attribute == "birthdate" },
+        link: request_params.deep_merge(q: { s: "birth_year desc" }),
+        active: existing_sort_attribute == "birth_year" },
       { name: "Last talk",
         link: request_params.deep_merge(q: { s: ["paused_until asc", "last_talk_date asc", "name asc"] }),
         active: existing_sort_attribute == "paused_until" },

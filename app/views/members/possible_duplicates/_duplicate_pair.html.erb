@@ -18,7 +18,7 @@
                 <% end %>
               </h6>
               <div class="text-muted small">
-                <div><%= "Born: #{l(member.birthdate, format: :rfc822)}" %></div>
+                <div><%= "Born: #{member.birth_year || "—"}" %></div>
                 <div><%= "Phone: #{member.phone_number.presence || "—"}" %></div>
                 <div><%= "Email: #{member.email.presence || "—"}" %></div>
                 <div><%= "Last talk: #{member.last_talk_date ? l(member.last_talk_date, format: :rfc822) : "Not found"}" %></div>

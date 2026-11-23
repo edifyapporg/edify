@@ -119,7 +119,7 @@ describe ::Edify::Etl::ImportManager do
       expect { subject.perform! }.to change(::Member, :count).by(1)
 
       child = unit.members.find_by(name: "Unbaptized, Eight")
-      expect(child.age).to eq(Member::MINIMUM_SPEAKER_AGE)
+      expect(child.age_this_year).to eq(Member::MINIMUM_SPEAKER_AGE)
       expect(child.speaker_category).to eq(:child)
     end
 

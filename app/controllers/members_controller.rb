@@ -83,10 +83,10 @@ class MembersController < ApplicationController
   end
 
   # POST /members/upsert
-  # This is an upsert using name and birthdate as a composite unique key
+  # This is an upsert using name and birth year (from the given birthdate) as a composite unique key
   def upsert
     @member = current_unit.members.find_or_initialize_by(name: member_params[:name],
-                                                         birthdate: member_params[:birthdate])
+                                                         birth_year: Member.birth_year_from(member_params[:birthdate]))
     existing_member = @member.persisted?
     @member.assign_attributes(member_params)
 

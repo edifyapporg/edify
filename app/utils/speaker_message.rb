@@ -191,11 +191,11 @@ class SpeakerMessage
     segments(medium).join(SEGMENT_SEPARATORS.fetch(medium))
   end
 
-  # Which group's wording and speaking time to use. Without a member on record, or without their birthdate, we
+  # Which group's wording and speaking time to use. Without a member on record, or without their birth year, we
   # cannot tell, so we treat them as an adult -- the longer talk is the safer thing to over-prepare for.
   # @return [Symbol]
   def category
-    return :adult if member&.birthdate.blank?
+    return :adult if member&.birth_year.blank?
 
     member.speaker_category
   end
