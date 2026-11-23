@@ -45,7 +45,12 @@ class ApiToken < ApplicationRecord
   strip_attributes
 
   scope :active, -> { where(revoked_at: nil).where("expires_at IS NULL OR expires_at > ?", Time.current) }
-  scope :newest_first, -> { order(created_at: :desc) }
+  # Active tokens first, then revoked and expired ones, newest first within each group (#377). The CASE uses the
+  # same test as the active scope.
+  ACTIVE_FIRST_SQL = "CASE WHEN revoked_at IS NULL AND (expires_at IS NULL OR expires_at > ?) THEN 0 ELSE 1 END".freeze
+  scope :active_first, lambda {
+    order(Arel.sql(sanitize_sql_array([ACTIVE_FIRST_SQL, Time.current]))).order(created_at: :desc)
+  }
 
   # @param [String, nil] token the plaintext token from an Authorization header
   # @return [ApiToken, nil] the matching token, or nil if it is unknown, revoked or expired

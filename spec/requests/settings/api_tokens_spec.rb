@@ -31,6 +31,15 @@ RSpec.describe "Settings API tokens" do
         expect(response.body).not_to include(other.plaintext_token)
       end
 
+      it "lists active tokens above revoked and expired ones" do
+        create_token(user, name: "Older active", created_at: 2.days.ago)
+        create_token(user, name: "Newer revoked", created_at: 1.hour.ago).revoke!
+
+        get settings_api_tokens_path
+
+        expect(response.body.index("Older active")).to be < response.body.index("Newer revoked")
+      end
+
       it "shows revoked and expired tokens without a revoke button" do
         create_token(user, name: "Old token").revoke!
         create_token(user, name: "Short token", expires_at: 1.day.from_now)
