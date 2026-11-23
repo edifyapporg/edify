@@ -28,19 +28,6 @@ module Members
       GROUPS.key(member.speaker_category)
     end
 
-    # Everything a client may see about a stale speaker: name, gender, age group and last talk, and nothing else (no
-    # age, birthdate, contact details or notes; see #315). The API and the MCP tools both answer with this.
-    # @param member [Member] one returned by #call
-    # @return [Hash]
-    def self.speaker_json(member)
-      {
-        name: member.name,
-        gender: member.gender,
-        group: group_of(member),
-        last_talk_date: member.last_talk_date,
-      }
-    end
-
     def initialize(members:, months:, limit:, group: nil)
       raise ArgumentError, "months must be within #{MONTHS_RANGE}" unless MONTHS_RANGE.cover?(months)
       raise ArgumentError, "limit must be within #{LIMIT_RANGE}" unless LIMIT_RANGE.cover?(limit)

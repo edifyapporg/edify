@@ -11,7 +11,7 @@ RSpec.describe ::Songs::RecentlySung do
   end
 
   def result(**)
-    described_class.call(unit: unit, **).map(&:to_json_hash)
+    described_class.call(unit: unit, **).map(&:to_h)
   end
 
   it "counts each hymn sung in the last 12 weeks, most sung first, then most recent" do
