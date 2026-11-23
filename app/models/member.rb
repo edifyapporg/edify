@@ -19,9 +19,6 @@ class Member < ApplicationRecord
   has_many :households, through: :household_members
   belongs_to :unit
 
-  # Full birthdates are no longer stored (#370): `birth_year` replaces the column, which a later migration drops.
-  self.ignored_columns += ["birthdate"]
-
   enum :gender, { male: 0, female: 1 }
 
   # A full birthdate, accepted from the importer and the member form but never stored. Assigning one sets
