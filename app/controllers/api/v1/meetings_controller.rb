@@ -1,8 +1,6 @@
 module Api
   module V1
     class MeetingsController < BaseController
-      ISO_DATE = /\A\d{4}-\d{2}-\d{2}\z/
-
       # GET /api/v1/meetings?from=2026-11-01&to=2027-01-31
       # The unit's meetings in the range, earliest first, with their speakers. `from` defaults to today and `to` to
       # Meeting::DEFAULT_LISTING_DAYS after `from`; the range may span at most Meeting::MAX_LISTING_DAYS.
@@ -38,17 +36,6 @@ module Api
       end
 
       private
-
-      # @return [Date, nil] nil unless the value is a real date written as YYYY-MM-DD
-      def parse_date(value)
-        ::Date.iso8601(value) if value.is_a?(String) && value.match?(ISO_DATE)
-      rescue ::Date::Error
-        nil
-      end
-
-      def date_message(name)
-        "#{name} must be a date written as YYYY-MM-DD."
-      end
 
       # @return [String, nil]
       def range_message(from, to)

@@ -2,7 +2,7 @@ module EdifyMcp
   module Tools
     # The MCP counterpart of GET /api/v1/meetings/:date, answering with the same serializer.
     class GetMeeting < Tool
-      ISO_DATE = /\A\d{4}-\d{2}-\d{2}\z/
+      ISO_DATE_PATTERN = /\A\d{4}-\d{2}-\d{2}\z/
 
       tool_name "get_meeting"
       title "Get a meeting"
@@ -45,7 +45,7 @@ module EdifyMcp
 
         # The schema already checks the shape; this catches dates such as 2026-02-30.
         def parse_date(value)
-          ::Date.iso8601(value) if value.match?(ISO_DATE)
+          ::Date.iso8601(value) if value.match?(ISO_DATE_PATTERN)
         rescue ::Date::Error
           nil
         end

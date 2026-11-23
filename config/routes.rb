@@ -79,6 +79,7 @@ Rails.application.routes.draw do
       get "meetings/:date", to: "meetings#show", as: :meeting
       get "songs/recent", to: "songs#recent"
       get "speakers/stale", to: "speakers#stale"
+      get "talks", to: "talks#index"
 
       match "*unmatched", to: "base#route_not_found", via: :all
     end

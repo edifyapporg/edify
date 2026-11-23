@@ -28,13 +28,8 @@ class Member < ApplicationRecord
   strip_attributes
 
   scope :alphabetized, -> { order(:name) }
-  # Members whose name contains every word of the query, in any order and ignoring case, so "jane smith" finds
-  # "Smith, Jane". LIKE wildcards in the query match only themselves.
-  scope :matching_name, lambda { |query|
-    query.to_s.split.reduce(all) do |relation, word|
-      relation.where("members.name ILIKE ?", "%#{sanitize_sql_like(word)}%")
-    end
-  }
+  # Members whose name contains every word of the query (see ApplicationRecord.matching_every_word).
+  scope :matching_name, ->(query) { matching_every_word(:name, query) }
   scope :synced_since, ->(date) { where(synced_on: date..) }
   scope :with_last_talk_date, lambda {
     from(left_joins(talks: :meeting)
