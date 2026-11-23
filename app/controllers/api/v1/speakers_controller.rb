@@ -26,11 +26,13 @@ module Api
 
       private
 
-      # @return [Integer, nil] the default when absent, nil when present but not a whole number
+      # Accepts plain digits only. Kernel#Integer would also read "010" as octal 8, "0x10" as 16 and "1_2" as 12.
+      # @return [Integer, nil] the default when absent, nil unless the value is plain digits
       def integer_param(name, default)
         return default unless params.key?(name)
 
-        Integer(params[name], exception: false)
+        value = params[name]
+        value.to_i if value.is_a?(String) && value.match?(/\A\d+\z/)
       end
 
       # @return [String, nil] a message when the value is missing or outside the range

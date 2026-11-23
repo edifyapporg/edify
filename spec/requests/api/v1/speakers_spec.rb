@@ -72,7 +72,17 @@ RSpec.describe "API v1 speakers" do
         expect(speaker_names).to include(never_spoke.name)
       end
 
-      [{ months: 0 }, { months: 121 }, { months: "twelve" }, { limit: 0 }, { limit: 201 }].each do |params|
+      it "reads leading zeros as decimal, not octal" do
+        make_request(months: "010")
+        expect(response).to have_http_status(:ok)
+        expect(json["months"]).to eq(10)
+      end
+
+      [
+        { months: 0 }, { months: 121 }, { months: "twelve" }, { limit: 0 }, { limit: 201 },
+        { months: "" }, { months: "12.5" }, { months: "-1" }, { months: " 12" }, { months: "0x10" }, { months: "1_2" },
+        { months: ["12"] }, { months: { value: "12" } }, { limit: "99999999999999999999" },
+      ].each do |params|
         it "rejects #{params}" do
           make_request(params)
           expect(response).to have_http_status(:unprocessable_content)
