@@ -73,6 +73,14 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :api, defaults: { format: :json } do
+    namespace :v1 do # rubocop:disable Naming/VariableNumber
+      get "speakers/stale", to: "speakers#stale"
+
+      match "*unmatched", to: "base#route_not_found", via: :all
+    end
+  end
+
   namespace :webhooks do
     resources :mailgun_events, only: [:create]
   end

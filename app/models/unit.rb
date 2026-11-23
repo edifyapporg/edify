@@ -56,6 +56,17 @@ class Unit < ApplicationRecord
          .first
   end
 
+  # The members a user sees on the roster. "Hide moved members" is the user's saved preference, and it drops members
+  # missing from the unit's most recent import. A unit that has never been imported has no notion of a member who has
+  # moved out, so nothing is hidden for one.
+  # @param [User] user
+  # @return [ActiveRecord::Relation<Member>]
+  def visible_members_for(user)
+    return members unless user.hide_moved_members? && last_synced_on?
+
+    members.synced_since(last_synced_on)
+  end
+
   # @return [Integer]
   def talk_count
     talks.count
