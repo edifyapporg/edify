@@ -64,6 +64,20 @@ module Api
         render_error(:unprocessable_content, "invalid_request", message)
       end
 
+      # Accepts plain digits only. Kernel#Integer would also read "010" as octal 8, "0x10" as 16 and "1_2" as 12.
+      # @return [Integer, nil] the default when absent, nil unless the value is plain digits
+      def integer_param(name, default)
+        return default unless params.key?(name)
+
+        value = params[name]
+        value.to_i if value.is_a?(String) && value.match?(/\A\d+\z/)
+      end
+
+      # @return [String, nil] a message when the value is missing or outside the range
+      def range_error(name, value, range)
+        "#{name} must be a whole number from #{range.min} to #{range.max}." unless value && range.cover?(value)
+      end
+
       def render_error(status, code, message)
         render json: { error: { code: code, message: message } }, status: status
       end

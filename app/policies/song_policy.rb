@@ -1,4 +1,10 @@
 class SongPolicy < ApplicationPolicy
+  # Every role in the unit sees the songs on the meetings index (MeetingPolicy#index?), so every role may ask which
+  # have been sung recently.
+  def recent?
+    user.assigned_to_unit?
+  end
+
   def new?
     user.music_editor?
   end
