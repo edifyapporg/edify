@@ -21,11 +21,14 @@ class Member < ApplicationRecord
 
   enum :gender, { male: 0, female: 1 }
 
-  # A full birthdate, accepted from the importer and the member form but never stored. Assigning one sets
+  # A full birthdate, accepted from the importer and the JSON upsert but never stored. Assigning one sets
   # `birth_year` and lets #under_age? check the exact date. Blank leaves `birth_year` as it was.
   attribute :birthdate, :date
 
   validates :name, :gender, :birth_year, presence: true
+  validates :birth_year, numericality: { only_integer: true, greater_than_or_equal_to: 1900,
+                                         less_than_or_equal_to: -> { Date.current.year } },
+                         allow_nil: true
   validates :name, uniqueness: { scope: [:unit_id, :birth_year] }, if: :name?
   validate :validate_age
 
@@ -140,11 +143,13 @@ class Member < ApplicationRecord
   end
 
   # Too young to be offered as a speaker, and so not worth storing. Age is the only test: a child of eight
-  # can be invited to speak whether or not they have been baptized. Checked against a full birthdate when one is
-  # given (on import or in the form), since the stored birth year alone cannot tell.
+  # can be invited to speak whether or not they have been baptized. The import has a full birthdate and checks it
+  # exactly. The member forms ask only for a birth year, so there the test is turning eight this year or earlier.
   # @return [Boolean]
   def under_age?
-    birthdate.present? && birthdate > MINIMUM_SPEAKER_AGE.years.ago.to_date
+    return birthdate > MINIMUM_SPEAKER_AGE.years.ago.to_date if birthdate.present?
+
+    birth_year.present? && age_this_year < MINIMUM_SPEAKER_AGE
   end
 
   # The speaker category as clients name it.
@@ -208,6 +213,6 @@ class Member < ApplicationRecord
   def validate_age
     return unless under_age?
 
-    errors.add(:birthdate, "member is not old enough")
+    errors.add(birthdate.present? ? :birthdate : :birth_year, "member is not old enough")
   end
 end

@@ -131,7 +131,8 @@ class MembersController < ApplicationController
 
   def member_params
     params.expect(
-      member: [:birthdate,
+      member: [:birth_year,
+               :birthdate,
                :email,
                :gender,
                :name,
