@@ -89,3 +89,4 @@ MCP tools at `/mcp`, each answering what its endpoint answers. Access is limited
 | `list_recent_songs` | `GET /api/v1/songs/recent` | all unit roles |
 | `get_meeting` | `GET /api/v1/meetings/:date` | all unit roles |
 | `search_members` | `GET /api/v1/members` | bishopric, clerk |
+| `list_talks` | `GET /api/v1/talks` | bishopric, clerk |
