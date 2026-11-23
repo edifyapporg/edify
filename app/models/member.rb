@@ -8,6 +8,10 @@ class Member < ApplicationRecord
   ADULT_AGE = 18
   # What the API, MCP tools and leaders call each speaker category: "primary", not "child".
   AGE_GROUPS = { child: "primary", youth: "youth", adult: "adult" }.freeze
+  # Limits on a name search, shared by the API and the MCP tools.
+  SEARCH_QUERY_LENGTH = (2..100)
+  SEARCH_DEFAULT_LIMIT = 25
+  SEARCH_LIMIT_RANGE = (1..100)
 
   has_many :talks, dependent: :nullify
   has_many :notes, dependent: :destroy
