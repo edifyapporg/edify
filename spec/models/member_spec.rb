@@ -3,19 +3,56 @@ require "rails_helper"
 describe ::Member do
   let(:member) { members(:bartell_randal) }
 
-  describe "#age" do
+  describe "#age_this_year" do
     before { travel_to "2022-04-15" }
 
-    it "returns the age based on birthdate" do
-      expect(member.age).to eq(25)
+    it "returns the age the member turns this calendar year" do
+      expect(member.age_this_year).to eq(25)
     end
   end
 
   describe "#bio" do
     before { travel_to "2022-04-15" }
 
-    it "returns the gender and age in a single string" do
-      expect(member.bio).to eq("Male, 25")
+    it "returns the gender and the age the member turns this year" do
+      expect(member.bio).to eq("Male, turns 25 this year")
+    end
+
+    it "returns only the gender when the birth year is unknown" do
+      member.birth_year = nil
+      expect(member.bio).to eq("Male")
+    end
+  end
+
+  describe "birthdate" do
+    let(:unit) { units(:sunny_hills) }
+
+    it "keeps only the year of a full birthdate" do
+      created = unit.members.create!(name: "Year, Only", gender: :female, birthdate: "12 Mar 1991")
+
+      expect(created.reload.birth_year).to eq(1991)
+      expect(created.birthdate).to be_nil
+      expect(described_class.connection.select_value("SELECT birthdate FROM members WHERE id = #{created.id}")).to be_nil
+    end
+
+    it "leaves the birth year alone when a blank birthdate is given" do
+      member.update!(birthdate: "")
+      expect(member.reload.birth_year).to eq(1997)
+    end
+
+    it "checks the minimum speaker age against the exact date" do
+      eight_tomorrow = (described_class::MINIMUM_SPEAKER_AGE.years.ago + 1.day).to_date
+      young = unit.members.new(name: "Young, Not Yet", gender: :male, birthdate: eight_tomorrow)
+
+      expect(young).not_to be_valid
+      expect(young.errors.full_messages).to include("Birthdate member is not old enough")
+    end
+
+    it "allows the same name and birth year in different units, but not in one" do
+      other_unit = units.find { it != member.unit }
+
+      expect(other_unit.members.new(name: member.name, gender: :male, birth_year: 1997)).to be_valid
+      expect(member.unit.members.new(name: member.name, gender: :male, birth_year: 1997)).not_to be_valid
     end
   end
 
@@ -304,26 +341,26 @@ describe ::Member do
     around { |example| travel_to(Date.new(2026, 6, 15)) { example.run } }
 
     let(:unit) { units(:sunny_hills) }
-    let!(:members_by_birthdate) do
-      %w[2018-01-01 2015-01-01 2014-12-31 2009-01-01 2008-12-31 1980-01-01].index_with do |birthdate|
-        unit.members.create!(name: "Born, #{birthdate}", gender: :female, birthdate: birthdate)
+    let!(:members_by_birth_year) do
+      [2018, 2015, 2014, 2009, 2008, 1980].index_with do |year|
+        unit.members.create!(name: "Born, #{year}", gender: :female, birth_year: year)
       end
     end
-    let!(:no_birthdate) do
-      unit.members.create!(name: "Born, Unknown", gender: :male, birthdate: "1980-01-01").tap do |member|
-        member.update_column(:birthdate, nil)
+    let!(:no_birth_year) do
+      unit.members.create!(name: "Born, Unknown", gender: :male, birth_year: 1980).tap do |member|
+        member.update_column(:birth_year, nil)
       end
     end
-    let(:members) { unit.members.where(id: [*members_by_birthdate.values, no_birthdate].map(&:id)) }
+    let(:members) { unit.members.where(id: [*members_by_birth_year.values, no_birth_year].map(&:id)) }
 
-    def birthdates_in(category)
-      members.in_speaker_category(category).map { |member| member.birthdate&.iso8601 }
+    def birth_years_in(category)
+      members.in_speaker_category(category).map(&:birth_year)
     end
 
     it "splits members at the January cutoffs" do
-      expect(birthdates_in(:child)).to contain_exactly("2018-01-01", "2015-01-01")
-      expect(birthdates_in(:youth)).to contain_exactly("2014-12-31", "2009-01-01")
-      expect(birthdates_in(:adult)).to contain_exactly("2008-12-31", "1980-01-01", nil)
+      expect(birth_years_in(:child)).to contain_exactly(2018, 2015)
+      expect(birth_years_in(:youth)).to contain_exactly(2014, 2009)
+      expect(birth_years_in(:adult)).to contain_exactly(2008, 1980, nil)
     end
 
     it "agrees with #speaker_category for every member" do

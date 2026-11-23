@@ -48,10 +48,17 @@ describe ::Members::DuplicateFinder do
     expect(pairs).to be_empty
   end
 
-  it "ignores members with no birthdate rather than grouping them together" do
+  it "flags related names born in the same year, whatever the dates were" do
+    create_member("Cole, Sam", birthdate: "1960-03-03")
+    create_member("Cole, Sam Riley", birthdate: "1960-11-11")
+
+    expect(pairs.size).to eq(1)
+  end
+
+  it "ignores members with no birth year rather than grouping them together" do
     a = create_member("Ghost, Sam", birthdate: "1975-05-05")
     b = create_member("Ghost, Sam Riley", birthdate: "1975-05-05")
-    [a, b].each { |member| member.update_column(:birthdate, nil) }
+    [a, b].each { |member| member.update_column(:birth_year, nil) }
 
     expect(pairs).to be_empty
   end

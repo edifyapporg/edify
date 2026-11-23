@@ -112,7 +112,7 @@ module Edify
           member = ::Member.find_or_initialize_by(
             unit_id: unit.id,
             name: raw_member_row.name,
-            birthdate: raw_member_row.birthdate
+            birth_year: ::Member.birth_year_from(raw_member_row.birthdate)
           )
           gender_indicator = raw_member_row.gender&.downcase&.first
           raw_member_row.gender = GENDER_MAP[gender_indicator]

@@ -27,8 +27,14 @@
           </div>
 
           <div class="col-12 col-md-3">
-            <%= form.label "Birthdate", class: "required" %>
+            <%= form.label :birthdate, "Birthdate", class: member.birth_year.present? ? nil : "required" %>
             <%= form.text_field :birthdate, class: "form-control", placeholder: "mm/dd/yyyy", value: form.object.birthdate.present? ? l(form.object.birthdate, format: :american) : nil %>
+            <div class="form-text">
+              Edify keeps only the birth year.
+              <% if member.birth_year.present? %>
+                Leave blank to keep <%= member.birth_year %>.
+              <% end %>
+            </div>
           </div>
         </div>
 

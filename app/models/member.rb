@@ -19,10 +19,17 @@ class Member < ApplicationRecord
   has_many :households, through: :household_members
   belongs_to :unit
 
+  # Full birthdates are no longer stored (#370): `birth_year` replaces the column, which a later migration drops.
+  self.ignored_columns += ["birthdate"]
+
   enum :gender, { male: 0, female: 1 }
 
-  validates :name, :gender, :birthdate, presence: true
-  validates :name, uniqueness: { scope: :birthdate }, if: :name?
+  # A full birthdate, accepted from the importer and the member form but never stored. Assigning one sets
+  # `birth_year` and lets #under_age? check the exact date. Blank leaves `birth_year` as it was.
+  attribute :birthdate, :date
+
+  validates :name, :gender, :birth_year, presence: true
+  validates :name, uniqueness: { scope: [:unit_id, :birth_year] }, if: :name?
   validate :validate_age
 
   strip_attributes
@@ -40,46 +47,61 @@ class Member < ApplicationRecord
   after_save_commit :match_talks, :match_household_members
 
   # Members in one speaker category, matching #speaker_category but filtered in SQL. Both use the same birth-year
-  # cutoffs, so they cannot drift apart. A member with no birthdate counts as an adult, as #speaker_category has it.
+  # cutoffs, so they cannot drift apart. A member with no birth year counts as an adult, as #speaker_category has it.
   # @param category [Symbol] :child, :youth or :adult
   scope :in_speaker_category, lambda { |category|
     case category
-    when :child then where(birthdate: earliest_child_birthdate..)
-    when :youth then where(birthdate: earliest_youth_birthdate...earliest_child_birthdate)
-    when :adult then where(birthdate: nil).or(where(birthdate: ...earliest_youth_birthdate))
+    when :child then where(birth_year: earliest_child_birth_year..)
+    when :youth then where(birth_year: earliest_youth_birth_year...earliest_child_birth_year)
+    when :adult then where(birth_year: nil).or(where(birth_year: ...earliest_youth_birth_year))
     else raise ArgumentError, "unknown speaker category: #{category.inspect}"
     end
   }
 
-  # Anyone born on or after this date is a child: they join the youth programs in January of the year they turn 12.
-  # @return [Date]
-  def self.earliest_child_birthdate
-    (YOUTH_AGE - 1).years.ago.beginning_of_year.to_date
+  # Anyone born in or after this year is a child: they join the youth programs in January of the year they turn 12.
+  # @return [Integer]
+  def self.earliest_child_birth_year
+    Date.current.year - (YOUTH_AGE - 1)
   end
 
-  # Anyone born on or after this date, and not a child, is a youth: they are spoken to as an adult from January of the
+  # Anyone born in or after this year, and not a child, is a youth: they are spoken to as an adult from January of the
   # year they turn 18.
-  # @return [Date]
-  def self.earliest_youth_birthdate
-    (ADULT_AGE - 1).years.ago.beginning_of_year.to_date
+  # @return [Integer]
+  def self.earliest_youth_birth_year
+    Date.current.year - (ADULT_AGE - 1)
+  end
+
+  # The year of a birthdate given as text or a Date, cast the way the birthdate attribute casts it.
+  # @return [Integer, nil]
+  def self.birth_year_from(value)
+    ::ActiveModel::Type::Date.new.cast(value)&.year
   end
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[baptized birthdate gender last_talk_date name synced_on]
+    %w[baptized birth_year gender last_talk_date name synced_on]
   end
 
   def self.ransackable_associations(_auth_object = nil)
     %w[]
   end
 
-  # @return [Integer]
-  def age
-    (Date.current - birthdate).to_i / 365
+  # The age the member turns this calendar year. Only the birth year is stored, so their exact age is unknown.
+  # @return [Integer, nil]
+  def age_this_year
+    birth_year && (Date.current.year - birth_year)
   end
 
-  # @return [String (frozen)]
+  # @return [String] e.g. "Female, turns 35 this year"
   def bio
-    "#{gender.titleize}, #{age}"
+    return gender.to_s.titleize if birth_year.nil?
+
+    "#{gender.to_s.titleize}, turns #{age_this_year} this year"
+  end
+
+  # Keeps the year of any full birthdate assigned, and leaves `birth_year` alone when it is blank.
+  def birthdate=(value)
+    super
+    self.birth_year = birthdate.year if birthdate
   end
 
   # @return [Boolean]
@@ -121,7 +143,8 @@ class Member < ApplicationRecord
   end
 
   # Too young to be offered as a speaker, and so not worth storing. Age is the only test: a child of eight
-  # can be invited to speak whether or not they have been baptized.
+  # can be invited to speak whether or not they have been baptized. Checked against a full birthdate when one is
+  # given (on import or in the form), since the stored birth year alone cannot tell.
   # @return [Boolean]
   def under_age?
     birthdate.present? && birthdate > MINIMUM_SPEAKER_AGE.years.ago.to_date
@@ -145,12 +168,12 @@ class Member < ApplicationRecord
 
   # @return [Boolean] not yet old enough for the youth programs, which a child joins in the year they turn 12
   def child?
-    birthdate.present? && birthdate >= self.class.earliest_child_birthdate
+    birth_year.present? && birth_year >= self.class.earliest_child_birth_year
   end
 
   # @return [Boolean]
   def youth?
-    birthdate.present? && !child? && birthdate >= self.class.earliest_youth_birthdate
+    birth_year.present? && !child? && birth_year >= self.class.earliest_youth_birth_year
   end
 
   # The adults of the household, whom a child or youth is invited alongside.

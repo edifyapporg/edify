@@ -3,7 +3,7 @@ bartell_randal:
   id: 1
   name: Bartell, Randal
   gender: 0
-  birthdate: '1997-03-19'
+  birth_year: 1997
   phone_number: 553-783-8372
   email: nola@walkerfarrell.us
   unit_id: 1
@@ -15,7 +15,7 @@ predovic_mohamed:
   id: 3
   name: Predovic, Mohamed
   gender: 0
-  birthdate: '1994-02-22'
+  birth_year: 1994
   phone_number: 254-579-2969
   email: sunny@abernathy.com
   unit_id: 1
@@ -27,7 +27,7 @@ hill_waylon:
   id: 4
   name: Hill, Waylon
   gender: 0
-  birthdate: '1968-10-19'
+  birth_year: 1968
   phone_number: 601-915-6744
   email: jorge.yost@oreilly.info
   unit_id: 1
@@ -39,7 +39,7 @@ nikolaus_jetta:
   id: 6
   name: Nikolaus, Jetta
   gender: 1
-  birthdate: '1956-03-06'
+  birth_year: 1956
   phone_number: 623-880-6552
   email: beckie.stoltenberg@kuhnmcglynn.us
   unit_id: 1
@@ -51,7 +51,7 @@ zboncak_ivy:
   id: 8
   name: Zboncak, Ivy
   gender: 1
-  birthdate: '1982-03-11'
+  birth_year: 1982
   phone_number: 650-484-9073
   email: darleen@west.us
   unit_id: 1
@@ -63,7 +63,7 @@ waelchi_lindsey:
   id: 9
   name: Waelchi, Lindsey
   gender: 1
-  birthdate: '1973-11-25'
+  birth_year: 1973
   phone_number: 521-521-5688
   email: josefa.kessler@leschpaucek.ca
   unit_id: 1
@@ -75,7 +75,7 @@ wilderman_kati:
   id: 10
   name: Wilderman, Kati
   gender: 1
-  birthdate: '2005-03-26'
+  birth_year: 2005
   phone_number: 934-220-0918
   email: gregorio@kuhn.name
   unit_id: 1
@@ -87,7 +87,7 @@ barrows_kenneth:
   id: 12
   name: Barrows, Kenneth
   gender: 0
-  birthdate: '2008-08-14'
+  birth_year: 2008
   phone_number: 959-922-0653
   email: victor_schmeler@wiza.co.uk
   unit_id: 1
@@ -99,7 +99,7 @@ luettgen_stefan:
   id: 16
   name: Luettgen, Stefan
   gender: 0
-  birthdate: '2007-12-02'
+  birth_year: 2007
   phone_number: 859-639-3222
   email: monique.huels@lemke.ca
   unit_id: 2
@@ -111,7 +111,7 @@ legros_joaquin:
   id: 17
   name: Legros, Joaquin
   gender: 0
-  birthdate: '2008-12-19'
+  birth_year: 2008
   phone_number: 314-934-8538
   email: clotilde_kiehn@brekkerowe.name
   unit_id: 2
@@ -123,7 +123,7 @@ anderson_torri:
   id: 19
   name: Anderson, Torri
   gender: 1
-  birthdate: '2005-08-21'
+  birth_year: 2005
   phone_number: 206-328-9111
   email: rayna_goldner@west.biz
   unit_id: 2
@@ -135,7 +135,7 @@ torp_cherri:
   id: 20
   name: Torp, Cherri
   gender: 1
-  birthdate: '2007-02-18'
+  birth_year: 2007
   phone_number: 840-434-5009
   email: jessica_spencer@littel.com
   unit_id: 2
@@ -147,7 +147,7 @@ hills_julie:
   id: 21
   name: Hills, Julie
   gender: 1
-  birthdate: '1946-11-03'
+  birth_year: 1946
   phone_number: 362-317-2870
   email: divina@trantowschroeder.com
   unit_id: 2
@@ -159,7 +159,7 @@ oberbrunner_meghann:
   id: 22
   name: Oberbrunner, Meghann
   gender: 1
-  birthdate: '1985-11-22'
+  birth_year: 1985
   phone_number: 606-575-2670
   email: vincenza_mills@vandervort.biz
   unit_id: 2
@@ -171,7 +171,7 @@ collier_elinor:
   id: 23
   name: Collier, Elinor
   gender: 1
-  birthdate: '1938-01-20'
+  birth_year: 1938
   phone_number: 410-830-9059
   email: vance@walterchamplin.info
   unit_id: 2
@@ -183,7 +183,7 @@ harris_staci:
   id: 24
   name: Harris, Staci
   gender: 1
-  birthdate: '1977-08-04'
+  birth_year: 1977
   phone_number: 337-875-0309
   email: ruthanne@cormier.ca
   unit_id: 2
@@ -195,7 +195,7 @@ miller_wilton:
   id: 25
   name: Miller, Wilton
   gender: 0
-  birthdate: '2001-09-19'
+  birth_year: 2001
   phone_number: 358-657-6999
   email: gillian@schaefer.co.uk
   unit_id: 2
@@ -207,7 +207,7 @@ friesen_sammy:
   id: 26
   name: Friesen, Sammy
   gender: 0
-  birthdate: '1945-06-14'
+  birth_year: 1945
   phone_number: 839-699-0102
   email: carla@schneider.co.uk
   unit_id: 2
@@ -219,7 +219,7 @@ kilback_darron:
   id: 27
   name: Kilback, Darron
   gender: 0
-  birthdate: '1952-07-14'
+  birth_year: 1952
   phone_number: 781-433-8139
   email: lino_balistreri@haagdickens.ca
   unit_id: 2
@@ -231,7 +231,7 @@ hagenes_daryl:
   id: 28
   name: Hagenes, Daryl
   gender: 0
-  birthdate: '1995-05-29'
+  birth_year: 1995
   phone_number: 364-644-2030
   email: soraya_koch@erdmanleffler.com
   unit_id: 2
@@ -243,7 +243,7 @@ aufderhar_matthew:
   id: 29
   name: Aufderhar, Matthew
   gender: 0
-  birthdate: '1932-08-28'
+  birth_year: 1932
   phone_number: 689-285-2410
   email: bernie@jaskolski.us
   unit_id: 2
@@ -255,7 +255,7 @@ heller_yong:
   id: 30
   name: Heller, Yong
   gender: 0
-  birthdate: '1926-09-17'
+  birth_year: 1926
   phone_number: 496-764-9756
   email: jamie_bahringer@mcclure.ca
   unit_id: 2
@@ -267,7 +267,7 @@ user_unassigned:
   id: 31
   name: User, Unassigned
   gender: 0
-  birthdate: '1967-04-04'
+  birth_year: 1967
   phone_number: 496-873-2331
   email: unassigned@example.com
   unit_id: 1
