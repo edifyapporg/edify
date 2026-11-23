@@ -7,7 +7,7 @@ class StaleSpeakerSerializer
     {
       name: member.name,
       gender: member.gender,
-      group: ::Members::StaleSpeakers.group_of(member),
+      group: member.age_group,
       last_talk_date: member.last_talk_date,
     }
   end
