@@ -45,7 +45,7 @@ RSpec.describe "MCP endpoint" do
       rpc("tools/list")
 
       tools = json.dig("result", "tools")
-      expect(tools.pluck("name")).to eq(%w[list_stale_speakers list_recent_songs get_meeting search_members])
+      expect(tools.pluck("name")).to eq(%w[list_stale_speakers list_recent_songs get_meeting search_members list_talks])
       expect(tools.pluck("annotations")).to all(include("readOnlyHint" => true, "destructiveHint" => false))
       expect(tools.map { it.dig("inputSchema", "additionalProperties") }).to all(be(false))
     end

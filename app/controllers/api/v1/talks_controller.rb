@@ -1,9 +1,9 @@
 module Api
   module V1
     class TalksController < BaseController
-      DEFAULT_LIMIT = 50
-      LIMIT_RANGE = (1..200)
-      TEXT_LENGTH = (2..100)
+      DEFAULT_LIMIT = ::Talk::LISTING_DEFAULT_LIMIT
+      LIMIT_RANGE = ::Talk::LISTING_LIMIT_RANGE
+      TEXT_LENGTH = ::Talk::FILTER_TEXT_LENGTH
       # Marks a parameter that was given but is not usable, as distinct from one that was left out.
       INVALID = Object.new.freeze
 
@@ -27,20 +27,12 @@ module Api
           from: from,
           to: to,
           limit: limit,
-          talks: talks(speaker:, purpose:, from:, to:).limit(limit).map { |talk| ::TalkSummarySerializer.call(talk) },
+          talks: current_unit.talks.filtered(speaker:, purpose:, from:, to:).limit(limit)
+                             .map { |talk| ::TalkSummarySerializer.call(talk) },
         }
       end
 
       private
-
-      def talks(speaker:, purpose:, from:, to:)
-        relation = current_unit.talks.unscope(:order).includes(:meeting)
-        relation = relation.speaker_matching(speaker) if speaker
-        relation = relation.purpose_containing(purpose) if purpose
-        relation = relation.where(meetings: { date: from.. }) if from
-        relation = relation.where(meetings: { date: ..to }) if to
-        relation.reorder(::Meeting.arel_table[:date].desc, ::Talk.arel_table[:position].asc)
-      end
 
       # @return [String, nil, INVALID] the squished text, nil when absent, or INVALID
       def text_param(name)
