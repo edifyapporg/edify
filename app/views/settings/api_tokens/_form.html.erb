@@ -24,5 +24,15 @@
                  class: "form-select" %>
   </div>
 
+  <div class="form-check mb-3">
+    <%= f.check_box :guidance_acknowledged, class: "form-check-input" %>
+    <%= f.label :guidance_acknowledged, class: "form-check-label sentence-label" do %>
+      I understand that this token lets the Edify CLI and AI assistants read ward member information. I've reviewed
+      the Church's guidance on member privacy and the use of AI tools in the
+      <%= link_to "General Handbook", ::EdifyConfig.general_handbook_url, target: "_blank", rel: "noopener" %>,
+      and I'll use this token accordingly.
+    <% end %>
+  </div>
+
   <%= f.submit "Create Token", class: "btn btn-primary" %>
 <% end %>

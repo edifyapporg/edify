@@ -23,6 +23,11 @@ class ApiToken < ApplicationRecord
   # A code from EXPIRY_CHOICES. Assigning one sets expires_at from now. Code that sets expires_at directly can skip it.
   attribute :expires_in, :string
 
+  # Whether the user ticked the form's box confirming they have reviewed the General Handbook's guidance on member
+  # privacy and AI tools (#369). Not stored: every token created through the form has it. Only an explicit false is
+  # refused, so code that creates tokens directly can leave it unset; the settings controller always sets it.
+  attribute :guidance_acknowledged, :boolean
+
   attr_reader :plaintext_token
 
   before_validation :assign_token, on: :create
@@ -35,6 +40,7 @@ class ApiToken < ApplicationRecord
   validate :scopes_are_known
   validate :user_is_assigned_to_unit, on: :create
   validate :expires_in_the_future, on: :create
+  validate :guidance_is_acknowledged, on: :create
 
   strip_attributes
 
@@ -104,6 +110,12 @@ class ApiToken < ApplicationRecord
     return if expires_at.nil? || expires_at > Time.current
 
     errors.add(:expires_at, "must be in the future")
+  end
+
+  def guidance_is_acknowledged
+    return unless guidance_acknowledged == false
+
+    errors.add(:base, I18n.t("models.api_token.guidance_not_acknowledged"))
   end
 
   def scopes_are_known
