@@ -2,7 +2,11 @@ module EdifyMcp
   # Builds Edify's MCP server. A fresh server and transport per request keeps it stateless: no sessions, nothing shared
   # between users, and each request authenticated on its own.
   module Server
-    TOOLS = [Tools::ListStaleSpeakers].freeze
+    TOOLS = [
+      Tools::ListStaleSpeakers,
+      Tools::ListRecentSongs,
+      Tools::GetMeeting,
+    ].freeze
 
     INSTRUCTIONS = <<~TEXT.squish.freeze
       Edify helps a ward's bishopric and clerks plan sacrament meeting speakers and music. Every tool answers for the

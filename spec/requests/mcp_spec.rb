@@ -41,11 +41,19 @@ RSpec.describe "MCP endpoint" do
       expect(json.dig("result", "instructions")).to include("own ward only", "never ages, birthdates, contact details")
     end
 
-    it "lists list_stale_speakers as a read-only tool with its arguments" do
+    it "lists every tool as read-only, closed to unknown arguments" do
       rpc("tools/list")
 
-      tool = json.dig("result", "tools").sole
-      expect(tool["name"]).to eq("list_stale_speakers")
+      tools = json.dig("result", "tools")
+      expect(tools.pluck("name")).to eq(%w[list_stale_speakers list_recent_songs get_meeting])
+      expect(tools.pluck("annotations")).to all(include("readOnlyHint" => true, "destructiveHint" => false))
+      expect(tools.map { it.dig("inputSchema", "additionalProperties") }).to all(be(false))
+    end
+
+    it "lists list_stale_speakers with its arguments" do
+      rpc("tools/list")
+
+      tool = json.dig("result", "tools").find { it["name"] == "list_stale_speakers" }
       expect(tool["annotations"]).to include("readOnlyHint" => true, "destructiveHint" => false)
       expect(tool.dig("inputSchema", "properties").keys).to contain_exactly("months", "limit", "group")
       expect(tool.dig("inputSchema", "properties", "group", "enum")).to eq(%w[primary youth adult])

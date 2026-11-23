@@ -79,4 +79,5 @@ so both front ends always agree.
 | `GET /api/v1/meetings` | all unit roles | `from` (today), `to` (`from` + 84 days, span at most 366) |
 | `GET /api/v1/meetings/:date` | all unit roles | the meeting's date, `YYYY-MM-DD` |
 
-MCP tools at `/mcp`: `list_stale_speakers`. Access is limited to site admins until `MCP_ENABLED=true`.
+MCP tools at `/mcp`, each answering what its endpoint answers: `list_stale_speakers` (speakers/stale), `list_recent_songs`
+(songs/recent) and `get_meeting` (meetings/:date). Access is limited to site admins until `MCP_ENABLED=true`.
