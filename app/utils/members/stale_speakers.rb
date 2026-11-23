@@ -33,7 +33,12 @@ module Members
     # @param member [Member] one returned by #call
     # @return [Hash]
     def self.speaker_json(member)
-      { name: member.name, gender: member.gender, group: group_of(member), last_talk_date: member.last_talk_date }
+      {
+        name: member.name,
+        gender: member.gender,
+        group: group_of(member),
+        last_talk_date: member.last_talk_date,
+      }
     end
 
     def initialize(members:, months:, limit:, group: nil)
