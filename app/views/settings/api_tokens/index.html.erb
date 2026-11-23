@@ -9,7 +9,8 @@
 <div class="container-fluid">
   <div class="row flex-nowrap">
     <%= render partial: "settings/sidebar" %>
-    <div class="col px-md-4 py-3">
+    <%# min-width: 0 lets this column shrink below the table's width, so .table-responsive scrolls instead of the page %>
+    <div class="col px-md-4 py-3" style="min-width: 0;">
       <% if @created_token %>
         <%= render partial: "created_token", locals: { api_token: @created_token } %>
       <% end %>
