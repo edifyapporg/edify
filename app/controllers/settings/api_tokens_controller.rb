@@ -8,7 +8,7 @@ module Settings
     def index
       authorize ::ApiToken
       @api_token = new_api_token
-      @api_tokens = policy_scope(::ApiToken).newest_first
+      @api_tokens = current_user.api_tokens.newest_first
     end
 
     # POST /settings/api_tokens
@@ -27,13 +27,13 @@ module Settings
         status = :unprocessable_content
       end
 
-      @api_tokens = policy_scope(::ApiToken).newest_first
+      @api_tokens = current_user.api_tokens.newest_first
       render :index, status: status
     end
 
     # PATCH /settings/api_tokens/:id/revoke
     def revoke
-      api_token = policy_scope(::ApiToken).find(params.expect(:id))
+      api_token = current_user.api_tokens.find(params.expect(:id))
       authorize api_token
 
       api_token.revoke!

@@ -1,6 +1,6 @@
-# Personal access tokens belong to one user. Only users assigned to a unit can list or create them. No role, not even
-# unit admin or site admin, can see or revoke another user's tokens, but a user can always revoke their own, even
-# after losing their unit, since revoking only ever removes access.
+# Personal access tokens belong to one user. Settings::ApiTokensController loads them only through
+# current_user.api_tokens, so another user's token is never found, whatever the viewer's role. This policy decides
+# only who may use the page.
 class ApiTokenPolicy < ApplicationPolicy
   def index?
     user.assigned_to_unit?
@@ -10,13 +10,9 @@ class ApiTokenPolicy < ApplicationPolicy
     index?
   end
 
+  # Ownership comes from the controller loading tokens through current_user.api_tokens. Revoking needs no unit,
+  # so a user who has lost theirs can still cut off their own token.
   def revoke?
-    record.user_id == user.id
-  end
-
-  class Scope < Scope
-    def resolve
-      scope.where(user: user)
-    end
+    true
   end
 end
