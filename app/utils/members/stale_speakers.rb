@@ -10,32 +10,43 @@ module Members
     MONTHS_RANGE = (1..120)
     DEFAULT_LIMIT = 25
     LIMIT_RANGE = (1..200)
+    # The age groups clients see, by the Member#speaker_category each stands for. Leaders say "Primary", not "child".
+    GROUPS = { "primary" => :child, "youth" => :youth, "adult" => :adult }.freeze
 
     # @param members [ActiveRecord::Relation<Member>] the roster to search, already scoped to what the user may see
     # @param months [Integer]
     # @param limit [Integer]
+    # @param group [String, nil] a key of GROUPS, or nil for everyone
     # @return [Array<Member>] each answering #name and #last_talk_date (nil if they have never spoken)
-    def self.call(members:, months: DEFAULT_MONTHS, limit: DEFAULT_LIMIT)
-      new(members: members, months: months, limit: limit).call
+    def self.call(members:, months: DEFAULT_MONTHS, limit: DEFAULT_LIMIT, group: nil)
+      new(members: members, months: months, limit: limit, group: group).call
     end
 
-    def initialize(members:, months:, limit:)
+    # @param member [Member]
+    # @return [String] the GROUPS key for the member's speaker category
+    def self.group_of(member)
+      GROUPS.key(member.speaker_category)
+    end
+
+    def initialize(members:, months:, limit:, group: nil)
       raise ArgumentError, "months must be within #{MONTHS_RANGE}" unless MONTHS_RANGE.cover?(months)
       raise ArgumentError, "limit must be within #{LIMIT_RANGE}" unless LIMIT_RANGE.cover?(limit)
+      raise ArgumentError, "group must be one of #{GROUPS.keys.join(', ')}" unless group.nil? || GROUPS.key?(group)
 
       @members = members
       @months = months
       @limit = limit
+      @group = group
     end
 
     # @return [Array<Member>]
     def call
-      members.with_last_talk_date
-             .where("members.last_talk_date IS NULL OR members.last_talk_date < ?", spoken_before)
-             .where("members.paused_until IS NULL OR members.paused_until <= ?", ::Date.current)
-             .reorder(::Arel.sql("members.last_talk_date ASC NULLS FIRST, members.name ASC"))
-             .limit(limit)
-             .to_a
+      roster.with_last_talk_date
+            .where("members.last_talk_date IS NULL OR members.last_talk_date < ?", spoken_before)
+            .where("members.paused_until IS NULL OR members.paused_until <= ?", ::Date.current)
+            .reorder(::Arel.sql("members.last_talk_date ASC NULLS FIRST, members.name ASC"))
+            .limit(limit)
+            .to_a
     end
 
     # Anyone whose last talk was before this date is stale.
@@ -46,6 +57,10 @@ module Members
 
     private
 
-    attr_reader :members, :months, :limit
+    attr_reader :members, :months, :limit, :group
+
+    def roster
+      group ? members.in_speaker_category(GROUPS.fetch(group)) : members
+    end
   end
 end

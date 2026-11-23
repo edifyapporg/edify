@@ -299,6 +299,45 @@ describe ::Member do
     end
   end
 
+  describe ".in_speaker_category" do
+    # On 2026-06-15, children were born in 2015 or later, and youth in 2009 through 2014.
+    around { |example| travel_to(Date.new(2026, 6, 15)) { example.run } }
+
+    let(:unit) { units(:sunny_hills) }
+    let!(:members_by_birthdate) do
+      %w[2018-01-01 2015-01-01 2014-12-31 2009-01-01 2008-12-31 1980-01-01].index_with do |birthdate|
+        unit.members.create!(name: "Born, #{birthdate}", gender: :female, birthdate: birthdate)
+      end
+    end
+    let!(:no_birthdate) do
+      unit.members.create!(name: "Born, Unknown", gender: :male, birthdate: "1980-01-01").tap do |member|
+        member.update_column(:birthdate, nil)
+      end
+    end
+    let(:members) { unit.members.where(id: [*members_by_birthdate.values, no_birthdate].map(&:id)) }
+
+    def birthdates_in(category)
+      members.in_speaker_category(category).map { |member| member.birthdate&.iso8601 }
+    end
+
+    it "splits members at the January cutoffs" do
+      expect(birthdates_in(:child)).to contain_exactly("2018-01-01", "2015-01-01")
+      expect(birthdates_in(:youth)).to contain_exactly("2014-12-31", "2009-01-01")
+      expect(birthdates_in(:adult)).to contain_exactly("2008-12-31", "1980-01-01", nil)
+    end
+
+    it "agrees with #speaker_category for every member" do
+      %i[child youth adult].each do |category|
+        expect(members.in_speaker_category(category).map(&:speaker_category).uniq).to eq([category])
+      end
+      expect(%i[child youth adult].sum { members.in_speaker_category(it).count }).to eq(members.count)
+    end
+
+    it "rejects an unknown category" do
+      expect { members.in_speaker_category(:primary) }.to raise_error(ArgumentError, /unknown speaker category/)
+    end
+  end
+
   describe "#parents" do
     let(:unit) { units(:sunny_hills) }
     let(:household) { unit.households.create!(name: "Hill, Waylon & Wanda") }

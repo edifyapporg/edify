@@ -31,6 +31,31 @@ class Member < ApplicationRecord
 
   after_save_commit :match_talks, :match_household_members
 
+  # Members in one speaker category, matching #speaker_category but filtered in SQL. Both use the same birth-year
+  # cutoffs, so they cannot drift apart. A member with no birthdate counts as an adult, as #speaker_category has it.
+  # @param category [Symbol] :child, :youth or :adult
+  scope :in_speaker_category, lambda { |category|
+    case category
+    when :child then where(birthdate: earliest_child_birthdate..)
+    when :youth then where(birthdate: earliest_youth_birthdate...earliest_child_birthdate)
+    when :adult then where(birthdate: nil).or(where(birthdate: ...earliest_youth_birthdate))
+    else raise ArgumentError, "unknown speaker category: #{category.inspect}"
+    end
+  }
+
+  # Anyone born on or after this date is a child: they join the youth programs in January of the year they turn 12.
+  # @return [Date]
+  def self.earliest_child_birthdate
+    (YOUTH_AGE - 1).years.ago.beginning_of_year.to_date
+  end
+
+  # Anyone born on or after this date, and not a child, is a youth: they are spoken to as an adult from January of the
+  # year they turn 18.
+  # @return [Date]
+  def self.earliest_youth_birthdate
+    (ADULT_AGE - 1).years.ago.beginning_of_year.to_date
+  end
+
   def self.ransackable_attributes(_auth_object = nil)
     %w[baptized birthdate gender last_talk_date name synced_on]
   end
@@ -106,12 +131,12 @@ class Member < ApplicationRecord
 
   # @return [Boolean] not yet old enough for the youth programs, which a child joins in the year they turn 12
   def child?
-    birthdate.present? && birthdate >= (YOUTH_AGE - 1).years.ago.beginning_of_year.to_date
+    birthdate.present? && birthdate >= self.class.earliest_child_birthdate
   end
 
   # @return [Boolean]
   def youth?
-    birthdate.present? && !child? && birthdate >= (ADULT_AGE - 1).years.ago.beginning_of_year.to_date
+    birthdate.present? && !child? && birthdate >= self.class.earliest_youth_birthdate
   end
 
   # The adults of the household, whom a child or youth is invited alongside.

@@ -73,4 +73,28 @@ RSpec.describe ::Members::StaleSpeakers do
     expect { result(limit: 0) }.to raise_error(ArgumentError, /limit/)
     expect { result(limit: 201) }.to raise_error(ArgumentError, /limit/)
   end
+
+  describe "filtering by group" do
+    let!(:primary_child) { member("Primary, Child", birthdate: 9.years.ago.to_date) }
+    let!(:youth) { member("Youth, Member", birthdate: 15.years.ago.to_date) }
+    let(:roster) { unit.members.where(id: [never_spoke, primary_child, youth].map(&:id)) }
+
+    it "returns everyone without a group" do
+      expect(result.map(&:name)).to contain_exactly("Never, Spoke", "Primary, Child", "Youth, Member")
+    end
+
+    it "returns only the group asked for" do
+      expect(result(group: "primary").map(&:name)).to eq(["Primary, Child"])
+      expect(result(group: "youth").map(&:name)).to eq(["Youth, Member"])
+      expect(result(group: "adult").map(&:name)).to eq(["Never, Spoke"])
+    end
+
+    it "names each member's group the way clients see it" do
+      expect([primary_child, youth, never_spoke].map { described_class.group_of(it) }).to eq(%w[primary youth adult])
+    end
+
+    it "rejects an unknown group" do
+      expect { result(group: "child") }.to raise_error(ArgumentError, /group must be one of primary, youth, adult/)
+    end
+  end
 end
