@@ -16,16 +16,7 @@ module Songs
 
     # One hymn's tally. `title` is spelled as it was most recently entered, and `song_types` lists the distinct types
     # it was sung as, in program order.
-    Tally = ::Data.define(:title, :times_sung, :last_sung, :song_types) do
-      def to_json_hash
-        {
-          title: title,
-          times_sung: times_sung,
-          last_sung: last_sung,
-          song_types: song_types,
-        }
-      end
-    end
+    Tally = ::Data.define(:title, :times_sung, :last_sung, :song_types)
 
     # @param unit [Unit]
     # @param weeks [Integer]

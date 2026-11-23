@@ -14,6 +14,9 @@ read that name get the same instructions.
   the changed lines, so fix all offenses in each file you modify, including ones that were
   already there.
 - CI also runs `bin/brakeman -q -w2` and `bin/bundle-audit check --update`.
+- The JSON API (`/api/v1`) and MCP endpoint (`/mcp`) follow `docs/api.md`: response shapes, serializers as
+  field allowlists, what member data may never be returned, and the error format. Read it before adding or
+  changing an endpoint or MCP tool.
 
 ## Pull request discipline
 

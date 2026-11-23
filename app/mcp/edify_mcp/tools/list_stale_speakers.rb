@@ -45,7 +45,7 @@ module EdifyMcp
             months: months,
             group: group,
             spoken_before: query.spoken_before,
-            speakers: query.call.map { |member| StaleSpeakers.speaker_json(member) }
+            speakers: query.call.map { |member| ::StaleSpeakerSerializer.call(member) }
           )
         end
       end

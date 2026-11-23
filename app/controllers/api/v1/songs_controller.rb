@@ -24,7 +24,7 @@ module Api
           weeks: weeks,
           song_type: song_type,
           since: query.since,
-          songs: query.call.map(&:to_json_hash),
+          songs: query.call.map { |tally| ::SongTallySerializer.call(tally) },
         }
       end
 

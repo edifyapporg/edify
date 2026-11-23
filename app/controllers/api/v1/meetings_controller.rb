@@ -1,7 +1,6 @@
 module Api
   module V1
     class MeetingsController < BaseController
-      ApiJson = ::Meetings::ApiJson
       ISO_DATE = /\A\d{4}-\d{2}-\d{2}\z/
 
       # GET /api/v1/meetings?from=2026-11-01&to=2027-01-31
@@ -22,7 +21,7 @@ module Api
         render json: {
           from: from,
           to: to,
-          meetings: meetings.map { |meeting| ApiJson.summary(meeting) },
+          meetings: meetings.map { |meeting| ::MeetingSummarySerializer.call(meeting) },
         }
       end
 
@@ -35,7 +34,7 @@ module Api
         return invalid_request(date_message(:date)) unless date
 
         meeting = current_unit.meetings.includes(:talks, :songs).find_by!(date: date)
-        render json: ApiJson.detail(meeting)
+        render json: ::MeetingSerializer.call(meeting)
       end
 
       private
