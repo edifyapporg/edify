@@ -8,7 +8,7 @@ module Api
       include ::Pundit::Authorization
 
       BEARER_PATTERN = /\ABearer (\S+)\z/
-      ISO_DATE = /\A\d{4}-\d{2}-\d{2}\z/
+      ISO_DATE_PATTERN = /\A\d{4}-\d{2}-\d{2}\z/
 
       before_action :authenticate_api_token!
       after_action :verify_authorized, except: :route_not_found
@@ -81,7 +81,7 @@ module Api
 
       # @return [Date, nil] nil unless the value is a real date written as YYYY-MM-DD
       def parse_date(value)
-        ::Date.iso8601(value) if value.is_a?(String) && value.match?(ISO_DATE)
+        ::Date.iso8601(value) if value.is_a?(String) && value.match?(ISO_DATE_PATTERN)
       rescue ::Date::Error
         nil
       end
