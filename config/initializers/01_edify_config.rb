@@ -19,6 +19,11 @@ class EdifyConfig
     "https://challenges.cloudflare.com/turnstile/v0/api.js"
   end
 
+  # The Handbook's main page, not a section: section numbers and anchors change without notice (#369).
+  def self.general_handbook_url
+    "https://www.churchofjesuschrist.org/study/manual/general-handbook"
+  end
+
   def self.email_sender_address
     "no-reply@#{app_url}"
   end

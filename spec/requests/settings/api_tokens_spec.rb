@@ -12,6 +12,12 @@ RSpec.describe "Settings API tokens" do
     context "when the user is assigned to a unit" do
       before { login_as user, scope: :user }
 
+      it "asks for the guidance acknowledgment, linking to the General Handbook" do
+        get settings_api_tokens_path
+        expect(response.body).to include("api_token[guidance_acknowledged]")
+        expect(response.body).to include(%(href="#{::EdifyConfig.general_handbook_url}"))
+      end
+
       it "lists only the user's own tokens and never shows a plaintext token" do
         own = create_token(user, name: "My laptop")
         other = create_token(other_user, name: "Someone else's laptop")
@@ -55,8 +61,9 @@ RSpec.describe "Settings API tokens" do
   end
 
   describe "POST /settings/api_tokens" do
-    def make_request(name: "Claude Code", expires_in: "30d")
-      post settings_api_tokens_path, params: { api_token: { name: name, expires_in: expires_in } }
+    def make_request(name: "Claude Code", expires_in: "30d", guidance_acknowledged: "1")
+      post settings_api_tokens_path,
+           params: { api_token: { name: name, expires_in: expires_in, guidance_acknowledged: guidance_acknowledged } }
     end
 
     context "when the user is assigned to a unit" do
@@ -102,7 +109,7 @@ RSpec.describe "Settings API tokens" do
 
       it "uses the default expiry when none is submitted" do
         freeze_time do
-          post settings_api_tokens_path, params: { api_token: { name: "No expiry chosen" } }
+          post settings_api_tokens_path, params: { api_token: { name: "No expiry chosen", guidance_acknowledged: "1" } }
           expect(user.api_tokens.last.expires_at).to eq(90.days.from_now)
         end
       end
@@ -114,7 +121,8 @@ RSpec.describe "Settings API tokens" do
 
       it "ignores attempts to set scopes or the owner" do
         post settings_api_tokens_path,
-             params: { api_token: { name: "Sneaky", expires_in: "30d", scopes: ["write"], user_id: other_user.id } }
+             params: { api_token: { name: "Sneaky", expires_in: "30d", guidance_acknowledged: "1", scopes: ["write"],
+                                    user_id: other_user.id } }
 
         token = ::ApiToken.find_by(name: "Sneaky")
         expect(token.user).to eq(user)
@@ -125,6 +133,19 @@ RSpec.describe "Settings API tokens" do
         expect { make_request(name: "") }.not_to change(::ApiToken, :count)
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.body).to include("Name can&#39;t be blank")
+      end
+
+      it "refuses and creates nothing when the guidance box is unticked" do
+        expect { make_request(guidance_acknowledged: "0") }.not_to change(::ApiToken, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("reviewed the General Handbook&#39;s guidance")
+      end
+
+      it "refuses and creates nothing when the guidance box is missing from the request" do
+        expect do
+          post settings_api_tokens_path, params: { api_token: { name: "No box", expires_in: "30d" } }
+        end.not_to change(::ApiToken, :count)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 

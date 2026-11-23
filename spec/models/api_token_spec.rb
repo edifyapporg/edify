@@ -65,6 +65,23 @@ describe ::ApiToken do
       expect(token.errors.full_messages).to include("Scopes must include at least one scope")
     end
 
+    it "refuses to create a token when the guidance was explicitly not acknowledged" do
+      token = described_class.new(user: user, name: "CLI", guidance_acknowledged: false)
+      expect(token).not_to be_valid
+      expect(token.errors.full_messages).to include(I18n.t("models.api_token.guidance_not_acknowledged"))
+    end
+
+    it "creates a token when the guidance was acknowledged or not asked about" do
+      expect(described_class.new(user: user, name: "CLI", guidance_acknowledged: true)).to be_valid
+      expect(described_class.new(user: user, name: "CLI")).to be_valid
+    end
+
+    it "checks the acknowledgment only on create" do
+      token = described_class.create!(user: user, name: "CLI")
+      token.guidance_acknowledged = false
+      expect(token).to be_valid
+    end
+
     it "rejects an expiry in the past on create" do
       token = described_class.new(user: user, name: "CLI", expires_at: 1.minute.ago)
       expect(token).not_to be_valid

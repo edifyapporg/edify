@@ -18,6 +18,8 @@ module Settings
       authorize ::ApiToken
       @api_token = new_api_token
       @api_token.assign_attributes(api_token_params)
+      # A missing box counts as unticked, so no request through the form can skip it.
+      @api_token.guidance_acknowledged = false if @api_token.guidance_acknowledged.nil?
 
       if @api_token.save
         @created_token = @api_token
@@ -49,7 +51,7 @@ module Settings
     end
 
     def api_token_params
-      params.expect(api_token: [:name, :expires_in])
+      params.expect(api_token: [:name, :expires_in, :guidance_acknowledged])
     end
   end
 end

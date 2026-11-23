@@ -25,3 +25,10 @@ select {
 select::-ms-expand {
   display: none;
 }
+
+// For labels that are full sentences, such as an acknowledgment, which are hard to read in small capitals.
+label.sentence-label {
+  text-transform: none;
+  font-size: inherit;
+  color: inherit;
+}

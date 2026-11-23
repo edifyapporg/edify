@@ -52,6 +52,7 @@ en:
         1y: "1 year"
         never: "Never"
       expiry_not_offered: "is not a valid choice"
+      guidance_not_acknowledged: "Please confirm that you've reviewed the General Handbook's guidance on member privacy and AI tools."
     meeting:
       date_not_unique: "has been taken; a meeting already exists for this date"
   notifiers:
