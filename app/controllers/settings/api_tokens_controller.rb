@@ -1,22 +1,13 @@
 module Settings
   # Lets a user create, list and revoke their own personal access tokens for the API, CLI and MCP endpoint (#315).
   class ApiTokensController < ::ApplicationController
-    EXPIRY_CHOICES = {
-      "30 days" => 30.days,
-      "90 days" => 90.days,
-      "1 year" => 1.year,
-      "Never" => nil,
-    }.freeze
-    DEFAULT_EXPIRY = "90 days".freeze
-
     before_action :authenticate_user!
     after_action :verify_authorized
 
     # GET /settings/api_tokens
     def index
       authorize ::ApiToken
-      @api_token = ::ApiToken.new
-      @expires_in = DEFAULT_EXPIRY
+      @api_token = new_api_token
       @api_tokens = policy_scope(::ApiToken).newest_first
     end
 
@@ -25,15 +16,12 @@ module Settings
     # the session cookie or flash.
     def create
       authorize ::ApiToken
-      @expires_in = EXPIRY_CHOICES.key?(api_token_params[:expires_in]) ? api_token_params[:expires_in] : DEFAULT_EXPIRY
-      @api_token = ::ApiToken.new(user: current_user,
-                                  name: api_token_params[:name],
-                                  expires_at: EXPIRY_CHOICES[@expires_in]&.from_now)
+      @api_token = new_api_token
+      @api_token.assign_attributes(api_token_params)
 
       if @api_token.save
         @created_token = @api_token
-        @api_token = ::ApiToken.new
-        @expires_in = DEFAULT_EXPIRY
+        @api_token = new_api_token
         status = :created
       else
         status = :unprocessable_content
@@ -53,6 +41,12 @@ module Settings
     end
 
     private
+
+    # Starts from the default expiry, so a request that leaves expires_in out gets that rather than a token that never
+    # expires. A submitted code, valid or not, replaces it.
+    def new_api_token
+      ::ApiToken.new(user: current_user, expires_in: ::ApiToken::DEFAULT_EXPIRY)
+    end
 
     def api_token_params
       params.expect(api_token: [:name, :expires_in])

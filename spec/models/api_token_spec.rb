@@ -122,6 +122,37 @@ describe ::ApiToken do
     end
   end
 
+  describe "#expires_in=" do
+    it "sets the expiry from now for each choice" do
+      freeze_time do
+        expect(described_class.new(expires_in: "30d").expires_at).to eq(30.days.from_now)
+        expect(described_class.new(expires_in: "90d").expires_at).to eq(90.days.from_now)
+        expect(described_class.new(expires_in: "1y").expires_at).to eq(1.year.from_now)
+      end
+    end
+
+    it "clears the expiry for never" do
+      expect(described_class.new(expires_at: 1.day.from_now, expires_in: "never").expires_at).to be_nil
+    end
+
+    it "rejects an unknown choice without setting an expiry" do
+      token = described_class.new(user: user, name: "CLI", expires_in: "forever")
+      expect(token.expires_at).to be_nil
+      expect(token).not_to be_valid
+      expect(token.errors.full_messages).to include("Expires in is not a valid choice")
+    end
+
+    it "is optional for code that sets expires_at directly" do
+      expect(described_class.new(user: user, name: "CLI", expires_at: 1.day.from_now)).to be_valid
+    end
+
+    it "has a label for every choice" do
+      described_class::EXPIRY_CHOICES.each_key do |code|
+        expect(I18n.t("models.api_token.expiry_choices.#{code}", raise: true)).to be_present
+      end
+    end
+  end
+
   describe "status" do
     subject! { create_token(expires_at: 1.day.from_now) }
 

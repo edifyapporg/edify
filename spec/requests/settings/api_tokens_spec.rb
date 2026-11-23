@@ -55,7 +55,7 @@ RSpec.describe "Settings API tokens" do
   end
 
   describe "POST /settings/api_tokens" do
-    def make_request(name: "Claude Code", expires_in: "30 days")
+    def make_request(name: "Claude Code", expires_in: "30d")
       post settings_api_tokens_path, params: { api_token: { name: name, expires_in: expires_in } }
     end
 
@@ -84,26 +84,37 @@ RSpec.describe "Settings API tokens" do
 
       it "sets the chosen expiry" do
         freeze_time do
-          make_request(expires_in: "1 year")
+          make_request(expires_in: "1y")
           expect(user.api_tokens.last.expires_at).to eq(1.year.from_now)
         end
       end
 
       it "creates a token that never expires when asked" do
-        make_request(expires_in: "Never")
+        make_request(expires_in: "never")
         expect(user.api_tokens.last.expires_at).to be_nil
       end
 
-      it "falls back to the default expiry for an unknown choice" do
+      it "rejects an unknown expiry choice" do
+        expect { make_request(expires_in: "forever") }.not_to change(::ApiToken, :count)
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("Expires in is not a valid choice")
+      end
+
+      it "uses the default expiry when none is submitted" do
         freeze_time do
-          make_request(expires_in: "forever and ever")
+          post settings_api_tokens_path, params: { api_token: { name: "No expiry chosen" } }
           expect(user.api_tokens.last.expires_at).to eq(90.days.from_now)
         end
       end
 
+      it "keeps the chosen expiry selected when the form is shown again with errors" do
+        make_request(name: "", expires_in: "1y")
+        expect(response.body).to include('<option selected="selected" value="1y">1 year</option>')
+      end
+
       it "ignores attempts to set scopes or the owner" do
         post settings_api_tokens_path,
-             params: { api_token: { name: "Sneaky", expires_in: "30 days", scopes: ["write"], user_id: other_user.id } }
+             params: { api_token: { name: "Sneaky", expires_in: "30d", scopes: ["write"], user_id: other_user.id } }
 
         token = ::ApiToken.find_by(name: "Sneaky")
         expect(token.user).to eq(user)
