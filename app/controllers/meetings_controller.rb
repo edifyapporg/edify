@@ -1,7 +1,6 @@
 class MeetingsController < ApplicationController
   include ActionView::RecordIdentifier
 
-  skip_before_action :verify_authenticity_token, only: :upsert
   before_action :authenticate_user!
   before_action :authorize_user
   before_action :set_meeting, only: %i[show edit update destroy edit_contributors update_contributors]
