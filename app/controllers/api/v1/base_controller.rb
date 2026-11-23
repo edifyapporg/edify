@@ -8,6 +8,7 @@ module Api
       include ::Pundit::Authorization
 
       BEARER_PATTERN = /\ABearer (\S+)\z/
+      ISO_DATE = /\A\d{4}-\d{2}-\d{2}\z/
 
       before_action :authenticate_api_token!
       after_action :verify_authorized, except: :route_not_found
@@ -76,6 +77,17 @@ module Api
       # @return [String, nil] a message when the value is missing or outside the range
       def range_error(name, value, range)
         "#{name} must be a whole number from #{range.min} to #{range.max}." unless value && range.cover?(value)
+      end
+
+      # @return [Date, nil] nil unless the value is a real date written as YYYY-MM-DD
+      def parse_date(value)
+        ::Date.iso8601(value) if value.is_a?(String) && value.match?(ISO_DATE)
+      rescue ::Date::Error
+        nil
+      end
+
+      def date_message(name)
+        "#{name} must be a date written as YYYY-MM-DD."
       end
 
       def render_error(status, code, message)

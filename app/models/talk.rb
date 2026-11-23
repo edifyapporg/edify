@@ -21,6 +21,12 @@ class Talk < ApplicationRecord
 
   scope :sort_by_meeting_date_asc, -> { joins(:meeting).order("meetings.date asc") }
   scope :sort_by_meeting_date_desc, -> { joins(:meeting).order("meetings.date desc") }
+  # Talks whose speaker name contains every word of the query (see ApplicationRecord.matching_every_word).
+  scope :speaker_matching, ->(query) { matching_every_word(:speaker_name, query) }
+  # Talks whose purpose contains the text, ignoring case: "missionary" finds "Departing Missionary".
+  scope :purpose_containing, lambda { |text|
+    where(arel_table[:purpose].matches("%#{sanitize_sql_like(text.to_s.squish)}%", nil, false))
+  }
 
   before_save :match_member
 

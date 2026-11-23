@@ -79,6 +79,7 @@ so both front ends always agree.
 | `GET /api/v1/meetings` | all unit roles | `from` (today), `to` (`from` + 84 days, span at most 366) |
 | `GET /api/v1/meetings/:date` | all unit roles | the meeting's date, `YYYY-MM-DD` |
 | `GET /api/v1/members` | bishopric, clerk | `q` (2-100 characters; every word must appear in the name), `limit` (1-100, 25) |
+| `GET /api/v1/talks` | bishopric, clerk | `speaker` (every word in the name), `purpose` (contains), `from`, `to`, `limit` (1-200, 50) |
 
 MCP tools at `/mcp`, each answering what its endpoint answers. Access is limited to site admins until `MCP_ENABLED=true`.
 
