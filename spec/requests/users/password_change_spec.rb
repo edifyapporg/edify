@@ -33,13 +33,22 @@ RSpec.describe "Password changes" do
       expect(response.parsed_body["error"]).to eq("invalid_grant")
     end
 
-    it "says the apps were disconnected and the API tokens still work" do
-      api_token = user.api_tokens.create!(name: "CLI")
+    it "says the apps were disconnected and names the API token that still works" do
+      api_token = user.api_tokens.create!(name: "CLI", created_at: Time.zone.local(2026, 11, 3, 12))
       change_password
 
       expect(flash[:notice]).to include("Apps you had connected to Edify, such as Claude, were disconnected.",
-                                        "Your API token still works.")
+                                        'Your API token "CLI" (created 03 Nov 2026) still works.')
       expect(api_token.reload.revoked_at).to be_nil
+    end
+
+    it "lists the newest API tokens and counts the rest, leaving out revoked ones" do
+      7.times { |i| user.api_tokens.create!(name: "Token #{i}", created_at: (7 - i).days.ago) }
+      user.api_tokens.create!(name: "Revoked", revoked_at: 1.day.ago)
+      change_password
+
+      expect(flash[:notice]).to include("Your 7 API tokens still work:", '"Token 6"', '"Token 2"', "and 2 more.")
+      expect(flash[:notice]).not_to include('"Token 1"', "Revoked")
     end
 
     it "doesn't mention apps or API tokens the user doesn't have" do
