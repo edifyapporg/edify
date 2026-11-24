@@ -1,6 +1,3 @@
-# Tells a user that new access to their account was just granted, so a leader whose account someone else briefly
-# controlled finds out right away (#396). These are security notices, so they go out whatever the user's
-# notification preferences, and they never include a token, code or digest. Subjects are in config/locales/en.yml.
 class AccountSecurityMailer < ApplicationMailer
   # @param api_token [ApiToken] the token just created
   def api_token_created(api_token)
