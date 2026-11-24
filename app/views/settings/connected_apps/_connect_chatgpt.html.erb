@@ -1,33 +1,38 @@
 <%# locals: (mcp_url:) %>
-<%# How a leader connects ChatGPT to Edify (#402), after the Claude guide, which covers what an assistant can see and
+<%# How a leader connects ChatGPT to Edify, after the Claude guide, which covers what an assistant can see and
     the Handbook. Steps follow OpenAI's "Add custom MCP server" guide; custom servers are on some ChatGPT plans only. %>
-<div class="card mb-5" id="connect_chatgpt">
-  <div class="card-header">
-    <h4>Connect ChatGPT</h4>
-  </div>
-  <div class="card-body">
-    <p>
-      ChatGPT can answer the same questions from Edify and sees the same information as Claude. It connects on ChatGPT
-      on the web, on plans that allow custom MCP servers. If you don't see the option, your plan doesn't include it.
-    </p>
+<div class="accordion-item" id="connect_chatgpt">
+  <h2 class="accordion-header" id="connect_chatgpt_heading">
+    <button class="accordion-button collapsed fs-5" type="button" data-bs-toggle="collapse"
+            data-bs-target="#connect_chatgpt_body" aria-expanded="false" aria-controls="connect_chatgpt_body">
+      Connect ChatGPT
+    </button>
+  </h2>
+  <div id="connect_chatgpt_body" class="accordion-collapse collapse" aria-labelledby="connect_chatgpt_heading">
+    <div class="accordion-body">
+      <p>
+        ChatGPT can answer the same questions from Edify and sees the same information as Claude. It connects on ChatGPT
+        on the web, on plans that allow custom MCP servers. If you don't see the option, your plan doesn't include it.
+      </p>
 
-    <ol>
-      <li>In ChatGPT on the web, open <strong>Plugins</strong>, select <strong>+</strong>, then <strong>Add custom MCP server</strong>.</li>
-      <li>Name it <strong>Edify</strong> and enter this server URL:</li>
-    </ol>
-    <%= render partial: "settings/connected_apps/copyable", locals: { text: mcp_url } %>
-    <ol start="3">
-      <li>Choose <strong>OAuth</strong> for authentication, review the warning, and select <strong>Create as a plugin</strong>.</li>
-      <li>Install it, sign in to Edify if asked, and choose <strong>Allow</strong>.</li>
-    </ol>
+      <ol>
+        <li>In ChatGPT on the web, open <strong>Plugins</strong>, select <strong>+</strong>, then <strong>Add custom MCP server</strong>.</li>
+        <li>Name it <strong>Edify</strong> and enter this server URL:</li>
+      </ol>
+      <%= render partial: "settings/connected_apps/copyable", locals: { text: mcp_url } %>
+      <ol start="3">
+        <li>Choose <strong>OAuth</strong> for authentication, review the warning, and select <strong>Create as a plugin</strong>.</li>
+        <li>Install it, sign in to Edify if asked, and choose <strong>Allow</strong>.</li>
+      </ol>
 
-    <p>
-      On a ChatGPT Free, Plus or Pro plan, OpenAI may use your conversations to improve its models unless you turn off
-      <strong>Improve the model for everyone</strong> under <strong>Settings &gt; Data controls</strong> in ChatGPT.
-    </p>
+      <p>
+        On a ChatGPT Free, Plus or Pro plan, OpenAI may use your conversations to improve its models unless you turn off
+        <strong>Improve the model for everyone</strong> under <strong>Settings &gt; Data controls</strong> in ChatGPT.
+      </p>
 
-    <p class="mb-0">
-      To stop ChatGPT's access, disconnect it below. It loses access at once.
-    </p>
+      <p class="mb-0">
+        To stop ChatGPT's access, disconnect it below. It loses access at once.
+      </p>
+    </div>
   </div>
 </div>

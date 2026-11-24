@@ -12,8 +12,11 @@
     <%# min-width: 0 lets this column shrink below the table's width, so .table-responsive scrolls instead of the page %>
     <div class="col px-md-4 py-3" style="min-width: 0;">
       <% if @can_connect %>
-        <%= render partial: "settings/connected_apps/connect_claude", locals: { mcp_url: ::Oauth::McpResource.url(request) } %>
-        <%= render partial: "settings/connected_apps/connect_chatgpt", locals: { mcp_url: ::Oauth::McpResource.url(request) } %>
+        <%# Collapsed until a leader opens one, so the list of connected apps stays near the top. %>
+        <div class="accordion mb-5" id="connect_guides">
+          <%= render partial: "settings/connected_apps/connect_claude", locals: { mcp_url: ::Oauth::McpResource.url(request) } %>
+          <%= render partial: "settings/connected_apps/connect_chatgpt", locals: { mcp_url: ::Oauth::McpResource.url(request) } %>
+        </div>
       <% end %>
 
       <div class="card mb-5">

@@ -1,7 +1,7 @@
 module Oauth
   # Resolves an OAuth client that identifies itself with a Client ID Metadata Document (CIMD): its client_id is an
-  # HTTPS URL, and the JSON at that URL names the client and lists its redirect URIs (#323). This is how Claude, on
-  # claude.ai and in Claude Code, and ChatGPT (#402) register with Edify; there is no dynamic client registration.
+  # HTTPS URL, and the JSON at that URL names the client and lists its redirect URIs. This is how Claude, on claude.ai
+  # and in Claude Code, and ChatGPT register with Edify; there is no dynamic client registration.
   # Every client is treated as public, using PKCE and no client authentication at the token endpoint, as Edify's
   # metadata advertises, even if its document prefers another method (ChatGPT's names private_key_jwt).
   #
