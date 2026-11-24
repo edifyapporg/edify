@@ -13,7 +13,7 @@ class McpController < ActionController::API
   # GET, POST and DELETE /mcp. The transport answers GET and DELETE itself, since a stateless server has no streams
   # or sessions to open or end.
   def handle
-    status, headers, body = ::EdifyMcp::Server.transport.handle_request(request)
+    status, headers, body = ::EdifyMcp::Server.transport(request).handle_request(request)
 
     headers.each { |name, value| response.set_header(name, value) }
     self.status = status
