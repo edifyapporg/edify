@@ -11,6 +11,10 @@
     <%= render partial: "settings/sidebar" %>
     <%# min-width: 0 lets this column shrink below the table's width, so .table-responsive scrolls instead of the page %>
     <div class="col px-md-4 py-3" style="min-width: 0;">
+      <% if @can_connect %>
+        <%= render partial: "settings/connected_apps/connect_claude", locals: { mcp_url: ::Oauth::McpResource.url(request) } %>
+      <% end %>
+
       <div class="card mb-5">
         <div class="card-header">
           <h4>Connected Apps</h4>

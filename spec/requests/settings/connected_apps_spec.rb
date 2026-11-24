@@ -25,6 +25,23 @@ RSpec.describe "Settings connected apps" do
       expect(response.body).to include("Claude", "claude.ai", ">Disconnect<")
     end
 
+    it "shows a leader with MCP access how to connect Claude, with this host's MCP URL" do
+      user.update!(admin: true)
+      get settings_connected_apps_path
+
+      expect(response.body).to include("Connect Claude", "http://www.example.com/mcp",
+                                       "claude mcp add --transport http edify http://www.example.com/mcp",
+                                       %(href="#{::EdifyConfig.general_handbook_url}"), "Help improve Claude")
+    end
+
+    it "leaves out the guide for a leader MCP isn't enabled for, while still listing their apps" do
+      issue_token(user)
+      get settings_connected_apps_path
+
+      expect(response.body).not_to include("Connect Claude")
+      expect(response.body).to include("Claude", ">Disconnect<")
+    end
+
     it "says so when there are none, and never shows another user's connections" do
       issue_token(other_user)
       get settings_connected_apps_path

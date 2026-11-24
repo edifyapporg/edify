@@ -10,6 +10,8 @@ module Settings
     def index
       authorize :connected_app
       @connected_apps = ::OauthApplication.connected_for(current_user).order(:name)
+      # The connection guide is for leaders the MCP endpoint serves; everyone can still see and disconnect apps.
+      @can_connect = current_user.assigned_to_unit? && ::EdifyMcp::Access.allowed?(current_user)
     end
 
     # DELETE /settings/connected_apps/:id

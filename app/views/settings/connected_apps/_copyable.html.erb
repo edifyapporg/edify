@@ -1,0 +1,10 @@
+<%# locals: (text:) %>
+<%# A line of text with a button that copies it, for the server URL and the Claude Code command. %>
+<div class="d-flex align-items-center mb-3" data-controller="clipboard">
+  <code class="text-break" data-clipboard-target="source"><%= text %></code>
+  <%= button_tag(fa_icon("clipboard"),
+                 type: "button",
+                 class: "btn btn-sm btn-outline-primary ms-2",
+                 title: "Copy to clipboard",
+                 data: { action: "clipboard#copy", clipboard_target: "button" }) %>
+</div>
