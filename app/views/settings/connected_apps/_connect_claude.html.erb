@@ -1,0 +1,58 @@
+<%# locals: (mcp_url:) %>
+<%# How a leader connects Claude to Edify (#323). Shown only to leaders the MCP endpoint serves. It refers to the
+    General Handbook only generally (see docs/api.md), and covers Claude's training setting, which the privacy review
+    recommended leaders on consumer plans turn off. %>
+<div class="card mb-5" id="connect_claude">
+  <div class="card-header">
+    <h4>Connect Claude</h4>
+  </div>
+  <div class="card-body">
+    <p>
+      Claude can answer questions about your unit's speakers, talks, meetings and music from Edify, such as "Who
+      hasn't spoken in the last year?"
+    </p>
+
+    <h5>Claude on the web, desktop and mobile</h5>
+    <ol>
+      <li>In Claude on the web or the desktop app, open <strong>Customize &gt; Connectors</strong> and add a custom connector.</li>
+      <li>Name it <strong>Edify</strong> and enter this server URL:</li>
+    </ol>
+    <%= render partial: "settings/connected_apps/copyable", locals: { text: mcp_url } %>
+    <ol start="3">
+      <li>Select <strong>Connect</strong>, sign in to Edify if asked, and choose <strong>Allow</strong>.</li>
+      <li>In a conversation, turn Edify on from the <strong>+</strong> menu. Once connected, it also works in the Claude mobile app.</li>
+    </ol>
+    <p class="text-muted small">
+      On a Claude Team or Enterprise plan, an organization owner may need to add the connector first.
+    </p>
+
+    <h5>Claude Code</h5>
+    <p class="mb-1">Run this in a terminal, then choose Edify under <code>/mcp</code> in Claude Code to sign in:</p>
+    <%= render partial: "settings/connected_apps/copyable",
+               locals: { text: "claude mcp add --transport http edify #{mcp_url}" } %>
+
+    <h5>What Claude can see</h5>
+    <p>
+      Only what your role can see in Edify for your unit: members' names, gender and age group (Primary, youth or
+      adult), speaking history, meetings and songs. Claude can't change anything, and never sees phone numbers, email
+      addresses, notes or birth years.
+    </p>
+
+    <h5>Your privacy responsibilities</h5>
+    <ul>
+      <li>
+        Review the Church's guidance on member privacy and the use of AI tools in the
+        <%= link_to "General Handbook", ::EdifyConfig.general_handbook_url, target: "_blank", rel: "noopener" %>,
+        and use this connection accordingly.
+      </li>
+      <li>
+        On a Claude Free, Pro or Max plan, Anthropic may use your conversations to improve Claude unless you turn off
+        <strong>Help improve Claude</strong> under <strong>Settings &gt; Privacy</strong> in Claude.
+      </li>
+    </ul>
+
+    <p class="mb-0">
+      To stop Claude's access, disconnect it below. It loses access at once.
+    </p>
+  </div>
+</div>

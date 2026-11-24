@@ -6,6 +6,29 @@
 class OauthApplication < Doorkeeper::Application
   LOOPBACK_HOSTS = %w[localhost 127.0.0.1 [::1]].freeze
 
+  # Clients the user can still reach Edify through: those with an unrevoked token young enough that its access token
+  # is live or its refresh token still works. Shown on Settings > Connected Apps.
+  # @param user [User]
+  # @return [ActiveRecord::Relation<OauthApplication>]
+  def self.connected_for(user)
+    tokens = ::OauthAccessToken.where(resource_owner_id: user.id, revoked_at: nil)
+                               .where(created_at: ::OauthAccessToken::REFRESH_TOKEN_LIFETIME.ago..)
+    where(id: tokens.select(:application_id))
+  end
+
+  # @return [String] the host of the client's metadata document, e.g. "claude.ai"
+  def client_host
+    ::URI.parse(uid).host
+  rescue ::URI::InvalidURIError
+    uid
+  end
+
+  # @param user [User]
+  # @return [Time, nil] when the user last signed in through this client or it last refreshed their access
+  def last_authorized_at(user)
+    access_tokens.where(resource_owner_id: user.id).maximum(:created_at)
+  end
+
   # @param uri [URI::Generic]
   # @return [Boolean] true for a plain-http redirect to this machine, as native clients such as Claude Code use
   def self.loopback_redirect?(uri)

@@ -1,0 +1,33 @@
+<div class="row">
+  <div class="col-md">
+    <h2 class="mt-md-4 mt-2"><strong>User Settings</strong></h2>
+  </div>
+</div>
+
+<hr/>
+
+<div class="container-fluid">
+  <div class="row flex-nowrap">
+    <%= render partial: "settings/sidebar" %>
+    <%# min-width: 0 lets this column shrink below the table's width, so .table-responsive scrolls instead of the page %>
+    <div class="col px-md-4 py-3" style="min-width: 0;">
+      <% if @can_connect %>
+        <%= render partial: "settings/connected_apps/connect_claude", locals: { mcp_url: ::Oauth::McpResource.url(request) } %>
+      <% end %>
+
+      <div class="card mb-5">
+        <div class="card-header">
+          <h4>Connected Apps</h4>
+        </div>
+        <div class="card-body">
+          <p>
+            Apps you've allowed to read your unit's Edify information by signing in, such as Claude. Disconnecting one
+            ends its access at once; it has to ask you again to reconnect.
+          </p>
+          <%= render partial: "settings/connected_apps/connected_apps_table",
+                     locals: { connected_apps: @connected_apps, user: current_user } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

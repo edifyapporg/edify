@@ -45,6 +45,12 @@ MCP authorization spec as Claude's client implements it:
   `invalid_target`.
 - **Tokens:** access tokens last an hour and have the `read` scope. Refresh tokens rotate on each use and stop
   working after 30 days without use (`OauthAccessToken`). Grants and tokens are stored as SHA-256 digests.
+- **Revoking:** **Settings > Connected Apps** (`Settings::ConnectedAppsController`) lists the clients a leader can
+  still reach Edify through (`OauthApplication.connected_for`), and disconnecting one revokes all its tokens and
+  codes for that leader, so `/mcp` refuses its next request.
+- **Leader guide:** the same page shows leaders the MCP endpoint serves how to connect Claude (claude.ai and Claude
+  Code, with the `/mcp` URL to copy), what Claude can see, a general pointer to the Handbook's guidance, and
+  Claude's "Help improve Claude" setting. Keep it in step with the tools and serializers.
 
 ## Responses
 

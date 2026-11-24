@@ -1,0 +1,32 @@
+<%# locals: (connected_apps:, user:) %>
+
+<% if connected_apps.empty? %>
+  <p class="text-muted mb-0">You haven't connected any apps.</p>
+<% else %>
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered" id="connected_apps">
+      <thead>
+      <tr>
+        <th>App</th>
+        <th>From</th>
+        <th>Last connected</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <% connected_apps.each do |app| %>
+        <tr>
+          <td><%= app.name %></td>
+          <td><%= app.client_host %></td>
+          <td><%= l(app.last_authorized_at(user).to_date, format: :rfc822) %></td>
+          <td>
+            <%= button_to "Disconnect", settings_connected_app_path(app), method: :delete,
+                          class: "btn btn-sm btn-outline-danger",
+                          form: { data: { turbo_confirm: "Disconnect #{app.name}? It will lose access at once." } } %>
+          </td>
+        </tr>
+      <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

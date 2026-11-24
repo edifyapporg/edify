@@ -70,6 +70,7 @@ Rails.application.routes.draw do
     resources :api_tokens, only: [:index, :create] do
       patch :revoke, on: :member
     end
+    resources :connected_apps, only: [:index, :destroy]
   end
 
   namespace :api, defaults: { format: :json } do
