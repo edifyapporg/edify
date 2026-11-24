@@ -10,8 +10,6 @@ module Oauth
   #
   # Then it resolves the client's Client ID Metadata Document. This signed-in step is the only place Edify fetches
   # one: the token and revoke endpoints, which anyone can call, only look up clients already resolved here.
-  #
-  # Once the leader chooses Allow, they're emailed that the app was connected, in case it wasn't them (#396).
   class AuthorizationsController < ::Doorkeeper::AuthorizationsController
     layout "application"
 
