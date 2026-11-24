@@ -75,6 +75,15 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       expect(response.body).not_to include("finishes on your own computer")
     end
 
+    it "submits Allow and Deny as ordinary forms, so the browser follows the redirect to the client itself" do
+      login_as user, scope: :user
+      get oauth_authorization_path, params: authorize_params
+
+      forms = response.parsed_body.css("form[action=\"/oauth/authorize\"]")
+      expect(forms.size).to eq(2)
+      expect(forms.pluck("data-turbo")).to all(eq("false"))
+    end
+
     it "requires PKCE" do
       login_as user, scope: :user
       get oauth_authorization_path, params: authorize_params.except(:code_challenge, :code_challenge_method)
