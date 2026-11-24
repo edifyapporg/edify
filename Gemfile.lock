@@ -138,6 +138,8 @@ GEM
       warden (~> 1.2.3)
     diff-lcs (1.6.2)
     domain_name (0.7.20261117)
+    doorkeeper (5.9.10)
+      railties (>= 5)
     drb (2.2.3)
     erb (6.0.7)
     erubi (1.13.1)
@@ -592,6 +594,7 @@ DEPENDENCIES
   cssbundling-rails
   csv
   devise
+  doorkeeper (~> 5.9)
   ffaker
   font_awesome5_rails
   foreman

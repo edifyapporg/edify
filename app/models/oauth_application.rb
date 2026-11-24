@@ -1,0 +1,35 @@
+# An OAuth client, such as Claude, that a leader can authorize to read Edify through the MCP endpoint (#323). Clients
+# are never registered by hand or through dynamic client registration: each is created from its Client ID Metadata
+# Document the first time its URL arrives as a client_id (Oauth::ClientIdMetadataDocument).
+class OauthApplication < Doorkeeper::Application
+  LOOPBACK_HOSTS = %w[localhost 127.0.0.1 [::1]].freeze
+
+  # Doorkeeper's single lookup for a client_id, at both the authorization and token endpoints. A URL from a trusted
+  # host is resolved from its metadata document; any other client_id must already exist.
+  # @param uid [#to_s]
+  # @return [OauthApplication, nil]
+  def self.by_uid(uid)
+    return super unless ::Oauth::ClientIdMetadataDocument.client_id?(uid)
+
+    ::Oauth::ClientIdMetadataDocument.new(uid.to_s).application
+  end
+
+  # @param uri [URI::Generic]
+  # @return [Boolean] true for a plain-http redirect to this machine, as native clients such as Claude Code use
+  def self.loopback_redirect?(uri)
+    uri.scheme == "http" && LOOPBACK_HOSTS.include?(uri.host)
+  end
+
+  # @return [Array<String>]
+  def redirect_uris
+    redirect_uri.to_s.split
+  end
+
+  # The consent screen warns about these: any program on the leader's computer can listen on a loopback port.
+  # @return [Boolean]
+  def only_loopback_redirects?
+    redirect_uris.all? { |uri| self.class.loopback_redirect?(::URI.parse(uri)) }
+  rescue ::URI::InvalidURIError
+    false
+  end
+end

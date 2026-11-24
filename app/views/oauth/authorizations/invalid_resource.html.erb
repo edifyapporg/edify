@@ -1,0 +1,13 @@
+<div class="d-flex justify-content-center">
+  <div class="card mt-4 w-100" style="max-width: 640px;">
+    <div class="card-header">
+      <h4 class="mb-0">This connection can't be made</h4>
+    </div>
+    <div class="card-body">
+      <p class="mb-0">
+        The app asked for access to something other than Edify's MCP server, so Edify stopped here. Try connecting
+        again with <strong><%= ::Oauth::McpResource.url(request) %></strong> as the server URL.
+      </p>
+    </div>
+  </div>
+</div>

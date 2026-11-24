@@ -17,6 +17,26 @@ clients can rely on one shape and reviewers have something to check against.
   data. A role sees through the API exactly what it sees in the UI.
 - Read endpoints require the token's `read` scope. Write endpoints (#324) will require `write`.
 
+## OAuth for MCP clients
+
+claude.ai can't send a pasted token, so Edify is also an OAuth authorization server (Doorkeeper, #323), following the
+MCP authorization spec as Claude's client implements it:
+
+- **Discovery:** `/.well-known/oauth-authorization-server` (`Oauth::MetadataController`) lists the endpoints and
+  advertises S256 PKCE, public clients (`token_endpoint_auth_methods_supported: ["none"]`) and Client ID Metadata
+  Documents.
+- **Clients** identify themselves with a Client ID Metadata Document: an https `client_id` URL whose JSON names the
+  client and its redirect URIs. `OauthApplication.by_uid` resolves it through `Oauth::ClientIdMetadataDocument`,
+  which accepts only `claude.ai` URLs and re-fetches after a day. There is no dynamic client registration, and no
+  page for registering clients by hand.
+- **Flow:** authorization code with required S256 PKCE, behind the Devise sign-in and a consent screen that names the
+  client and the redirect host. Plain-http redirects are allowed only to loopback addresses, on any port, for Claude
+  Code.
+- **`resource`** (RFC 8707), when sent, must name the `/mcp` endpoint (`Oauth::McpResource`); anything else gets
+  `invalid_target`.
+- **Tokens:** access tokens last an hour and have the `read` scope. Refresh tokens rotate on each use and stop
+  working after 30 days without use (`OauthAccessToken`). Grants and tokens are stored as SHA-256 digests.
+
 ## Responses
 
 - **Plain JSON, not JSON:API.** Most answers are computed (stale speakers, song tallies), not resources with ids,

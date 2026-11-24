@@ -18,6 +18,7 @@ gem "aws-sdk-s3", require: false
 gem "cssbundling-rails"
 gem "csv"
 gem "devise"
+gem "doorkeeper", "~> 5.9" # OAuth authorization server for MCP clients (#323)
 gem "font_awesome5_rails"
 gem "friendly_id"
 gem "image_processing", "~> 1.2"
