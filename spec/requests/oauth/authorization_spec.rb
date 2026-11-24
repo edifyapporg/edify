@@ -10,6 +10,8 @@ RSpec.describe "OAuth sign-in for MCP clients" do
   let(:code_challenge) { ::Base64.urlsafe_encode64(::Digest::SHA256.digest(code_verifier), padding: false) }
 
   before do
+    # MCP is open to admins until it is enabled for everyone; consent is refused to anyone /mcp wouldn't serve.
+    user.update!(admin: true)
     allow(::Oauth::ClientIdMetadataDocument::Fetcher).to receive(:call) do
       { client_id: client_id, client_name: "Claude", redirect_uris: redirect_uris }.to_json
     end
@@ -84,7 +86,7 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       get oauth_authorization_path, params: authorize_params(resource: "https://elsewhere.example/mcp")
 
       expect(response).to have_http_status(:bad_request)
-      expect(response.body).to include("This connection can't be made")
+      expect(response.body).to include("This connection can&#39;t be made")
     end
 
     it "never fetches a client_id from an untrusted host" do
@@ -93,6 +95,46 @@ RSpec.describe "OAuth sign-in for MCP clients" do
 
       expect(response.body).not_to include("Connect")
       expect(::Oauth::ClientIdMetadataDocument::Fetcher).not_to have_received(:call)
+    end
+
+    it "refuses an admin who is impersonating the leader, before fetching anything" do
+      admin = users(:admin)
+      login_as admin, scope: :user
+      post impersonate_start_path(user)
+
+      get oauth_authorization_path, params: authorize_params
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response.body).to include("Stop impersonating to connect an app")
+      expect(::Oauth::ClientIdMetadataDocument::Fetcher).not_to have_received(:call)
+    end
+
+    it "refuses a leader the MCP endpoint wouldn't serve, so no token is issued" do
+      user.update!(admin: false)
+      login_as user, scope: :user
+      get oauth_authorization_path, params: authorize_params
+
+      expect(response).to have_http_status(:forbidden)
+      expect(response.body).to include("Connecting apps isn&#39;t available yet")
+
+      post oauth_authorization_path, params: authorize_params
+      expect(response).to have_http_status(:forbidden)
+      expect(::Doorkeeper::AccessGrant.count).to eq(0)
+    end
+
+    it "refuses a user with no unit" do
+      unassigned = users(:unassigned).tap { it.update!(admin: true) }
+      login_as unassigned, scope: :user
+      get oauth_authorization_path, params: authorize_params
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "answers a malformed resource with 400, not an error" do
+      login_as user, scope: :user
+      get oauth_authorization_path, params: authorize_params(resource: "//www.example.com/mcp")
+
+      expect(response).to have_http_status(:bad_request)
     end
 
     context "with Claude Code's loopback redirect on a port it picked" do
@@ -104,6 +146,19 @@ RSpec.describe "OAuth sign-in for MCP clients" do
         get oauth_authorization_path, params: authorize_params
 
         expect(response.body).to include("Connect Claude to Edify?", "finishes on your own computer")
+      end
+    end
+
+    context "with a client that lists both an https and a loopback redirect" do
+      let(:redirect_uris) { ["https://claude.ai/api/mcp/auth_callback", "http://localhost/callback"] }
+
+      it "warns only when this request's redirect is the loopback one" do
+        login_as user, scope: :user
+        get oauth_authorization_path, params: authorize_params
+        expect(response.body).not_to include("finishes on your own computer")
+
+        get oauth_authorization_path, params: authorize_params(redirect_uri: "http://localhost:5555/callback")
+        expect(response.body).to include("finishes on your own computer")
       end
     end
   end
@@ -128,6 +183,14 @@ RSpec.describe "OAuth sign-in for MCP clients" do
     it "refuses the exchange without the right code_verifier" do
       exchange(authorization_code, code_verifier: "wrong")
       expect(response.parsed_body["error"]).to eq("invalid_grant")
+    end
+
+    it "never fetches a client document at the public token endpoint" do
+      post oauth_token_path, params: { grant_type: "authorization_code", code: "x", code_verifier: code_verifier,
+                                       client_id: "https://claude.ai/oauth/never-seen", redirect_uri: redirect_uri }
+
+      expect(response.parsed_body["error"]).to eq("invalid_client")
+      expect(::Oauth::ClientIdMetadataDocument::Fetcher).not_to have_received(:call)
     end
 
     it "refuses the exchange for another resource" do

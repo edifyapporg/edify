@@ -1,7 +1,7 @@
 <%# The consent screen for an MCP client such as Claude (#323). It names the client and, as the MCP authorization
-    spec requires, the host the leader will be sent back to, with an extra warning when that is only this computer. %>
+    spec requires, the host the leader will be sent back to, with an extra warning when this request's redirect is only this computer. %>
 <% client = @pre_auth.client.application %>
-<% redirect_host = URI.parse(@pre_auth.redirect_uri).host %>
+<% redirect_uri = URI.parse(@pre_auth.redirect_uri) %>
 
 <div class="d-flex justify-content-center">
   <div class="card mt-4 w-100" style="max-width: 640px;">
@@ -22,10 +22,10 @@
       </ul>
 
       <p>
-        After you choose, you'll be sent to <strong><%= redirect_host %></strong>.
+        After you choose, you'll be sent to <strong><%= redirect_uri.host %></strong>.
       </p>
 
-      <% if client.only_loopback_redirects? %>
+      <% if OauthApplication.loopback_redirect?(redirect_uri) %>
         <div class="alert alert-warning">
           This connection finishes on your own computer, as Claude Code does. Allow it only if you just started
           connecting from an app you trust: any program on this computer could be waiting for the reply.
