@@ -7,7 +7,7 @@ class AccountSecurityMailer < ApplicationMailer
   end
 
   # @param user [User] the leader who chose Allow on the OAuth consent screen
-  # @param application [OauthApplication] the client they allowed
+  # @param application [OauthApplication] the client the leader allowed
   # @param loopback [Boolean] whether the client finished connecting on the leader's own computer, as Claude Code does
   def app_connected(user, application, loopback:)
     @user = user

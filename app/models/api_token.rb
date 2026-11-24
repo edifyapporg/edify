@@ -103,7 +103,7 @@ class ApiToken < ApplicationRecord
 
   private
 
-  # However the token was made, the user hears about it, in case it wasn't them (#396).
+  # However the token was made, the user hears about it, in case someone else made it (#396).
   def send_created_email
     ::AccountSecurityMailer.api_token_created(self).deliver_later
   end
