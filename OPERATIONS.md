@@ -101,6 +101,15 @@ Because the worker is independent of the web process:
 
 ---
 
+## Support email address
+
+Set `SUPPORT_EMAIL_ADDRESS` in the app's environment to a mailbox someone reads. When a user's email address is
+changed, Edify emails the old address, and if the user didn't make the change, that email tells them to write to
+this address (a password reset would go to the new address). Without it, the email tells them to ask their
+bishopric instead.
+
+---
+
 ## Shared app droplet
 
 The app server also hosts another Hatchbox app. Its Caddy config is generated for **all** apps on the box,

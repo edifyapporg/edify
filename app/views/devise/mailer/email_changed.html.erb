@@ -1,7 +1,18 @@
 <p>Hello <%= @resource.first_name %>!</p>
 
 <% if @resource.try(:unconfirmed_email?) %>
-	  <p>We're contacting you to notify you that your email is being changed to <%= @resource.unconfirmed_email %>.</p>
+  <p>The email address for your Edify account is being changed to <%= @resource.unconfirmed_email %>.</p>
 <% else %>
-	<p>We're contacting you to notify you that your email has been changed to <%= @resource.email %>.</p>
+  <p>The email address for your Edify account was just changed to <%= @resource.email %>. We're writing to your old address to let you know.</p>
 <% end %>
+
+<p>If you made this change, there's nothing more to do.</p>
+
+<p>
+  If you didn't, someone else may have access to your account, and password reset emails now go to the new address.
+  <% if ::EdifyConfig.support_email_address %>
+    Write to <%= mail_to ::EdifyConfig.support_email_address %> right away so we can restore your access.
+  <% else %>
+    Ask your bishopric to contact the Edify administrators right away.
+  <% end %>
+</p>
