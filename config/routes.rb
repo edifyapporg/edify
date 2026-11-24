@@ -94,6 +94,9 @@ Rails.application.routes.draw do
     controllers authorizations: "oauth/authorizations", tokens: "oauth/tokens"
   end
   get "/.well-known/oauth-authorization-server", to: "oauth/metadata#show", as: :oauth_authorization_server_metadata
+  get "/.well-known/oauth-protected-resource/mcp", to: "oauth/protected_resource_metadata#show",
+                                                   as: :mcp_protected_resource_metadata
+  get "/.well-known/oauth-protected-resource", to: "oauth/protected_resource_metadata#show"
 
   namespace :webhooks do
     resources :mailgun_events, only: [:create]
