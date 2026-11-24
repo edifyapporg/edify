@@ -5,6 +5,8 @@ en:
     app_connected:
       subject: "New app connected to your Edify account"
   controllers:
+    auth_rate_limiting:
+      too_many_attempts: "Too many attempts. Wait a few minutes and try again."
     access_request_controller:
       approve_failure: "Access request could not be approved. Something went wrong."
       approve_success: "Access request was approved."
