@@ -59,6 +59,17 @@ RSpec.describe ::Oauth::ClientIdMetadataDocument do
       travel(25.hours) { expect(application.name).to eq("Claude") }
     end
 
+    it "keeps the last good values, not a rejected refresh's, when the new document is invalid" do
+      described_class.new(client_id).application
+      document[:client_name] = "Renamed"
+      document[:redirect_uris] = ["http://claude.ai/callback"]
+
+      refreshed = travel(25.hours) { application }
+
+      expect(refreshed).to have_attributes(name: "Claude", redirect_uris: ["https://claude.ai/api/mcp/auth_callback"])
+      expect(refreshed).not_to be_changed
+    end
+
     it "returns nil when the document has never been fetched" do
       allow(described_class::Fetcher).to receive(:call).and_raise(described_class::Fetcher::Error, "timeout")
       expect(application).to be_nil
@@ -90,7 +101,7 @@ RSpec.describe ::Oauth::ClientIdMetadataDocument do
 
     it "accepts loopback redirects, as Claude Code registers" do
       document[:redirect_uris] = ["http://localhost/callback", "http://127.0.0.1/callback"]
-      expect(application.only_loopback_redirects?).to be(true)
+      expect(application.redirect_uris).to eq(["http://localhost/callback", "http://127.0.0.1/callback"])
     end
   end
 end

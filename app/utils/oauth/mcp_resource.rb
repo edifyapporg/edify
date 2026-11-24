@@ -27,7 +27,7 @@ module Oauth
     # Lowercases the scheme and host, drops a trailing slash, and refuses a query or fragment.
     def self.normalize(value)
       uri = ::URI.parse(value.to_s)
-      return if uri.host.nil? || uri.query || uri.fragment
+      return if uri.scheme.nil? || uri.host.nil? || uri.query || uri.fragment
 
       uri.scheme = uri.scheme.downcase
       uri.host = uri.host.downcase

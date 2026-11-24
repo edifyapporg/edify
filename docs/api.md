@@ -26,11 +26,13 @@ MCP authorization spec as Claude's client implements it:
   advertises S256 PKCE, public clients (`token_endpoint_auth_methods_supported: ["none"]`) and Client ID Metadata
   Documents.
 - **Clients** identify themselves with a Client ID Metadata Document: an https `client_id` URL whose JSON names the
-  client and its redirect URIs. `OauthApplication.by_uid` resolves it through `Oauth::ClientIdMetadataDocument`,
-  which accepts only `claude.ai` URLs and re-fetches after a day. There is no dynamic client registration, and no
-  page for registering clients by hand.
+  client and its redirect URIs. `Oauth::AuthorizationsController` resolves it through
+  `Oauth::ClientIdMetadataDocument` at the signed-in authorize step only, accepting only `claude.ai` URLs and
+  re-fetching after a day; the public token and revoke endpoints only look up clients already resolved. There is no
+  dynamic client registration, and no page for registering clients by hand.
 - **Flow:** authorization code with required S256 PKCE, behind the Devise sign-in and a consent screen that names the
-  client and the redirect host. Plain-http redirects are allowed only to loopback addresses, on any port, for Claude
+  client and the redirect host. Consent is refused while an admin is impersonating, and for a leader `/mcp` wouldn't
+  serve (no unit, or `EdifyMcp::Access` says no), so no token is issued that `/mcp` would reject. Plain-http redirects are allowed only to loopback addresses, on any port, for Claude
   Code.
 - **`resource`** (RFC 8707), when sent, must name the `/mcp` endpoint (`Oauth::McpResource`); anything else gets
   `invalid_target`.

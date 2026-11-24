@@ -3,10 +3,11 @@ module Oauth
   # HTTPS URL, and the JSON at that URL names the client and lists its redirect URIs (#323). This is how Claude, on
   # claude.ai and in Claude Code, registers with Edify; there is no dynamic client registration.
   #
-  # Only client_ids on TRUSTED_HOSTS are accepted, which also bounds what Edify ever fetches. A document is fetched
-  # the first time its client_id arrives and again once REFRESH_AFTER has passed; if a refresh fails, the last valid
-  # copy keeps working. The draft spec's checks apply: the document's client_id must equal the URL exactly, and the
-  # redirect URIs it lists are the only ones Doorkeeper will accept for that client.
+  # Only client_ids on TRUSTED_HOSTS are accepted, which also bounds what Edify ever fetches. Documents are fetched
+  # only at the signed-in authorization step (Oauth::AuthorizationsController): the first time a client_id arrives,
+  # and again once REFRESH_AFTER has passed. If a refresh fails, the last valid copy keeps working. The draft spec's
+  # checks apply: the document's client_id must equal the URL exactly, and the redirect URIs it lists are the only
+  # ones Doorkeeper will accept for that client.
   #
   # @see https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00
   class ClientIdMetadataDocument
@@ -30,7 +31,8 @@ module Oauth
                                               open_timeout: TIMEOUT_SECONDS, read_timeout: TIMEOUT_SECONDS) do |http|
           read(http, uri)
         end
-      rescue ::Timeout::Error, ::SystemCallError, ::SocketError, ::IOError, ::OpenSSL::SSL::SSLError => e
+      rescue ::Timeout::Error, ::SystemCallError, ::SocketError, ::IOError, ::OpenSSL::SSL::SSLError,
+             ::Net::HTTPBadResponse, ::Net::ProtocolError => e
         raise Error, "#{e.class}: #{e.message}"
       end
 
@@ -99,6 +101,8 @@ module Oauth
       return application if application.save
 
       log("its redirect URIs were rejected: #{application.errors.full_messages.to_sentence}")
+      # The caller falls back to the last good copy, so it must not keep the rejected values.
+      application.reload if application.persisted?
       nil
     end
 
