@@ -71,6 +71,7 @@ RSpec.describe "OAuth sign-in for MCP clients" do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Connect Claude to Edify?", "claude.ai", "It can&#39;t change anything")
+      expect(response.body).to include("If someone sent\n          you this link, choose Deny")
       expect(response.body).not_to include("finishes on your own computer")
     end
 
@@ -173,6 +174,22 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       expect(token.resource_owner_id).to eq(user.id)
     end
 
+    it "keeps the authorization code and PKCE verifier out of the request log" do
+      log = StringIO.new
+      original = ActionController::Base.logger
+      ActionController::Base.logger = ActiveSupport::Logger.new(log)
+      begin
+        code = authorization_code
+        exchange(code)
+      ensure
+        ActionController::Base.logger = original
+      end
+
+      expect(response).to have_http_status(:ok)
+      expect(log.string).to include("Redirected to [FILTERED]")
+      expect(log.string).not_to include(code, code_verifier)
+    end
+
     it "stores tokens only as digests" do
       exchange(authorization_code)
       plaintext = response.parsed_body.fetch("access_token")
@@ -217,6 +234,24 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       travel(31.days) { refresh(refresh_token) }
 
       expect(response.parsed_body["error"]).to eq("invalid_grant")
+    end
+  end
+
+  describe "log filtering" do
+    let(:filter) { ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters) }
+
+    it "filters OAuth codes and PKCE verifiers, but not other names containing code" do
+      filtered = filter.filter("code" => "abc", "code_verifier" => "def", "zip_code" => "84101", "code_challenge" => "x")
+
+      expect(filtered).to eq("code" => "[FILTERED]", "code_verifier" => "[FILTERED]", "zip_code" => "84101",
+                             "code_challenge" => "x")
+    end
+
+    it "filters only redirects that carry an authorization code" do
+      patterns = Rails.application.config.filter_redirect
+
+      expect(patterns).to(be_any { |pattern| pattern.match?("https://claude.ai/api/mcp/auth_callback?code=a&state=s") })
+      expect(patterns).not_to(be_any { |pattern| pattern.match?("https://www.edifyapp.org/meetings?zip_code=1") })
     end
   end
 end

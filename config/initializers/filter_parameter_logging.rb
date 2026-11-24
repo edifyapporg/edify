@@ -7,6 +7,9 @@ Rails.application.config.filter_parameters += [
   :_key,
   :birthdate,
   :certificate,
+  # OAuth (#323): the authorization code, matched exactly so names like zip_code still log, and the PKCE verifier.
+  /\Acode\z/,
+  :code_verifier,
   :crypt,
   :data_string,
   :otp,
@@ -18,3 +21,7 @@ Rails.application.config.filter_parameters += [
   :token,
   :username,
 ]
+
+# The OAuth authorization step redirects the browser to the client with the code in the query string. Log those
+# redirects as [FILTERED] rather than with a code a log reader could redeem.
+Rails.application.config.filter_redirect << /[?&]code=/
