@@ -30,6 +30,11 @@ en:
       created: "Note was successfully created."
       updated: "Note was successfully updated."
       destroyed: "Note was successfully destroyed."
+    password_change_notice:
+      apps_disconnected: "Apps you had connected to Edify, such as Claude, were disconnected. Connect them again if you still use them."
+      api_tokens_active:
+        one: "Your API token still works. If you didn't create it, revoke it under Settings > API Tokens."
+        other: "Your %{count} API tokens still work. Revoke any you didn't create under Settings > API Tokens."
     registrations_controller:
       flash:
         turnstile_unauthorized: "Unauthorized"
