@@ -25,7 +25,12 @@ class User < ApplicationRecord
   belongs_to :unit, optional: true
 
   before_validation :set_notification_preferences
+  after_update :revoke_oauth_access, if: :saved_change_to_encrypted_password?
   after_commit :send_welcome_notifications
+
+  # True after a password change, made through this instance, that disconnected apps the user had connected (#390).
+  attr_reader :oauth_access_revoked
+  alias oauth_access_revoked? oauth_access_revoked
 
   scope :admin, -> { where(admin: true) }
   scope :alphabetical, -> { order(:first_name) }
@@ -79,6 +84,16 @@ class User < ApplicationRecord
   end
 
   private
+
+  # A password change, whether in settings or through a reset email, ends every OAuth connection, so a client someone
+  # connected while they controlled the account stops working (#390). Personal API tokens are left alone: revoking
+  # them would break the leader's own scripts and CLI, so the flash notice lists them instead.
+  def revoke_oauth_access
+    @oauth_access_revoked = ::OauthApplication.connected_for(self).exists?
+    now = Time.current
+    ::OauthAccessToken.where(resource_owner_id: id, revoked_at: nil).update_all(revoked_at: now)
+    ::Doorkeeper.config.access_grant_model.where(resource_owner_id: id, revoked_at: nil).update_all(revoked_at: now)
+  end
 
   def send_welcome_notifications
     return true unless newly_confirmed?

@@ -1,5 +1,7 @@
 module Users
   class RegistrationsController < Devise::RegistrationsController
+    include PasswordChangeNotice
+
     before_action :turnstile_verify, only: [:create]
 
     def update
@@ -10,6 +12,7 @@ module Users
       yield resource if block_given?
       if resource_updated
         set_flash_message_for_update(resource, prev_unconfirmed_email)
+        append_password_change_notice(resource) if resource.saved_change_to_encrypted_password?
         bypass_sign_in resource, scope: resource_name if sign_in_after_change_password?
 
         respond_with resource, location: after_update_path_for(resource)
