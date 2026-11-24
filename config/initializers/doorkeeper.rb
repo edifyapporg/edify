@@ -1,7 +1,7 @@
 # Doorkeeper makes Edify an OAuth authorization server, so Claude can connect to the MCP endpoint with a leader's
 # own sign-in instead of a pasted personal access token (#323). Only the authorization code flow with S256 PKCE is
-# enabled. Claude identifies itself with a Client ID Metadata Document, which OauthApplication.by_uid resolves; there
-# is no dynamic client registration. See docs/api.md.
+# enabled. Claude identifies itself with a Client ID Metadata Document, which Oauth::AuthorizationsController resolves
+# at the signed-in authorize step; there is no dynamic client registration. See docs/api.md.
 Doorkeeper.configure do
   orm :active_record
 
