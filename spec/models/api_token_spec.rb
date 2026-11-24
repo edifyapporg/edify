@@ -38,6 +38,14 @@ describe ::ApiToken do
     end
   end
 
+  describe "the created email" do
+    it "emails the user once when a token is created, not when it's updated" do
+      token = nil
+      expect { token = create_token }.to have_enqueued_mail(::AccountSecurityMailer, :api_token_created).once
+      expect { token.revoke! }.not_to have_enqueued_mail(::AccountSecurityMailer)
+    end
+  end
+
   describe "validations" do
     it "requires a name" do
       token = described_class.new(user: user, name: " ")

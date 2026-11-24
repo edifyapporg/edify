@@ -31,6 +31,7 @@ class ApiToken < ApplicationRecord
   attr_reader :plaintext_token
 
   before_validation :assign_token, on: :create
+  after_create_commit :send_created_email
 
   validates :name, presence: true, length: { maximum: 100 }
   validates :token_digest, presence: true, uniqueness: true
@@ -101,6 +102,11 @@ class ApiToken < ApplicationRecord
   end
 
   private
+
+  # However the token was made, the user hears about it, in case someone else made it (#396).
+  def send_created_email
+    ::AccountSecurityMailer.api_token_created(self).deliver_later
+  end
 
   attr_writer :plaintext_token
 

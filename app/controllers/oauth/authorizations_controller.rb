@@ -18,6 +18,13 @@ module Oauth
 
     private
 
+    # Doorkeeper's hook after a code is issued. Denials and token refreshes never reach it.
+    def after_successful_authorization(context)
+      super
+      loopback = ::OauthApplication.loopback_redirect?(::URI.parse(pre_auth.redirect_uri))
+      ::AccountSecurityMailer.app_connected(current_user, pre_auth.client.application, loopback: loopback).deliver_later
+    end
+
     def refuse_impersonation
       return if true_user == current_user
 
