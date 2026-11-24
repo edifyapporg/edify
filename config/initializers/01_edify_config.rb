@@ -28,6 +28,12 @@ class EdifyConfig
     "no-reply@#{app_url}"
   end
 
+  # Where a user writes for help when they can't reach their own account, e.g. after someone else changed its email
+  # address (#397). Unset in development; the emails that mention it fall back to the bishopric.
+  def self.support_email_address
+    ::ENV["SUPPORT_EMAIL_ADDRESS"].presence # rubocop:disable Rails/EnvironmentVariableAccess
+  end
+
   # The MCP endpoint is open to site admins only until this is set, pending the privacy review in #315.
   def self.mcp_enabled_for_everyone?
     ::ENV["MCP_ENABLED"] == "true" # rubocop:disable Rails/EnvironmentVariableAccess
