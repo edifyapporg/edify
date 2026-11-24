@@ -1,7 +1,8 @@
 <%# The consent screen for an MCP client such as Claude (#323). It names the client and, as the MCP authorization
     spec requires, the host the leader will be sent back to. Every claude.ai user is the same client, so it always warns
     against approving a link someone else started, and more strongly when this request's redirect is only this
-    computer. %>
+    computer. Its forms skip Turbo: Allow and Deny answer with a redirect to the client's own site, which a
+    Turbo fetch would try to follow across origins and the browser would block. %>
 <% client = @pre_auth.client.application %>
 <% redirect_uri = URI.parse(@pre_auth.redirect_uri) %>
 
@@ -45,11 +46,11 @@
       </p>
 
       <div class="d-flex gap-2">
-        <%= form_tag oauth_authorization_path, method: :post do %>
+        <%= form_tag oauth_authorization_path, method: :post, data: { turbo: false } do %>
           <%= render partial: "oauth/authorizations/pre_auth_fields", locals: { pre_auth: @pre_auth, resource: params[:resource] } %>
           <%= submit_tag "Allow", class: "btn btn-primary" %>
         <% end %>
-        <%= form_tag oauth_authorization_path, method: :delete do %>
+        <%= form_tag oauth_authorization_path, method: :delete, data: { turbo: false } do %>
           <%= render partial: "oauth/authorizations/pre_auth_fields", locals: { pre_auth: @pre_auth, resource: params[:resource] } %>
           <%= submit_tag "Deny", class: "btn btn-outline-secondary" %>
         <% end %>
