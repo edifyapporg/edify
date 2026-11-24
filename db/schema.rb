@@ -476,9 +476,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_200000) do
     t.bigint "unit_id"
     t.datetime "updated_at", null: false
     t.boolean "hide_moved_members", default: true, null: false
+    t.integer "two_factor_method", default: 0, null: false
     t.string "otp_secret"
     t.integer "consumed_timestep"
-    t.boolean "otp_required_for_login", default: false, null: false
     t.string "otp_backup_codes", array: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
