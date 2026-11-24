@@ -8,6 +8,9 @@ clients can rely on one shape and reviewers have something to check against.
 
 - Every request carries a personal access token as `Authorization: Bearer <token>`, created under
   **Settings > API Tokens** (`ApiToken`). `Api::V1::BaseController` and `EdifyMcp::TokenVerifier` check it.
+- `/mcp` also accepts OAuth access tokens a leader authorized for an MCP client (see "OAuth for MCP clients").
+  `EdifyMcp::TokenVerifier` tells the two apart by the personal token's `edify_` prefix, and applies the same unit
+  and MCP access checks to both.
 - Creating a token requires ticking a box confirming the leader has reviewed the General Handbook's guidance on
   member privacy and AI tools (#369). Refer to the Handbook only generally and link its main page
   (`EdifyConfig.general_handbook_url`): never quote it or cite section numbers, which change without notice.
@@ -22,7 +25,11 @@ clients can rely on one shape and reviewers have something to check against.
 claude.ai can't send a pasted token, so Edify is also an OAuth authorization server (Doorkeeper, #323), following the
 MCP authorization spec as Claude's client implements it:
 
-- **Discovery:** `/.well-known/oauth-authorization-server` (`Oauth::MetadataController`) lists the endpoints and
+- **Discovery:** an unauthenticated `/mcp` request gets `401` with
+  `WWW-Authenticate: Bearer resource_metadata="…/.well-known/oauth-protected-resource/mcp", scope="read"`. That
+  protected resource metadata (`Oauth::ProtectedResourceMetadataController`, also served at the root well-known path)
+  names the `/mcp` URL as the `resource` and this host as the only authorization server, whose
+  `/.well-known/oauth-authorization-server` (`Oauth::MetadataController`) lists the endpoints and
   advertises S256 PKCE, public clients (`token_endpoint_auth_methods_supported: ["none"]`) and Client ID Metadata
   Documents.
 - **Clients** identify themselves with a Client ID Metadata Document: an https `client_id` URL whose JSON names the

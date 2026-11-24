@@ -24,9 +24,11 @@ module EdifyMcp
     end
 
     # The transport answers one JSON-RPC POST with plain JSON: stateless, no server-sent events. It authenticates the
-    # bearer token with TokenVerifier and requires the read scope.
+    # bearer token with TokenVerifier and requires the read scope. Its 401 challenge points OAuth clients at the
+    # protected resource metadata for the host the request arrived at (#323).
+    # @param request [ActionDispatch::Request]
     # @return [MCP::Server::Transports::StreamableHTTPTransport]
-    def transport
+    def transport(request)
       ::MCP::Server::Transports::StreamableHTTPTransport.new(
         build,
         stateless: true,
@@ -34,6 +36,7 @@ module EdifyMcp
         serve_subscriptions_listen: false,
         token_verifier: TokenVerifier.new,
         required_scopes: ["read"],
+        resource_metadata_url: ::Oauth::McpResource.metadata_url(request),
         allowed_hosts: allowed_hosts
       )
     end

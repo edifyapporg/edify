@@ -10,6 +10,12 @@ module Oauth
       "#{request.base_url}#{PATH}"
     end
 
+    # @param request [ActionDispatch::Request]
+    # @return [String] where the MCP endpoint's protected resource metadata is served (RFC 9728 path insertion)
+    def self.metadata_url(request)
+      "#{request.base_url}/.well-known/oauth-protected-resource#{PATH}"
+    end
+
     # @param value [String] a client's `resource` parameter
     # @param request [ActionDispatch::Request]
     # @return [Boolean] true when it names /mcp on this request's host, or on production's www or bare domain
