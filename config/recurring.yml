@@ -19,3 +19,7 @@ production:
     class: "MeetingScheduleNotifyJob"
     queue: default
     schedule: at 3pm every day
+  oauth_sweep:
+    class: "OauthSweepJob"
+    queue: default
+    schedule: at 4am every day
