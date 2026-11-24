@@ -19,7 +19,8 @@
 
       <p class="mb-1">It will be able to:</p>
       <ul>
-        <% @pre_auth.scopes.each do |scope| %>
+        <%# Every token can read, whatever scopes the client asked for, so that line always shows. %>
+        <% (::Doorkeeper.config.default_scopes.to_a | @pre_auth.scopes.to_a).each do |scope| %>
           <li><%= t(scope, scope: [:doorkeeper, :scopes]) %></li>
         <% end %>
       </ul>

@@ -22,8 +22,8 @@ clients can rely on one shape and reviewers have something to check against.
 
 ## OAuth for MCP clients
 
-claude.ai can't send a pasted token, so Edify is also an OAuth authorization server (Doorkeeper, #323), following the
-MCP authorization spec as Claude's client implements it:
+claude.ai and ChatGPT can't send a pasted token, so Edify is also an OAuth authorization server (Doorkeeper, #323,
+#402), following the MCP authorization spec as Claude's and ChatGPT's clients implement it:
 
 - **Discovery:** an unauthenticated `/mcp` request gets `401` with
   `WWW-Authenticate: Bearer resource_metadata="…/.well-known/oauth-protected-resource/mcp", scope="read"`. That
@@ -34,9 +34,12 @@ MCP authorization spec as Claude's client implements it:
   Documents.
 - **Clients** identify themselves with a Client ID Metadata Document: an https `client_id` URL whose JSON names the
   client and its redirect URIs. `Oauth::AuthorizationsController` resolves it through
-  `Oauth::ClientIdMetadataDocument` at the signed-in authorize step only, accepting only `claude.ai` URLs and
-  re-fetching after a day; the public token and revoke endpoints only look up clients already resolved. There is no
-  dynamic client registration, and no page for registering clients by hand.
+  `Oauth::ClientIdMetadataDocument` at the signed-in authorize step only, accepting only `claude.ai` and `chatgpt.com`
+  URLs and re-fetching after a day; the public token and revoke endpoints only look up clients already resolved. There
+  is no dynamic client registration, and no page for registering clients by hand. Every client is public (PKCE, no
+  client authentication at the token endpoint), even though ChatGPT's document
+  (`https://chatgpt.com/oauth/client.json`) prefers `private_key_jwt`: it also supports `none`, which is all Edify
+  advertises.
 - **Flow:** authorization code with required S256 PKCE, behind the Devise sign-in and a consent screen that names the
   client and the redirect host. Consent is refused while an admin is impersonating, and for a leader `/mcp` wouldn't
   serve (no unit, or `EdifyMcp::Access` says no), so no token is issued that `/mcp` would reject. Plain-http redirects are allowed only to loopback addresses, on any port, for Claude
@@ -45,12 +48,17 @@ MCP authorization spec as Claude's client implements it:
   `invalid_target`.
 - **Tokens:** access tokens last an hour and have the `read` scope. Refresh tokens rotate on each use and stop
   working after 30 days without use (`OauthAccessToken`). Grants and tokens are stored as SHA-256 digests.
+- **Scopes:** `read` is the default. `offline_access` is optional and grants nothing extra; it is there because
+  ChatGPT asks for it to get a refresh token, and every client already gets one. The consent screen always lists
+  `read`, since every token can read.
 - **Revoking:** **Settings > Connected Apps** (`Settings::ConnectedAppsController`) lists the clients a leader can
   still reach Edify through (`OauthApplication.connected_for`), and disconnecting one revokes all its tokens and
   codes for that leader, so `/mcp` refuses its next request.
 - **Leader guide:** the same page shows leaders the MCP endpoint serves how to connect Claude (claude.ai and Claude
   Code, with the `/mcp` URL to copy), what Claude can see, a general pointer to the Handbook's guidance, and
-  Claude's "Help improve Claude" setting. Keep it in step with the tools and serializers.
+  Claude's "Help improve Claude" setting. A second card covers ChatGPT on the web (plans that allow custom MCP
+  servers) and its "Improve the model for everyone" setting. Keep both in step with the tools, the serializers and
+  each app's menus.
 
 ## Responses
 

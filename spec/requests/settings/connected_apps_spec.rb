@@ -34,6 +34,13 @@ RSpec.describe "Settings connected apps" do
                                        %(href="#{::EdifyConfig.general_handbook_url}"), "Help improve Claude")
     end
 
+    it "shows a leader with MCP access how to connect ChatGPT too" do
+      user.update!(admin: true)
+      get settings_connected_apps_path
+
+      expect(response.body).to include("Connect ChatGPT", "Add custom MCP server", "Improve the model for everyone")
+    end
+
     it "leaves out the guide for a leader MCP isn't enabled for, while still listing their apps" do
       issue_token(user)
       get settings_connected_apps_path

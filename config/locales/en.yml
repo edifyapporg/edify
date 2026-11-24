@@ -61,6 +61,7 @@ en:
   doorkeeper:
     scopes:
       read: "See your unit's members, talks, meetings and songs, as your role allows. It can't change anything."
+      offline_access: "Stay connected until you disconnect it, or until it goes unused for 30 days."
   models:
     api_token:
       expiry_choices:

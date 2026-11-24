@@ -1,7 +1,9 @@
 module Oauth
   # Resolves an OAuth client that identifies itself with a Client ID Metadata Document (CIMD): its client_id is an
   # HTTPS URL, and the JSON at that URL names the client and lists its redirect URIs (#323). This is how Claude, on
-  # claude.ai and in Claude Code, registers with Edify; there is no dynamic client registration.
+  # claude.ai and in Claude Code, and ChatGPT (#402) register with Edify; there is no dynamic client registration.
+  # Every client is treated as public, using PKCE and no client authentication at the token endpoint, as Edify's
+  # metadata advertises, even if its document prefers another method (ChatGPT's names private_key_jwt).
   #
   # Only client_ids on TRUSTED_HOSTS are accepted, which also bounds what Edify ever fetches. Documents are fetched
   # only at the signed-in authorization step (Oauth::AuthorizationsController): the first time a client_id arrives,
@@ -11,7 +13,7 @@ module Oauth
   #
   # @see https://datatracker.ietf.org/doc/html/draft-ietf-oauth-client-id-metadata-document-00
   class ClientIdMetadataDocument
-    TRUSTED_HOSTS = %w[claude.ai].freeze
+    TRUSTED_HOSTS = %w[claude.ai chatgpt.com].freeze
     REFRESH_AFTER = 1.day
     MAX_NAME_LENGTH = 100
 
@@ -82,8 +84,10 @@ module Oauth
 
     private
 
+    # A client saved before Edify added a scope is refreshed at once, so it may ask for that scope.
     def stale?(application)
-      application.metadata_fetched_at.nil? || application.metadata_fetched_at < REFRESH_AFTER.ago
+      application.metadata_fetched_at.nil? || application.metadata_fetched_at < REFRESH_AFTER.ago ||
+        application.scopes.to_s != ::Doorkeeper.config.scopes.to_s
     end
 
     # @return [OauthApplication, nil] the saved client, or nil if the document could not be fetched or is invalid
@@ -95,7 +99,7 @@ module Oauth
         name: metadata.fetch("client_name").strip.truncate(MAX_NAME_LENGTH),
         redirect_uri: metadata.fetch("redirect_uris").join("\n"),
         confidential: false,
-        scopes: ::Doorkeeper.config.default_scopes.to_s,
+        scopes: ::Doorkeeper.config.scopes.to_s,
         metadata_fetched_at: ::Time.current
       )
       return application if application.save
