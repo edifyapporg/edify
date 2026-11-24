@@ -18,7 +18,7 @@ RSpec.describe "Account change emails" do
 
       mails = deliveries_to(user.email)
       expect(mails.map(&:subject)).to eq(["Password Changed"])
-      expect(mails.first.body.encoded).to include("was just changed", "Reset your password", "Connected Apps")
+      expect(mails.first.body.encoded).to include("was just changed", "Reset your password", "API Tokens", "were disconnected")
     end
 
     it "emails the user after a reset" do
