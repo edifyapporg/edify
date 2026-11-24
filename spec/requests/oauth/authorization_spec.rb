@@ -71,6 +71,7 @@ RSpec.describe "OAuth sign-in for MCP clients" do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Connect Claude to Edify?", "claude.ai", "It can&#39;t change anything")
+      expect(response.body).to include("If someone sent\n          you this link, choose Deny")
       expect(response.body).not_to include("finishes on your own computer")
     end
 
@@ -171,6 +172,22 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       expect(response.parsed_body).to include("token_type" => "Bearer", "expires_in" => 3600, "scope" => "read")
       token = ::OauthAccessToken.by_token(response.parsed_body.fetch("access_token"))
       expect(token.resource_owner_id).to eq(user.id)
+    end
+
+    it "keeps the authorization code and PKCE verifier out of the request log" do
+      log = StringIO.new
+      original = ActionController::Base.logger
+      ActionController::Base.logger = ActiveSupport::Logger.new(log)
+      begin
+        code = authorization_code
+        exchange(code)
+      ensure
+        ActionController::Base.logger = original
+      end
+
+      expect(response).to have_http_status(:ok)
+      expect(log.string).to include("Redirected to [FILTERED]")
+      expect(log.string).not_to include(code, code_verifier)
     end
 
     it "stores tokens only as digests" do

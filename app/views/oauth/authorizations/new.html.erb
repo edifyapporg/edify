@@ -1,5 +1,7 @@
 <%# The consent screen for an MCP client such as Claude (#323). It names the client and, as the MCP authorization
-    spec requires, the host the leader will be sent back to, with an extra warning when this request's redirect is only this computer. %>
+    spec requires, the host the leader will be sent back to. Every claude.ai user is the same client, so it always warns
+    against approving a link someone else started, and more strongly when this request's redirect is only this
+    computer. %>
 <% client = @pre_auth.client.application %>
 <% redirect_uri = URI.parse(@pre_auth.redirect_uri) %>
 
@@ -29,6 +31,11 @@
         <div class="alert alert-warning">
           This connection finishes on your own computer, as Claude Code does. Allow it only if you just started
           connecting from an app you trust: any program on this computer could be waiting for the reply.
+        </div>
+      <% else %>
+        <div class="alert alert-info">
+          Only allow this if you started connecting just now, from your own <%= client.name %> account. If someone sent
+          you this link, choose Deny: allowing it could connect their account to your unit's information.
         </div>
       <% end %>
 
