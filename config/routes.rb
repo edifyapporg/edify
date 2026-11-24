@@ -87,6 +87,14 @@ Rails.application.routes.draw do
 
   match "/mcp", to: "mcp#handle", via: [:get, :post, :delete]
 
+  # OAuth sign-in for MCP clients such as Claude (#323): authorize, token and revoke. Clients register through Client
+  # ID Metadata Documents, so Doorkeeper's application management pages are not used.
+  use_doorkeeper do
+    skip_controllers :applications, :authorized_applications, :token_info
+    controllers authorizations: "oauth/authorizations", tokens: "oauth/tokens"
+  end
+  get "/.well-known/oauth-authorization-server", to: "oauth/metadata#show", as: :oauth_authorization_server_metadata
+
   namespace :webhooks do
     resources :mailgun_events, only: [:create]
   end

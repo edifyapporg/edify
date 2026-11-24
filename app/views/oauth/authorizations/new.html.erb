@@ -1,0 +1,59 @@
+<%# The consent screen for an MCP client such as Claude (#323). It names the client and, as the MCP authorization
+    spec requires, the host the leader will be sent back to. Every claude.ai user is the same client, so it always warns
+    against approving a link someone else started, and more strongly when this request's redirect is only this
+    computer. %>
+<% client = @pre_auth.client.application %>
+<% redirect_uri = URI.parse(@pre_auth.redirect_uri) %>
+
+<div class="d-flex justify-content-center">
+  <div class="card mt-4 w-100" style="max-width: 640px;">
+    <div class="card-header">
+      <h4 class="mb-0">Connect <%= client.name %> to Edify?</h4>
+    </div>
+    <div class="card-body">
+      <p>
+        <strong><%= client.name %></strong> is asking to read your unit's Edify information as you,
+        <strong><%= current_user.name.full %></strong><%= " of #{current_unit.name}" if current_unit %>.
+      </p>
+
+      <p class="mb-1">It will be able to:</p>
+      <ul>
+        <% @pre_auth.scopes.each do |scope| %>
+          <li><%= t(scope, scope: [:doorkeeper, :scopes]) %></li>
+        <% end %>
+      </ul>
+
+      <p>
+        After you choose, you'll be sent to <strong><%= redirect_uri.host %></strong>.
+      </p>
+
+      <% if OauthApplication.loopback_redirect?(redirect_uri) %>
+        <div class="alert alert-warning">
+          This connection finishes on your own computer, as Claude Code does. Allow it only if you just started
+          connecting from an app you trust: any program on this computer could be waiting for the reply.
+        </div>
+      <% else %>
+        <div class="alert alert-info">
+          Only allow this if you started connecting just now, from your own <%= client.name %> account. If someone sent
+          you this link, choose Deny: allowing it could connect their account to your unit's information.
+        </div>
+      <% end %>
+
+      <p class="text-muted small">
+        You can disconnect it at any time. Edify is not an official product of The Church of Jesus Christ of Latter-day
+        Saints; follow the General Handbook's guidance on member privacy and AI tools.
+      </p>
+
+      <div class="d-flex gap-2">
+        <%= form_tag oauth_authorization_path, method: :post do %>
+          <%= render partial: "oauth/authorizations/pre_auth_fields", locals: { pre_auth: @pre_auth, resource: params[:resource] } %>
+          <%= submit_tag "Allow", class: "btn btn-primary" %>
+        <% end %>
+        <%= form_tag oauth_authorization_path, method: :delete do %>
+          <%= render partial: "oauth/authorizations/pre_auth_fields", locals: { pre_auth: @pre_auth, resource: params[:resource] } %>
+          <%= submit_tag "Deny", class: "btn btn-outline-secondary" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
