@@ -42,7 +42,7 @@ RSpec.describe "MCP endpoint with OAuth" do
         expect(response.parsed_body).to eq(
           "resource" => "http://localhost/mcp",
           "authorization_servers" => ["http://localhost"],
-          "scopes_supported" => ["read"],
+          "scopes_supported" => %w[read offline_access],
           "bearer_methods_supported" => ["header"],
           "resource_name" => "Edify"
         )

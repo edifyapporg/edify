@@ -52,7 +52,7 @@ RSpec.describe "OAuth sign-in for MCP clients" do
         "code_challenge_methods_supported" => ["S256"],
         "token_endpoint_auth_methods_supported" => ["none"],
         "grant_types_supported" => %w[authorization_code refresh_token],
-        "scopes_supported" => ["read"],
+        "scopes_supported" => %w[read offline_access],
         "client_id_metadata_document_supported" => true
       )
       expect(response.parsed_body).not_to have_key("registration_endpoint")
@@ -264,6 +264,42 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       travel(31.days) { refresh(refresh_token) }
 
       expect(response.parsed_body["error"]).to eq("invalid_grant")
+    end
+  end
+
+  describe "ChatGPT" do
+    # ChatGPT's real document, as served at its client_id URL. It prefers private_key_jwt but also supports none,
+    # which is all Edify advertises.
+    let(:client_id) { "https://chatgpt.com/oauth/client.json" }
+    let(:redirect_uri) { "https://chatgpt.com/connector_platform_oauth_redirect" }
+
+    before do
+      allow(::Oauth::ClientIdMetadataDocument::Fetcher).to receive(:call) do
+        { client_id: client_id, client_uri: "https://chatgpt.com/", redirect_uris: [redirect_uri],
+          token_endpoint_auth_method: "private_key_jwt", token_endpoint_auth_methods_supported: %w[none private_key_jwt],
+          grant_types: %w[authorization_code refresh_token urn:ietf:params:oauth:grant-type:jwt-bearer],
+          response_types: ["code"], client_name: "ChatGPT", token_endpoint_auth_signing_alg: "RS256",
+          jwks_uri: "https://chatgpt.com/oauth/jwks.json" }.to_json
+      end
+    end
+
+    it "asks for consent, listing read access even when ChatGPT asks only for offline_access" do
+      login_as user, scope: :user
+      get oauth_authorization_path, params: authorize_params(scope: "offline_access")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("ChatGPT", "chatgpt.com", "See your unit&#39;s members",
+                                       "Stay connected until you disconnect it")
+    end
+
+    it "issues tokens for read and offline_access, and refreshes them" do
+      exchange(authorization_code(scope: "read offline_access"))
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body).to include("scope" => "read offline_access")
+
+      refresh(response.parsed_body.fetch("refresh_token"))
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body.fetch("access_token")).to be_present
     end
   end
 

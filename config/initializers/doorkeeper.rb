@@ -28,6 +28,9 @@ Doorkeeper.configure do
   hash_token_secrets
 
   default_scopes :read
+  # ChatGPT asks for offline_access to get a refresh token. It grants nothing more: every client gets refresh
+  # tokens, and what a token can read depends only on the leader's role.
+  optional_scopes :offline_access
   enforce_configured_scopes
 
   # Nothing introspects tokens: the MCP endpoint looks them up directly.

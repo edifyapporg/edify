@@ -16,6 +16,7 @@ RSpec.describe ::Oauth::ClientIdMetadataDocument do
   describe ".client_id?" do
     it "accepts an https URL with a path on a trusted host" do
       expect(described_class.client_id?(client_id)).to be(true)
+      expect(described_class.client_id?("https://chatgpt.com/oauth/client.json")).to be(true)
     end
 
     it "refuses other hosts, plain http, a bare host, a port, credentials and fragments" do
@@ -32,7 +33,7 @@ RSpec.describe ::Oauth::ClientIdMetadataDocument do
 
     it "creates a public client from the document" do
       expect(application).to be_persisted
-      expect(application).to have_attributes(uid: client_id, name: "Claude", confidential: false, scopes: ["read"],
+      expect(application).to have_attributes(uid: client_id, name: "Claude", confidential: false, scopes: %w[read offline_access],
                                              redirect_uris: ["https://claude.ai/api/mcp/auth_callback"])
       expect(application.secret).to be_nil
     end
@@ -50,6 +51,14 @@ RSpec.describe ::Oauth::ClientIdMetadataDocument do
 
       travel(25.hours) { expect(application.name).to eq("Claude (renamed)") }
       expect(::OauthApplication.where(uid: client_id).count).to eq(1)
+    end
+
+    it "fetches again at once for a client saved before a scope was added, so it may ask for that scope" do
+      saved = described_class.new(client_id).application
+      saved.update!(scopes: "read")
+
+      expect(described_class.new(client_id).application.scopes.to_a).to eq(%w[read offline_access])
+      expect(described_class::Fetcher).to have_received(:call).twice
     end
 
     it "keeps using the last good copy when a refresh fails" do
