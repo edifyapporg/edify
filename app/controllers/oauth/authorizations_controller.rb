@@ -10,6 +10,8 @@ module Oauth
   #
   # Then it resolves the client's Client ID Metadata Document. This signed-in step is the only place Edify fetches
   # one: the token and revoke endpoints, which anyone can call, only look up clients already resolved here.
+  #
+  # Once the leader chooses Allow, they're emailed that the app was connected, in case it wasn't them (#396).
   class AuthorizationsController < ::Doorkeeper::AuthorizationsController
     layout "application"
 
@@ -17,6 +19,13 @@ module Oauth
                   :resolve_client_metadata_document, only: [:new, :create]
 
     private
+
+    # Doorkeeper's hook after a code is issued. Denials and token refreshes never reach it.
+    def after_successful_authorization(context)
+      super
+      loopback = ::OauthApplication.loopback_redirect?(::URI.parse(pre_auth.redirect_uri))
+      ::AccountSecurityMailer.app_connected(current_user, pre_auth.client.application, loopback: loopback).deliver_later
+    end
 
     def refuse_impersonation
       return if true_user == current_user

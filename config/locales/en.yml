@@ -1,4 +1,9 @@
 en:
+  account_security_mailer:
+    api_token_created:
+      subject: "New API token on your Edify account"
+    app_connected:
+      subject: "New app connected to your Edify account"
   controllers:
     access_request_controller:
       approve_failure: "Access request could not be approved. Something went wrong."

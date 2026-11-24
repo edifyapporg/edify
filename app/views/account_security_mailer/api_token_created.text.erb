@@ -1,0 +1,12 @@
+Hello <%= @user.first_name %>!
+
+A new API token was just created on your Edify account (<%= @user.email %>):
+
+- Name: <%= @api_token.name %>
+- Access: <%= @api_token.scopes.to_sentence %>
+- Expires: <%= @api_token.expires_at ? l(@api_token.expires_at.to_date, format: :rfc822) : "never" %>
+
+If you created it, there's nothing more to do.
+
+If you didn't, someone else may have access to your account. Revoke the token under Settings > API Tokens
+(<%= settings_api_tokens_url %>), then reset your password (<%= new_user_password_url %>).

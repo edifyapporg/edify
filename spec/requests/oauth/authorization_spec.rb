@@ -147,6 +147,17 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       expect(response).to have_http_status(:bad_request)
     end
 
+    it "emails the leader once they choose Allow, but not when they deny" do
+      login_as user, scope: :user
+      get oauth_authorization_path, params: authorize_params
+
+      expect { delete oauth_authorization_path, params: authorize_params }
+        .not_to have_enqueued_mail(::AccountSecurityMailer)
+      expect { post oauth_authorization_path, params: authorize_params }
+        .to have_enqueued_mail(::AccountSecurityMailer, :app_connected)
+        .with(user, ::OauthApplication.find_by!(uid: client_id), loopback: false)
+    end
+
     context "with Claude Code's loopback redirect on a port it picked" do
       let(:redirect_uris) { ["http://localhost/callback", "http://127.0.0.1/callback"] }
       let(:redirect_uri) { "http://localhost:43117/callback" }
@@ -224,6 +235,16 @@ RSpec.describe "OAuth sign-in for MCP clients" do
 
       expect(response).to have_http_status(:bad_request)
       expect(response.parsed_body["error"]).to eq("invalid_target")
+    end
+
+    it "sends no email for the code exchange or a refresh" do
+      code = authorization_code
+
+      expect do
+        exchange(code)
+        refresh(response.parsed_body.fetch("refresh_token"))
+      end.not_to have_enqueued_mail(::AccountSecurityMailer)
+      expect(response).to have_http_status(:ok)
     end
 
     it "rotates the refresh token" do

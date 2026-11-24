@@ -1,0 +1,17 @@
+<p>Hello <%= @user.first_name %>!</p>
+
+<p>
+  <strong><%= @application.name %></strong> (<%= @application.client_host %>) was just connected to your Edify
+  account (<%= @user.email %>). It can read what your role can see in Edify for your unit.
+  <% if @loopback %>
+    It connected through a program on someone's computer, such as Claude Code, rather than Claude on the web.
+  <% end %>
+</p>
+
+<p>If you connected it, there's nothing more to do.</p>
+
+<p>
+  If you didn't, someone else may have access to your account. Disconnect it under
+  <%= link_to "Settings > Connected Apps", settings_connected_apps_url %>, then
+  <%= link_to "reset your password", new_user_password_url %>.
+</p>
