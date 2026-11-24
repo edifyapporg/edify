@@ -1,10 +1,13 @@
 class User < ApplicationRecord
-  devise :database_authenticatable,
+  devise :two_factor_authenticatable,
+         :two_factor_backupable,
          :confirmable,
          :registerable,
          :recoverable,
          :rememberable,
-         :validatable
+         :validatable,
+         otp_backup_code_length: 5,
+         otp_number_of_backup_codes: 10
 
   has_one_attached :avatar
   has_person_name
@@ -16,6 +19,13 @@ class User < ApplicationRecord
     music: 3,
     program: 4,
   }
+
+  # The second factor asked for at sign-in, after the password. Emailed confirmation isn't offered yet.
+  enum :two_factor_method, {
+    none: 0,
+    email: 1,
+    authenticator: 2,
+  }, prefix: :two_factor
 
   has_many :api_tokens, dependent: :destroy
   has_many :import_jobs, foreign_key: :owner_id, dependent: :nullify
@@ -69,6 +79,11 @@ class User < ApplicationRecord
 
   def needs_onboarding?
     unit_id.nil? && access_request.nil?
+  end
+
+  # devise-two-factor's name for whether sign-in needs an authenticator-app code.
+  def otp_required_for_login
+    two_factor_authenticator?
   end
 
   def pending_unit

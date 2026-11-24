@@ -1,0 +1,29 @@
+<div class="row">
+  <div class="col-lg-4 offset-lg-4">
+    <h1 class="text-center">Enter your code</h1>
+
+    <p>
+      Enter the 6-digit code for Edify from your authenticator app. If you don't have your phone, enter one of your
+      recovery codes instead.
+    </p>
+
+    <%= form_with url: user_sign_in_code_path do |f| %>
+      <div class="mb-3">
+        <%= f.text_field :code,
+                         autofocus: true,
+                         autocomplete: "one-time-code",
+                         placeholder: "Code",
+                         "aria-label": "Code",
+                         class: "form-control" %>
+      </div>
+
+      <div class="mb-3 d-grid">
+        <%= f.submit "Verify", class: "btn btn-primary btn-lg", data: { turbo: false } %>
+      </div>
+    <% end %>
+
+    <div class="text-center">
+      <%= link_to "Start over", new_user_session_path %>
+    </div>
+  </div>
+</div>

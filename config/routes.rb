@@ -12,6 +12,11 @@ Rails.application.routes.draw do
     sessions: "users/sessions",
   }
 
+  devise_scope :user do
+    get "users/sign_in/code", to: "users/sign_in_codes#new", as: :new_user_sign_in_code
+    post "users/sign_in/code", to: "users/sign_in_codes#create", as: :user_sign_in_code
+  end
+
   resources :access_requests, only: [:new, :create, :destroy] do
     get :review, on: :member
     put :approve, on: :member
