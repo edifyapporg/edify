@@ -23,6 +23,11 @@
           <% end %>
         </li>
       <% end %>
+      <li class="nav-item border-sidebar w-100 <%= controller_name == "connected_apps" ? "active" : nil %>">
+        <%= link_to settings_connected_apps_path, class: "nav-link align-middle px-0" do %>
+          <i class="fs-3 bi-plug"></i> <span class="ms-2 d-none d-md-inline fs-5">Connected Apps</span>
+        <% end %>
+      </li>
     </ul>
   </div>
 </div>
