@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_24_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -476,6 +476,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_24_010000) do
     t.bigint "unit_id"
     t.datetime "updated_at", null: false
     t.boolean "hide_moved_members", default: true, null: false
+    t.integer "two_factor_method", default: 0, null: false
+    t.string "otp_secret"
+    t.integer "consumed_timestep"
+    t.string "otp_backup_codes", array: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["unit_id"], name: "index_users_on_unit_id"
