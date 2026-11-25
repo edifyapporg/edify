@@ -11,11 +11,7 @@ RSpec.describe "MCP endpoint" do
                          synced_on: unit.last_synced_on)
   end
 
-  # Admins may use MCP until it is enabled for everyone; most examples run as an admin bishopric member.
-  before do
-    user.update!(admin: true)
-    host! "localhost"
-  end
+  before { host! "localhost" }
 
   def rpc(method, params = {}, headers: auth)
     post "/mcp", params: { jsonrpc: "2.0", id: 1, method: method, params: params }.to_json,
@@ -109,7 +105,7 @@ RSpec.describe "MCP endpoint" do
       expect(tool_result.dig("content", 0, "text")).to include("/unit_id", "disallowed additional property")
     end
 
-    context "with an admin from another unit" do
+    context "with a leader from another unit" do
       let(:user) { users(:pleasant_one) }
 
       it "sees only their own unit's members" do
@@ -184,21 +180,6 @@ RSpec.describe "MCP endpoint" do
       user.update!(unit: nil)
       call_tool
       expect_unauthorized("not assigned to a unit")
-    end
-
-    context "when MCP is not yet enabled for everyone" do
-      before { user.update!(admin: false) }
-
-      it "refuses a user who is not a site admin" do
-        call_tool
-        expect_unauthorized("not enabled for your account yet")
-      end
-
-      it "allows them once MCP_ENABLED is set" do
-        allow(::EdifyConfig).to receive(:mcp_enabled_for_everyone?).and_return(true)
-        call_tool
-        expect(tool_result["isError"]).to be(false)
-      end
     end
 
     it "refuses a request for another host, against DNS rebinding" do

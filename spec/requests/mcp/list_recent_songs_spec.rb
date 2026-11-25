@@ -11,7 +11,6 @@ RSpec.describe "MCP list_recent_songs" do
   around { |example| travel_to(Date.new(2026, 6, 15)) { example.run } }
 
   before do
-    user.update!(admin: true)
     host! "localhost"
     sing("Come, Follow Me #116", on: Date.new(2026, 6, 7), type: :opening_hymn)
     sing("Come, Follow Me #116", on: Date.new(2026, 5, 3), type: :closing_hymn)

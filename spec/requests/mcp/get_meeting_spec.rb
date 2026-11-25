@@ -9,7 +9,6 @@ RSpec.describe "MCP get_meeting" do
   let(:auth) { { "Authorization" => "Bearer #{api_token.plaintext_token}" } }
 
   before do
-    user.update!(admin: true)
     host! "localhost"
     unit.meetings.create!(date: Date.new(2026, 11, 8), meeting_type: :sacrament_meeting,
                           presider_name: "Bishop Young").tap do |m|
@@ -56,7 +55,7 @@ RSpec.describe "MCP get_meeting" do
     end
   end
 
-  context "with an admin from another unit" do
+  context "with a leader from another unit" do
     let(:user) { users(:pleasant_one) }
 
     it "finds no meeting where only the first unit has one" do

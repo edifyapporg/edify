@@ -49,7 +49,6 @@ module EdifyMcp
 
     def check_user!(user)
       raise InvalidToken, "Your Edify account is not assigned to a unit." unless user.assigned_to_unit?
-      raise InvalidToken, "Edify's MCP server is not enabled for your account yet." unless Access.allowed?(user)
     end
 
     # Identifies the token by record id rather than carrying the secret any further.

@@ -13,11 +13,8 @@ RSpec.describe "MCP endpoint with OAuth" do
   end
   let(:bearer) { { "Authorization" => "Bearer #{oauth_token.plaintext_token}" } }
 
-  # Admins may use MCP until it is enabled for everyone. The transport's DNS-rebinding check allows loopback hosts.
-  before do
-    user.update!(admin: true)
-    host! "localhost"
-  end
+  # The transport's DNS-rebinding check allows loopback hosts.
+  before { host! "localhost" }
 
   def rpc(method, params = {}, headers: bearer)
     post "/mcp", params: { jsonrpc: "2.0", id: 1, method: method, params: params }.to_json,
@@ -84,12 +81,12 @@ RSpec.describe "MCP endpoint with OAuth" do
       expect(response).to have_http_status(:unauthorized)
     end
 
-    it "is refused for a leader MCP isn't enabled for yet" do
-      user.update!(admin: false)
+    it "is refused for a user removed from the unit" do
+      user.update!(unit: nil)
       rpc("tools/list")
 
       expect(response).to have_http_status(:unauthorized)
-      expect(response.headers["WWW-Authenticate"]).to include("not enabled for your account yet")
+      expect(response.headers["WWW-Authenticate"]).to include("not assigned to a unit")
     end
 
     it "revokes the refresh token it replaced, once it is first used" do

@@ -18,7 +18,6 @@ RSpec.describe "MCP list_talks" do
   end
 
   before do
-    user.update!(admin: true)
     host! "localhost"
     talk(on: Date.new(2027, 1, 10), speaker: "Zz, Jane Smith", purpose: "Departing Missionary", topic: "Faith")
     talk(on: Date.new(2027, 2, 14), speaker: "Zz, John Smith", purpose: "Stake Representative", topic: "Hope",

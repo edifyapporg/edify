@@ -14,7 +14,6 @@ RSpec.describe "MCP search_members" do
   end
 
   before do
-    user.update!(admin: true)
     host! "localhost"
     create_member("Zzsmith, John", gender: :male)
     create_member("Zzsmith, Ann", birthdate: 15.years.ago.to_date)

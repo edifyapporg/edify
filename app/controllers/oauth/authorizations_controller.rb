@@ -4,8 +4,8 @@ module Oauth
   #
   # - an admin impersonating a leader, whose consent would mint tokens owned by that leader and outliving the
   #   impersonation;
-  # - a leader the MCP endpoint wouldn't serve (no unit, or MCP not enabled for them), so no token is issued that /mcp
-  #   would only answer with 401, which a client takes as a cue to ask for consent again;
+  # - a user with no unit, whom the MCP endpoint wouldn't serve, so no token is issued that /mcp would only answer
+  #   with 401, which a client takes as a cue to ask for consent again;
   # - any `resource` other than the MCP endpoint (RFC 8707).
   #
   # Then it resolves the client's Client ID Metadata Document. This signed-in step is the only place Edify fetches
@@ -13,7 +13,7 @@ module Oauth
   class AuthorizationsController < ::Doorkeeper::AuthorizationsController
     layout "application"
 
-    before_action :refuse_impersonation, :refuse_without_mcp_access, :refuse_other_resources,
+    before_action :refuse_impersonation, :refuse_without_unit, :refuse_other_resources,
                   :resolve_client_metadata_document, only: [:new, :create]
 
     private
@@ -32,11 +32,11 @@ module Oauth
                          "Apps can only be connected by leaders signed in as themselves."
     end
 
-    def refuse_without_mcp_access
-      return if current_user.assigned_to_unit? && ::EdifyMcp::Access.allowed?(current_user)
+    def refuse_without_unit
+      return if current_user.assigned_to_unit?
 
-      render_unavailable "Connecting apps isn't available yet",
-                         "Edify's AI assistant connection isn't enabled for your account yet."
+      render_unavailable "Connecting apps needs a ward",
+                         "Your Edify account isn't assigned to a ward yet, so there's nothing for an app to read."
     end
 
     def refuse_other_resources
