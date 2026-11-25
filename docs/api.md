@@ -42,7 +42,7 @@ claude.ai and ChatGPT can't send a pasted token, so Edify is also an OAuth autho
   advertises.
 - **Flow:** authorization code with required S256 PKCE, behind the Devise sign-in and a consent screen that names the
   client and the redirect host. Consent is refused while an admin is impersonating, and for a leader `/mcp` wouldn't
-  serve (no unit, or `EdifyMcp::Access` says no), so no token is issued that `/mcp` would reject. Plain-http redirects are allowed only to loopback addresses, on any port, for Claude
+  serve (no unit), so no token is issued that `/mcp` would reject. Plain-http redirects are allowed only to loopback addresses, on any port, for Claude
   Code.
 - **`resource`** (RFC 8707), when sent, must name the `/mcp` endpoint (`Oauth::McpResource`); anything else gets
   `invalid_target`.
@@ -127,7 +127,7 @@ so both front ends always agree.
 | `GET /api/v1/members` | bishopric, clerk | `q` (2-100 characters; every word must appear in the name), `limit` (1-100, 25) |
 | `GET /api/v1/talks` | bishopric, clerk | `speaker` (every word in the name), `purpose` (contains), `from`, `to`, `limit` (1-200, 50) |
 
-MCP tools at `/mcp`, each answering what its endpoint answers. Access is limited to site admins until `MCP_ENABLED=true`.
+MCP tools at `/mcp`, each answering what its endpoint answers, for any leader assigned to a unit.
 
 | Tool | Answers like | Roles |
 |---|---|---|

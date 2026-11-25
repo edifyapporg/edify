@@ -10,8 +10,6 @@ RSpec.describe "OAuth sign-in for MCP clients" do
   let(:code_challenge) { ::Base64.urlsafe_encode64(::Digest::SHA256.digest(code_verifier), padding: false) }
 
   before do
-    # MCP is open to admins until it is enabled for everyone; consent is refused to anyone /mcp wouldn't serve.
-    user.update!(admin: true)
     allow(::Oauth::ClientIdMetadataDocument::Fetcher).to receive(:call) do
       { client_id: client_id, client_name: "Claude", redirect_uris: redirect_uris }.to_json
     end
@@ -119,25 +117,16 @@ RSpec.describe "OAuth sign-in for MCP clients" do
       expect(::Oauth::ClientIdMetadataDocument::Fetcher).not_to have_received(:call)
     end
 
-    it "refuses a leader the MCP endpoint wouldn't serve, so no token is issued" do
-      user.update!(admin: false)
-      login_as user, scope: :user
+    it "refuses a user with no unit, whom the MCP endpoint wouldn't serve, so no token is issued" do
+      login_as users(:unassigned), scope: :user
       get oauth_authorization_path, params: authorize_params
 
       expect(response).to have_http_status(:forbidden)
-      expect(response.body).to include("Connecting apps isn&#39;t available yet")
+      expect(response.body).to include("Connecting apps needs a ward")
 
       post oauth_authorization_path, params: authorize_params
       expect(response).to have_http_status(:forbidden)
       expect(::Doorkeeper::AccessGrant.count).to eq(0)
-    end
-
-    it "refuses a user with no unit" do
-      unassigned = users(:unassigned).tap { it.update!(admin: true) }
-      login_as unassigned, scope: :user
-      get oauth_authorization_path, params: authorize_params
-
-      expect(response).to have_http_status(:forbidden)
     end
 
     it "answers a malformed resource with 400, not an error" do

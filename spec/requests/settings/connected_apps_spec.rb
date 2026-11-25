@@ -25,8 +25,7 @@ RSpec.describe "Settings connected apps" do
       expect(response.body).to include("Claude", "claude.ai", ">Disconnect<")
     end
 
-    it "shows a leader with MCP access how to connect Claude, with this host's MCP URL" do
-      user.update!(admin: true)
+    it "shows a leader how to connect Claude, with this host's MCP URL" do
       get settings_connected_apps_path
 
       expect(response.body).to include("Connect Claude", "http://www.example.com/mcp",
@@ -34,15 +33,13 @@ RSpec.describe "Settings connected apps" do
                                        %(href="#{::EdifyConfig.general_handbook_url}"), "Help improve Claude")
     end
 
-    it "shows a leader with MCP access how to connect ChatGPT too" do
-      user.update!(admin: true)
+    it "shows a leader how to connect ChatGPT too" do
       get settings_connected_apps_path
 
       expect(response.body).to include("Connect ChatGPT", "Add custom MCP server", "Improve the model for everyone")
     end
 
     it "starts both guides collapsed" do
-      user.update!(admin: true)
       get settings_connected_apps_path
 
       guides = response.parsed_body.css("#connect_guides .accordion-collapse")
@@ -52,7 +49,8 @@ RSpec.describe "Settings connected apps" do
       expect(classes.flatten).not_to include("show")
     end
 
-    it "leaves out the guide for a leader MCP isn't enabled for, while still listing their apps" do
+    it "leaves out the guides for a user with no unit, while still listing the user's apps" do
+      user.update!(unit: nil)
       issue_token(user)
       get settings_connected_apps_path
 
@@ -94,7 +92,6 @@ RSpec.describe "Settings connected apps" do
     end
 
     it "means the next MCP request with that token is refused" do
-      user.update!(admin: true)
       token = issue_token(user)
       delete settings_connected_app_path(claude)
 
