@@ -47,6 +47,13 @@ en:
     registrations_controller:
       flash:
         turnstile_unauthorized: "Unauthorized"
+    sign_in_codes:
+      expired: "Your sign-in timed out. Enter your email address and password again."
+      invalid_code: "That code didn't work. Check your authenticator app and try again."
+      recovery_code_used:
+        one: "Signed in with a recovery code. You have 1 recovery code left."
+        other: "Signed in with a recovery code. You have %{count} recovery codes left."
+        zero: "Signed in with a recovery code. You have no recovery codes left."
     songs_controller:
       created: "Song was successfully created."
       updated: "Song was successfully updated."

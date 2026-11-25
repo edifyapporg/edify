@@ -30,6 +30,28 @@ describe ::User do
     end
   end
 
+  describe "#otp_required_for_login" do
+    it "is true only for an authenticator app" do
+      required = described_class.two_factor_methods.keys.index_with do |method|
+        described_class.new(two_factor_method: method).otp_required_for_login
+      end
+
+      expect(required).to eq("none" => false, "email" => false, "authenticator" => true)
+    end
+  end
+
+  describe "#otp_secret" do
+    it "is stored encrypted" do
+      user = users(:sunny_bishopric)
+      secret = described_class.generate_otp_secret
+      user.update!(otp_secret: secret)
+
+      stored = described_class.connection.select_value("SELECT otp_secret FROM users WHERE id = #{user.id}")
+      expect(stored).not_to include(secret)
+      expect(user.reload.otp_secret).to eq(secret)
+    end
+  end
+
   describe "#send_welcome_notifications" do
     let(:user) do
       described_class.create!(
